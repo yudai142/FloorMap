@@ -1,7 +1,5 @@
 # FloorMap
 
-# FloorMap
-
 ## 0. デモアプリリンク
 完成イメージを把握しやすくなるよう作成しましたので合わせてご確認ください。
 https://floormap-seating-manager.onrender.com/rooms/p8PLK4ccG4AH1VoVnSGKQRF5
