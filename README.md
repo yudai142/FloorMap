@@ -319,3 +319,183 @@ toC向けに磨いた仕組みがそのまま転用できる構造を活かし�
 
 以前の出席管理アプリ開発経験から、入退室の記録・状態管理の設計については知見がある。その土台を活かしつつ、SVGエディタ・リアルタイム同期・複数ユーザー権限管理といった新要素に集中してキャッチアップした。
 ActionCable と React 状態管理の連携、SVG のドラッグ操作など、複雑なフロントエンド実装も段階的に実装・検証を進めることで、安定動作を実現。
+
+## テーブル詳細
+
+### users テーブル（ユーザー）
+
+ユーザーアカウント情報と認証・ログイン統計を管理
+
+- `id` : bigint / 主キー
+- `email` : string / ログイン用メールアドレス（ユニーク制約）
+- `encrypted_password` : string / Deviseが管理するハッシュ化パスワード
+- `name` : string / 表示名
+- `role` : integer / 権限（0=一般, 他の値は管理者など）
+- `otp_secret` : string / 2段階認証（TOTP）用シークレット
+- `otp_required_for_login` : boolean / 2段階認証が必須かどうか
+- `reset_password_token` : string / パスワードリセット用トークン（ユニーク制約）
+- `reset_password_sent_at` : datetime / パスワードリセットメール送信日時
+- `remember_created_at` : datetime / ログイン状態の記憶（Remember me）有効期限
+- `sign_in_count` : integer / ログイン回数
+- `current_sign_in_at` : datetime / 最新ログイン日時
+- `current_sign_in_ip` : string / 最新ログイン時のIPアドレス
+- `last_sign_in_at` : datetime / 前回ログイン日時
+- `last_sign_in_ip` : string / 前回ログイン時のIPアドレス
+- `created_at` : datetime / レコード作成日時
+- `updated_at` : datetime / レコード更新日時
+
+---
+
+### rooms テーブル（フロアマップ/部屋）
+
+上面図・フロアレイアウト情報を管理
+
+- `id` : bigint / 主キー
+- `user_id` : bigint / 作成者（オーナー）のユーザーID（外部キー。users.id を参照）
+- `name` : string / 部屋の名前
+- `width` : integer / フロアマップのキャンバス幅（ピクセル）
+- `height` : integer / フロアマップのキャンバス高さ（ピクセル）
+- `shapes_data` : jsonb / 家具・壁などの図形データを JSON 形式で保存
+- `token` : string / 公開用ユニークトークン（URLで共有する際に使用、ユニーク制約）
+- `auto_checkout_enabled` : boolean / 自動チェックアウト機能のON/OFF
+- `auto_checkout_time` : string / 自動チェックアウト実行時刻（HH:MM 形式）
+- `created_at` : datetime / レコード作成日時
+- `updated_at` : datetime / レコード更新日時
+
+---
+
+### seats テーブル（座席）
+
+各座席の配置・着席状況・チェックアウト情報を管理
+
+- `id` : bigint / 主キー
+- `room_id` : bigint / 所属する部屋のID（外部キー。rooms.id を参照）
+- `label` : string / 座席ラベル名（"A1"、"テーブル2" など）
+- `x` : integer / フロアマップ上のX座標（ピクセル）
+- `y` : integer / フロアマップ上のY座標（ピクセル）
+- `occupied` : boolean / 着席中かどうかのフラグ
+- `occupant_id` : integer / 着席中のユーザーID（users.id を参照。退会時や離席時には NULL に）
+- `occupant_name` : string / ビジター（未ログインユーザー）が着席した場合の表示名
+- `auto_checkout_at` : datetime / この座席の自動チェックアウト予定日時
+- `daily_auto_checkout_enabled` : boolean / 毎日の自動チェックアウトON/OFF
+- `daily_auto_checkout_time` : string / 毎日のチェックアウト時刻（HH:MM 形式）
+- `created_at` : datetime / レコード作成日時
+- `updated_at` : datetime / レコード更新日時
+
+---
+
+### room_permissions テーブル（部屋の閲覧・編集権限）
+
+部屋ごとの権限設定を管理する中間テーブル
+
+- `id` : bigint / 主キー
+- `room_id` : bigint / 対象の部屋ID（外部キー。rooms.id を参照）
+- `user_id` : bigint / 権限を付与されたユーザーID（外部キー。users.id を参照）
+- `created_at` : datetime / 権限付与日時
+- `updated_at` : datetime / 権限更新日時
+
+---
+
+### invitations テーブル（ユーザー招待）
+
+メール招待による新規ユーザー登録を管理
+
+- `id` : bigint / 主キー
+- `email` : string / 招待先メールアドレス
+- `token` : string / 招待URLに含まれるユニークトークン（ユニーク制約）
+- `role` : integer / 招待後に付与されるロール
+- `invited_by_id` : bigint / 招待した管理者のユーザーID（外部キー。users.id を参照）
+- `expires_at` : datetime / 招待の有効期限
+- `accepted_at` : datetime / 招待が受け入れられた日時（NULL なら未受諾）
+- `created_at` : datetime / 招待作成日時
+- `updated_at` : datetime / 招待更新日時
+
+---
+
+### notifications テーブル（アプリ内通知）
+
+ユーザーへのアプリ内通知を管理
+
+- `id` : bigint / 主キー
+- `user_id` : bigint / 通知の宛先ユーザーID（外部キー。users.id を参照）
+- `title` : string / 通知タイトル
+- `message` : text / 通知本文
+- `notification_type` : string / 通知の種別（"check_in"、"check_out" など）
+- `data` : jsonb / 通知に付随する追加情報（JSON形式）
+- `read_at` : datetime / 既読日時（NULL なら未読）
+- `created_at` : datetime / 通知作成日時
+- `updated_at` : datetime / 通知更新日時
+
+---
+
+### notification_preferences テーブル（通知設定）
+
+ユーザーごとの通知設定を管理
+
+- `id` : bigint / 主キー
+- `user_id` : bigint / 設定対象のユーザーID（外部キー。users.id を参照）
+- `notification_type` : string / 通知種別（"check_in"、"check_out" など）
+- `enabled` : boolean / その種別の通知をONにするか（デフォルト: true）
+- `created_at` : datetime / 設定作成日時
+- `updated_at` : datetime / 設定更新日時
+
+---
+
+### backups テーブル（データベースバックアップ）
+
+データベースバックアップの記録と管理
+
+- `id` : bigint / 主キー
+- `name` : string / バックアップ名
+- `backup_type` : string / バックアップの種別（"automatic"=自動、"manual"=手動）
+- `status` : string / バックアップのステータス（"pending"、"in_progress"、"completed"、"failed"）
+- `s3_key` : string / S3 上の保存先キー
+- `size_bytes` : integer / バックアップファイルのサイズ（バイト）
+- `started_at` : datetime / バックアップ処理開始日時
+- `completed_at` : datetime / バックアップ処理完了日時
+- `error_message` : text / 失敗時のエラー内容
+- `description` : text / バックアップの説明（任意）
+- `created_at` : datetime / レコード作成日時
+- `updated_at` : datetime / レコード更新日時
+
+---
+
+### versions テーブル（変更履歴・監査ログ）
+
+PaperTrail による全テーブルの変更履歴を記録
+
+- `id` : bigint / 主キー
+- `item_id` : bigint / 変更対象のレコードID
+- `item_type` : string / 変更対象のモデル名（"Room"、"Seat" など）
+- `event` : string / 変更の種類（"create"、"update"、"destroy"）
+- `whodunnit` : string / 変更を行ったユーザーの識別情報
+- `object` : text / 変更前の状態をYAML形式で保存
+- `created_at` : datetime / 変更記録作成日時
+
+
+
+## 外部キー・制約一覧
+
+| 外部キー | 説明 |
+|---------|------|
+| `rooms.user_id` → `users.id` | 部屋の作成者 |
+| `seats.room_id` → `rooms.id` | 座席が所属する部屋 |
+| `seats.occupant_id` → `users.id` | 座席に着席中のユーザー（退会時は NULL） |
+| `room_permissions.room_id` → `rooms.id` | 権限が付与される部屋 |
+| `room_permissions.user_id` → `users.id` | 権限を付与されるユーザー |
+| `invitations.invited_by_id` → `users.id` | 招待を送った管理者 |
+| `notifications.user_id` → `users.id` | 通知の宛先ユーザー |
+| `notification_preferences.user_id` → `users.id` | 通知設定の対象ユーザー |
+
+---
+
+## ユニーク制約一覧
+
+| テーブル | カラム | 説明 |
+|---------|--------|------|
+| users | email | ログイン用メールアドレスは重複不可 |
+| users | reset_password_token | パスワードリセットトークンは各ユーザーで一意 |
+| rooms | token | 公開用トークンはアプリ内で一意 |
+| invitations | token | 招待トークンはアプリ内で一意 |
+| room_permissions | (room_id, user_id) | 同じ部屋への同じユーザーへの権限付与は一度のみ |
+| notification_preferences | (user_id, notification_type) | 同じユーザーの同じ通知種別設定は一度のみ |
