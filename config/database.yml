@@ -1,0 +1,22 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  host: <%= ENV.fetch("DATABASE_HOST", "localhost") %>
+  port: <%= ENV.fetch("DATABASE_PORT", 5432) %>
+  username: <%= ENV.fetch("POSTGRES_USER", "postgres") %>
+  password: <%= ENV.fetch("POSTGRES_PASSWORD", "postgres") %>
+
+development:
+  <<: *default
+  database: floormap_development
+
+test:
+  <<: *default
+  database: floormap_test
+
+production:
+  <<: *default
+  database: floormap_production
+  username: floormap
+  password: <%= ENV["FLOORMAP_DATABASE_PASSWORD"] %>
