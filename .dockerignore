@@ -1,0 +1,12 @@
+.git
+.gitignore
+.github
+README.md
+docker-compose.yml
+.DS_Store
+node_modules
+tmp
+log
+coverage
+.env.local
+.env.*.local
