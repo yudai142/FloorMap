@@ -1,0 +1,56 @@
+source "https://rubygems.org"
+
+ruby "3.2.11"
+
+# Core Rails
+gem "rails", "~> 8.1.0"
+gem "pg", "~> 1.5"
+gem "puma", ">= 5.0"
+
+# JavaScript & CSS
+gem "importmap-rails"
+gem "turbo-rails"
+gem "stimulus-rails"
+gem "tailwindcss-rails"
+gem "jbuilder"
+
+# Frontend Framework
+gem "vite_rails"
+gem "inertia_rails"
+
+# Authentication & Authorization
+gem "devise"
+gem "devise-two-factor"
+gem "pundit"
+
+# Real-time & Jobs
+gem "redis", "~> 5.0"
+gem "actioncable"
+gem "good_job"
+
+# API
+gem "rswag"
+
+# Observability
+gem "sentry-rails"
+gem "sentry-ruby"
+
+# Audit
+gem "paper_trail"
+
+# Utilities
+gem "pagy"
+gem "kaminari"
+gem "rack-cors"
+
+group :development, :test do
+  gem "debug", platforms: %i[mri mingw x64_mingw]
+  gem "rspec-rails"
+  gem "factory_bot_rails"
+  gem "faker"
+end
+
+group :development do
+  gem "web-console"
+  gem "rack-mini-profiler"
+end
