@@ -7,8 +7,6 @@ services:
       POSTGRES_DB: floormap_development
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -19,13 +17,13 @@ services:
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
 
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
     command: bash -c "bundle exec rails db:create && bundle exec rails db:migrate && bundle exec rails server -b 0.0.0.0"
     ports:
       - "3000:3000"
