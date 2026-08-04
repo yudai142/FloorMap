@@ -20,9 +20,14 @@
 
     <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+
+    <%# Vite entrypoint %>
+    <%= vite_javascript_tag "application", "data-turbo-track": "reload" %>
+    <%= vite_stylesheet_tag "application", "data-turbo-track": "reload" %>
   </head>
 
   <body>
+    <div id="root"></div>
     <%= yield %>
   </body>
 </html>
