@@ -36,3 +36,7 @@
 # Ignore local development guide
 CLAUDE.md
 .claude/*
+
+# Ignore local documentation and design files
+doc/*
+/doc/*
