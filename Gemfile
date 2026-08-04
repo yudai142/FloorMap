@@ -10,6 +10,8 @@ gem "pg", "~> 1.1"
 gem "puma", ">= 5.0"
 # Use Vite as the JavaScript bundler [https://github.com/vitejs/vite-plugin-ruby]
 gem "vite_rails"
+# Inertia.js adapter for Rails [https://github.com/inertiajs/inertia-rails]
+gem "inertia_rails"
 # Hotwire's SPA-like page accelerator [https://turbo.hotwired.dev]
 gem "turbo-rails"
 # Hotwire's modest JavaScript framework [https://stimulus.hotwired.dev]
