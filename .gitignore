@@ -39,4 +39,12 @@ CLAUDE.md
 
 # Ignore local documentation and design files
 doc/*
-/doc/*
+
+# Ignore npm/node packages
+node_modules/
+package-lock.json
+yarn.lock
+
+# Ignore Vite build output
+dist/
+.vite-cache/

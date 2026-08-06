@@ -6,6 +6,8 @@ RUN apt-get update && apt-get install -y \
     postgresql-client \
     git \
     curl \
+    nodejs \
+    npm \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -18,6 +20,13 @@ RUN bundle install
 
 # アプリケーションコードをコピー
 COPY . .
+
+# npm パッケージをインストール
+RUN npm install
+
+# Vite を初期化・ビルド
+RUN bundle exec vite install --force 2>/dev/null || true
+RUN npm run build 2>/dev/null || true
 
 # ポート 3000 を公開
 EXPOSE 3000
