@@ -10,30 +10,78 @@ RSpec.describe RoomPermission, type: :model do
     it { is_expected.to validate_presence_of(:permission_type) }
     it { is_expected.to validate_presence_of(:user_id) }
     it { is_expected.to validate_presence_of(:room_id) }
-    it { is_expected.to validate_uniqueness_of(:user_id).scoped_to(:room_id) }
+
+    context "uniqueness of user_id scoped to room_id" do
+      let(:user) { create(:user) }
+      let(:room) { create(:room) }
+
+      it "allows multiple permissions for same user in different rooms" do
+        room2 = create(:room)
+        permission1 = create(:room_permission, user:, room:, permission_type: :view)
+        permission2 = build(:room_permission, user:, room: room2, permission_type: :edit)
+        expect(permission2).to be_valid
+      end
+
+      it "disallows duplicate user_id + room_id combinations" do
+        create(:room_permission, user:, room:, permission_type: :view)
+        duplicate = build(:room_permission, user:, room:, permission_type: :edit)
+        expect(duplicate).not_to be_valid
+        expect(duplicate.errors[:user_id]).to include("has already been taken")
+      end
+    end
   end
 
   describe "enums" do
     it { is_expected.to define_enum_for(:permission_type).with_values(view: 0, edit: 1, manage: 2) }
   end
 
-  describe "permissions" do
+  describe "permission types" do
     let(:room) { create(:room) }
     let(:user) { create(:user) }
 
-    it "creates a room permission with view type" do
-      permission = build(:room_permission, room:, user:, permission_type: :view)
-      expect(permission.permission_type).to eq("view")
+    describe "view permission" do
+      it "allows users to view room and seat information" do
+        permission = create(:room_permission, room:, user:, permission_type: :view)
+        expect(permission.view?).to be true
+        expect(permission.edit?).to be false
+        expect(permission.manage?).to be false
+      end
     end
 
-    it "creates a room permission with edit type" do
-      permission = build(:room_permission, room:, user:, permission_type: :edit)
+    describe "edit permission" do
+      it "allows users to edit seats and check-in status" do
+        permission = create(:room_permission, room:, user:, permission_type: :edit)
+        expect(permission.edit?).to be true
+        expect(permission.manage?).to be false
+      end
+    end
+
+    describe "manage permission" do
+      it "allows users to manage room permissions and all features" do
+        permission = create(:room_permission, room:, user:, permission_type: :manage)
+        expect(permission.manage?).to be true
+        expect(permission.view?).to be true
+        expect(permission.edit?).to be true
+      end
+    end
+  end
+
+  describe "creation and persistence" do
+    let(:room) { create(:room) }
+    let(:user) { create(:user) }
+
+    it "creates and persists valid room permission" do
+      permission = create(:room_permission, room:, user:, permission_type: :edit)
+      expect(permission).to be_persisted
+      expect(permission.room_id).to eq(room.id)
+      expect(permission.user_id).to eq(user.id)
       expect(permission.permission_type).to eq("edit")
     end
 
-    it "creates a room permission with manage type" do
-      permission = build(:room_permission, room:, user:, permission_type: :manage)
-      expect(permission.permission_type).to eq("manage")
+    it "associates permission with both user and room" do
+      permission = create(:room_permission, room:, user:, permission_type: :view)
+      expect(permission.user).to eq(user)
+      expect(permission.room).to eq(room)
     end
   end
 end
