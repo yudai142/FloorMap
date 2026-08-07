@@ -1,5 +1,5 @@
 class PagesController < ApplicationController
   def home
-    render inertia: 'Home'
+    render inertia: "Home"
   end
 end

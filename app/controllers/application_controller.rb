@@ -8,8 +8,8 @@ class ApplicationController < ActionController::Base
     {
       auth: {
         user: current_user&.slice(:id, :email, :name),
-        is_authenticated: user_signed_in?,
-      },
+        is_authenticated: user_signed_in?
+      }
     }
   end
 end
