@@ -18,16 +18,4 @@ FactoryBot.define do
       role { :admin }
     end
   end
-
-  factory :room do
-    sequence(:name) { |n| "Meeting Room #{n}" }
-    description { "A test room" }
-    user { association :user, :manager }
-  end
-
-  factory :room_permission do
-    user { association :user }
-    room { association :room }
-    permission_type { :view }
-  end
 end
