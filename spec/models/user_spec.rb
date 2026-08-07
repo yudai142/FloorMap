@@ -59,4 +59,32 @@ RSpec.describe User, type: :model do
       expect(user.encrypted_password).not_to eq('password123')
     end
   end
+
+  describe 'roles' do
+    it { is_expected.to define_enum_for(:role).with_values(user: 0, manager: 1, admin: 2) }
+
+    it 'defaults to user role' do
+      user = create(:user)
+      expect(user.role).to eq('user')
+      expect(user.user?).to be true
+    end
+
+    it 'can be set to manager role' do
+      user = create(:user, role: :manager)
+      expect(user.role).to eq('manager')
+      expect(user.manager?).to be true
+      expect(user.user?).to be false
+    end
+
+    it 'can be set to admin role' do
+      user = create(:user, role: :admin)
+      expect(user.role).to eq('admin')
+      expect(user.admin?).to be true
+      expect(user.user?).to be false
+    end
+  end
+
+  describe 'associations' do
+    it { is_expected.to have_many(:room_permissions) }
+  end
 end
