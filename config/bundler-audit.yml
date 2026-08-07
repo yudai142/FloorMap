@@ -1,0 +1,8 @@
+---
+# Audit all gems listed in the Gemfile for known security problems by running bin/bundler-audit.
+# CVEs that are not relevant to the application can be enumerated on the ignore list below.
+
+ignore:
+  # pagy I18n locale option validation issue - requires Ruby 3.3+
+  - CVE-2026-54659
+  - GHSA-2xmw-f8j8-wfxc

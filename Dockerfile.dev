@@ -1,0 +1,35 @@
+FROM ruby:3.2.11-slim
+
+# 必要なパッケージをインストール
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    postgresql-client \
+    git \
+    curl \
+    nodejs \
+    npm \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Gemfile をコピー
+COPY Gemfile Gemfile.lock ./
+
+# Gem をインストール
+RUN bundle install
+
+# アプリケーションコードをコピー
+COPY . .
+
+# npm パッケージをインストール
+RUN npm install
+
+# Vite を初期化・ビルド
+RUN bundle exec vite install --force 2>/dev/null || true
+RUN npm run build 2>/dev/null || true
+
+# ポート 3000 を公開
+EXPOSE 3000
+
+# デフォルトコマンド
+CMD ["bash", "-c", "bundle exec rails db:prepare && bundle exec rails server -b 0.0.0.0"]

@@ -1,0 +1,4 @@
+---
+skip_checks:
+  - EOLRuby
+allow_yaml_parsing: true
