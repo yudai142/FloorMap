@@ -18,4 +18,8 @@ class SeatPolicy < ApplicationPolicy
   def index?
     user.owner_of?(@record.room) || user.has_permission_in?(@record.room) || user.admin?
   end
+
+  def position?
+    user.owner_of?(@record.room) || user.admin?
+  end
 end
