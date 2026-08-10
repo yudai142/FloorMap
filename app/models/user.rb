@@ -8,6 +8,7 @@ class User < ApplicationRecord
 
   has_many :rooms, dependent: :destroy
   has_many :room_permissions, dependent: :destroy
+  has_many :sessions, dependent: :destroy
 
   validates :email, presence: true, uniqueness: true
 

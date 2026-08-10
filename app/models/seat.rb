@@ -1,5 +1,6 @@
 class Seat < ApplicationRecord
   belongs_to :room
+  has_many :sessions, dependent: :destroy
 
   validates :room_id, presence: true
   validates :row_number, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
