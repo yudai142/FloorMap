@@ -189,6 +189,71 @@
     </div>
 
     <div class="detail-card">
+      <h2>座席の状態</h2>
+
+      <% current_session = @seat.sessions.where(status: "active").last %>
+      <% if current_session.present? %>
+        <div class="detail-section">
+          <div class="detail-label">現在の利用状況</div>
+          <div class="detail-value" style="color: #16a34a; font-weight: 600;">使用中</div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-label">チェックイン者</div>
+          <div class="detail-value"><%= current_session.user.email %></div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-label">チェックイン時刻</div>
+          <div class="detail-value"><%= current_session.check_in_time.strftime("%Y年%m月%d日 %H:%M:%S") %></div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-label">滞在時間</div>
+          <div class="detail-value">
+            <% elapsed = (Time.current - current_session.check_in_time).to_i %>
+            <% hours = elapsed / 3600 %>
+            <% minutes = (elapsed % 3600) / 60 %>
+            <% if hours > 0 %>
+              <%= "#{hours}時間#{minutes}分" %>
+            <% else %>
+              <%= "#{minutes}分" %>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="actions">
+          <% if user_signed_in? && (current_user.id == current_session.user_id || current_user.admin?) %>
+            <%= button_to "チェックアウト", session_path(current_session), method: :delete, class: "btn btn-primary" %>
+          <% end %>
+          <%= link_to "一覧に戻る", room_seats_path(@room), class: "btn btn-secondary" %>
+        </div>
+      <% else %>
+        <div class="detail-section">
+          <div class="detail-label">現在の利用状況</div>
+          <div class="detail-value" style="color: #64748b;">利用可能</div>
+        </div>
+
+        <div class="detail-section">
+          <div style="padding: 12px 0; text-align: center;">
+            <p style="color: #64748b; font-size: 13px;">この座席は現在利用されていません</p>
+          </div>
+        </div>
+
+        <div class="actions">
+          <% if user_signed_in? %>
+            <form action="<%= sessions_check_in_path %>" method="post" style="flex: 1;">
+              <input type="hidden" name="seat_id" value="<%= @seat.id %>">
+              <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+              <button type="submit" class="btn btn-primary" style="width: 100%;">チェックイン</button>
+            </form>
+          <% end %>
+          <%= link_to "一覧に戻る", room_seats_path(@room), class: "btn btn-secondary" %>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="detail-card">
       <h2>ルーム情報</h2>
 
       <div class="detail-section">
