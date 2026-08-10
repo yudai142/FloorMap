@@ -10,4 +10,12 @@ class User < ApplicationRecord
   has_many :room_permissions, dependent: :destroy
 
   validates :email, presence: true, uniqueness: true
+
+  def owner_of?(room)
+    room.user_id == id
+  end
+
+  def has_permission_in?(room)
+    room_permissions.exists?(room_id: room.id)
+  end
 end
