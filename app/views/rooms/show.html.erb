@@ -1,0 +1,9 @@
+<div class="rooms-show-container">
+  <div class="settings-layout">
+    <%= render 'shared/room_settings_sidebar', room: @room, current_tab: :members %>
+
+    <div class="settings-panel">
+      <%= render 'shared/member_management_section', room: @room %>
+    </div>
+  </div>
+</div>
