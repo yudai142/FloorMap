@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_10_110216) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_10_110217) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -33,6 +33,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_10_110216) do
   create_table "seats", force: :cascade do |t|
     t.integer "column_number", null: false
     t.datetime "created_at", null: false
+    t.float "position_x"
+    t.float "position_y"
     t.bigint "room_id", null: false
     t.integer "row_number", null: false
     t.string "seat_type", default: "regular", null: false

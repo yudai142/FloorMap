@@ -1,5 +1,5 @@
 class RoomsController < ApplicationController
-  before_action :set_room, only: [ :show, :edit, :update, :destroy ]
+  before_action :set_room, only: [ :show, :edit, :update, :destroy, :canvas_data ]
 
   def index
     authorize Room
@@ -50,10 +50,24 @@ class RoomsController < ApplicationController
     redirect_to rooms_url, notice: "ルームを削除しました"
   end
 
+  def canvas_data
+    authorize @room, :show?
+
+    seats_with_sessions = @room.seats.map do |seat|
+      session = Session.where(seat_id: seat.id, status: :active).last
+      seat.canvas_data.merge(session: session&.as_json(only: [ :id, :user_id, :check_in_time ]))
+    end
+
+    render json: {
+      room: @room.as_json(only: [ :id, :name, :description ]),
+      seats: seats_with_sessions
+    }
+  end
+
   private
 
   def set_room
-    @room = Room.find(params[:id])
+    @room = Room.find(params[:id] || params[:room_id])
   end
 
   def room_params

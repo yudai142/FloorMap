@@ -410,20 +410,8 @@
         </div>
       </div>
 
-      <div class="floor-canvas">
-        <div class="desk-cluster">
-          <% @room.seats_grouped_by_row.each do |row_number, seats_in_row| %>
-            <div class="desk-row">
-              <% seats_in_row.each do |seat| %>
-                <% session = Session.where(seat_id: seat.id, status: :active).last %>
-                <div class="desk-seat <%= session.present? ? 'occupied' : 'available' %>">
-                  <div class="desk-seat-label"><%= seat.seat_identifier %></div>
-                  <div class="desk-seat-indicator <%= session.present? ? 'occupied' : 'available' %>"></div>
-                </div>
-              <% end %>
-            </div>
-          <% end %>
-        </div>
+      <div class="floor-canvas" data-controller="seat-canvas" data-seat-canvas-room-id-value="<%= @room.id %>">
+        <canvas data-seat-canvas-target="canvas" style="width: 100%; height: 100%; display: block; border-radius: 12px;"></canvas>
       </div>
     </div>
 
