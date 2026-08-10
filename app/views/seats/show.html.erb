@@ -1,0 +1,234 @@
+<style>
+  .seat-detail-container {
+    background-color: #f8fafc;
+    min-height: 100vh;
+    padding: 32px 64px;
+  }
+  .detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+  }
+  .detail-header h1 {
+    font-size: 28px;
+    font-weight: bold;
+    color: #0f172a;
+    margin: 0;
+  }
+  .detail-header .badge {
+    background-color: #eff6ff;
+    color: #3b82f6;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .detail-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .detail-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 32px;
+  }
+  .detail-card h2 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0 0 24px 0;
+  }
+  .detail-section {
+    margin-bottom: 24px;
+  }
+  .detail-section:last-child {
+    margin-bottom: 0;
+  }
+  .detail-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .detail-value {
+    font-size: 16px;
+    color: #0f172a;
+    font-weight: 500;
+  }
+  .actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid #e2e8f0;
+  }
+  .btn {
+    flex: 1;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-primary {
+    background-color: #3b82f6;
+    color: white;
+  }
+  .btn-primary:hover {
+    background-color: #2563eb;
+  }
+  .btn-secondary {
+    background-color: white;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+  }
+  .btn-secondary:hover {
+    background-color: #f8fafc;
+  }
+  .btn-danger {
+    background-color: white;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+  }
+  .btn-danger:hover {
+    background-color: #fef2f2;
+  }
+  .status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .status-badge.regular {
+    background-color: #eff6ff;
+    color: #3b82f6;
+  }
+  .status-badge.accessible {
+    background-color: #dcfce7;
+    color: #16a34a;
+  }
+  .status-badge.vip {
+    background-color: #fef3c7;
+    color: #d97706;
+  }
+  .back-link {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #64748b;
+    text-decoration: none;
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+  .back-link:hover {
+    color: #334155;
+  }
+</style>
+
+<div class="seat-detail-container">
+  <%= link_to "← 戻る", room_seats_path(@room), class: "back-link" %>
+
+  <div class="detail-header">
+    <h1>座席 <%= @seat.seat_identifier %></h1>
+    <span class="badge"><%= @room.name %></span>
+  </div>
+
+  <div class="detail-content">
+    <div class="detail-card">
+      <h2>座席情報</h2>
+
+      <div class="detail-section">
+        <div class="detail-label">座席識別子</div>
+        <div class="detail-value"><%= @seat.seat_identifier %></div>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-label">行番号</div>
+        <div class="detail-value"><%= @seat.row_number %> (行：<%= (65 + @seat.row_number).chr %>)</div>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-label">列番号</div>
+        <div class="detail-value"><%= @seat.column_number %></div>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-label">座席タイプ</div>
+        <div class="detail-value">
+          <span class="status-badge <%= @seat.seat_type %>">
+            <% case @seat.seat_type %>
+              <% when "regular" %>通常座席
+              <% when "accessible" %>障害対応座席
+              <% when "vip" %>VIP座席
+            <% end %>
+          </span>
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-label">作成日時</div>
+        <div class="detail-value"><%= @seat.created_at.strftime("%Y年%m月%d日 %H:%M") %></div>
+      </div>
+
+      <div class="actions">
+        <%= link_to "編集", edit_room_seat_path(@room, @seat), class: "btn btn-primary" %>
+        <%= link_to "削除", room_seat_path(@room, @seat), method: :delete, data: { confirm: "本当に削除しますか？" }, class: "btn btn-danger" %>
+        <%= link_to "一覧に戻る", room_seats_path(@room), class: "btn btn-secondary" %>
+      </div>
+    </div>
+
+    <div class="detail-card">
+      <h2>ルーム情報</h2>
+
+      <div class="detail-section">
+        <div class="detail-label">ルーム名</div>
+        <div class="detail-value"><%= @room.name %></div>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-label">説明</div>
+        <div class="detail-value">
+          <% if @room.description.present? %>
+            <%= @room.description %>
+          <% else %>
+            <span style="color: #94a3b8;">説明なし</span>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-label">総座席数</div>
+        <div class="detail-value"><%= @room.seats.count %> 席</div>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-label">座席タイプ別</div>
+        <div style="margin-top: 12px;">
+          <% ["regular", "accessible", "vip"].each do |type| %>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
+              <span style="font-size: 13px; color: #475569;">
+                <% case type %>
+                  <% when "regular" %>通常座席
+                  <% when "accessible" %>障害対応座席
+                  <% when "vip" %>VIP座席
+                <% end %>
+              </span>
+              <span style="font-weight: 600; color: #0f172a;"><%= @room.seats.where(seat_type: type).count %> 席</span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

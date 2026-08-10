@@ -7,6 +7,7 @@ Rails.application.routes.draw do
 
   resources :rooms do
     resources :room_permissions, only: [ :create, :destroy ]
+    resources :seats
   end
 
   resources :room_permissions, only: :destroy
