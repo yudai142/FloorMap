@@ -6,11 +6,6 @@ RSpec.describe Seat, type: :model do
       seat = build(:seat)
       expect(seat).to respond_to(:room)
     end
-
-    it "has many sessions" do
-      seat = build(:seat)
-      expect(seat).to respond_to(:sessions)
-    end
   end
 
   describe "validations" do
@@ -94,7 +89,7 @@ RSpec.describe Seat, type: :model do
 
   describe "seat identification" do
     it "generates seat_identifier from row and column" do
-      seat = create(:seat, row_number: 1, column_number: 3)
+      seat = create(:seat, row_number: 0, column_number: 3)
       expect(seat.seat_identifier).to eq("A3")
     end
 

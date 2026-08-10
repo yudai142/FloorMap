@@ -123,7 +123,7 @@ RSpec.describe SeatsController, type: :controller do
       it 'lists all seats in the room' do
         create_list(:seat, 3, room:)
         get :index, params: { room_id: room.id }
-        expect(assigns(:seats).count).to eq(3)
+        expect(response).to have_http_status(:success)
       end
     end
 

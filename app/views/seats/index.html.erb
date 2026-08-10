@@ -1,0 +1,10 @@
+<div class="seats-container">
+  <h1><%= @room.name %> - 座席一覧</h1>
+  <div class="seats-list">
+    <% @seats.each do |seat| %>
+      <div class="seat-item">
+        <%= seat.seat_identifier %>
+      </div>
+    <% end %>
+  </div>
+</div>
