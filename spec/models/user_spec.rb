@@ -59,4 +59,70 @@ RSpec.describe User, type: :model do
       expect(user.encrypted_password).not_to eq('password123')
     end
   end
+
+  describe 'roles' do
+    it 'defaults to user role' do
+      user = create(:user)
+      expect(user.role).to eq('user')
+      expect(user.user?).to be true
+    end
+
+    it 'can be set to manager role' do
+      user = create(:user, role: :manager)
+      expect(user.role).to eq('manager')
+      expect(user.manager?).to be true
+    end
+
+    it 'can be set to admin role' do
+      user = create(:user, role: :admin)
+      expect(user.role).to eq('admin')
+      expect(user.admin?).to be true
+    end
+  end
+
+  describe 'associations' do
+    it "has room_permissions" do
+      user = build(:user)
+      expect(user).to respond_to(:room_permissions)
+    end
+
+    it "has rooms" do
+      user = build(:user)
+      expect(user).to respond_to(:rooms)
+    end
+  end
+
+  describe '#owner_of?' do
+    let(:manager) { create(:user, :manager) }
+    let(:other_user) { create(:user) }
+    let(:room) { create(:room, user: manager) }
+
+    it 'returns true when user is the owner' do
+      expect(manager.owner_of?(room)).to be true
+    end
+
+    it 'returns false when user is not the owner' do
+      expect(other_user.owner_of?(room)).to be false
+    end
+  end
+
+  describe '#has_permission_in?' do
+    let(:manager) { create(:user, :manager) }
+    let(:other_user) { create(:user) }
+    let(:room) { create(:room, user: manager) }
+
+    context 'when user has permission' do
+      before { create(:room_permission, room: room, user: other_user) }
+
+      it 'returns true' do
+        expect(other_user.has_permission_in?(room)).to be true
+      end
+    end
+
+    context 'when user does not have permission' do
+      it 'returns false' do
+        expect(other_user.has_permission_in?(room)).to be false
+      end
+    end
+  end
 end

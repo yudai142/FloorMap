@@ -1,0 +1,13 @@
+<nav class="room-settings-sidebar">
+  <div class="sidebar-section">
+    <h3 class="sidebar-label">ルーム設定</h3>
+  </div>
+
+  <div class="sidebar-nav">
+    <%= link_to "一般設定", room_path(room), class: "sidebar-nav-item #{'active' if current_tab == :general}" %>
+    <%= link_to "メンバー管理", room_path(room, tab: 'members'), class: "sidebar-nav-item #{'active' if current_tab == :members}" %>
+    <%= link_to "権限グループ", room_path(room, tab: 'permission_groups'), class: "sidebar-nav-item #{'active' if current_tab == :permission_groups}" %>
+    <%= link_to "通知統合", room_path(room, tab: 'notifications'), class: "sidebar-nav-item #{'active' if current_tab == :notifications}" %>
+    <%= link_to "危険ゾーン", room_path(room, tab: 'danger'), class: "sidebar-nav-item danger" %>
+  </div>
+</nav>

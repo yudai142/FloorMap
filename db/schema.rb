@@ -10,9 +10,25 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_04_065113) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_07_044636) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "room_permissions", force: :cascade do |t|
+    t.integer "permission_type", null: false
+    t.bigint "room_id", null: false
+    t.bigint "user_id", null: false
+    t.index ["room_id"], name: "index_room_permissions_on_room_id"
+    t.index ["user_id", "room_id"], name: "index_room_permissions_on_user_id_and_room_id", unique: true
+    t.index ["user_id"], name: "index_room_permissions_on_user_id"
+  end
+
+  create_table "rooms", force: :cascade do |t|
+    t.text "description"
+    t.string "name", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id"], name: "index_rooms_on_user_id"
+  end
 
   create_table "users", force: :cascade do |t|
     t.integer "consumed_timestep"
@@ -24,8 +40,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_065113) do
     t.datetime "remember_created_at"
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token"
+    t.integer "role", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
+
+  add_foreign_key "room_permissions", "rooms"
+  add_foreign_key "room_permissions", "users"
+  add_foreign_key "rooms", "users"
 end

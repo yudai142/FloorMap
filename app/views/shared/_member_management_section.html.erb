@@ -1,0 +1,99 @@
+<div class="member-management-section">
+  <div class="section-header">
+    <div class="section-title">
+      <h2>メンバー管理</h2>
+      <p>このルームに参加しているユーザーの一覧と権限管理を行います。</p>
+    </div>
+
+    <button class="btn btn-primary" data-action="click->member-invitation#openModal">
+      <svg class="icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M8 1V15M1 8H15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      新規招待
+    </button>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="members-table-wrapper">
+    <table class="members-table">
+      <thead>
+        <tr>
+          <th style="width: 200px;">名前</th>
+          <th style="width: 240px;">メールアドレス</th>
+          <th style="width: 120px;">役割</th>
+          <th style="width: 120px;">参加日</th>
+          <th style="flex: 1; text-align: right;">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% room.user_id == current_user.id %>
+        <tr>
+          <td class="member-name">
+            <img src="<%= room.user.avatar_url || asset_path('default-avatar.png') %>" alt="avatar" class="member-avatar">
+            <span><%= room.user.email %></span>
+          </td>
+          <td><%= room.user.email %></td>
+          <td>
+            <span class="role-badge">オーナー</span>
+          </td>
+          <td><%= room.created_at.strftime('%Y/%m/%d') %></td>
+          <td style="text-align: right;">-</td>
+        </tr>
+
+        <% room.room_permissions.each do |permission| %>
+        <tr>
+          <td class="member-name">
+            <img src="<%= permission.user.avatar_url || asset_path('default-avatar.png') %>" alt="avatar" class="member-avatar">
+            <span><%= permission.user.email %></span>
+          </td>
+          <td><%= permission.user.email %></td>
+          <td>
+            <div class="role-selector">
+              <select data-controller="permission-updater" data-permission-id="<%= permission.id %>">
+                <option value="view" <% 'selected' if permission.view? %>>閲覧</option>
+                <option value="edit" <% 'selected' if permission.edit? %>>編集</option>
+                <option value="manage" <% 'selected' if permission.manage? %>>管理</option>
+              </select>
+            </div>
+          </td>
+          <td><%= permission.created_at.strftime('%Y/%m/%d') %></td>
+          <td style="text-align: right;">
+            <%= button_to "除外", room_permission_path(permission), method: :delete,
+                data: { confirm: "本当に除外しますか？" }, class: "btn btn-danger-outline" %>
+          </td>
+        </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 新規招待モーダル -->
+<div id="member-invitation-modal" class="modal" data-controller="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>新規招待</h3>
+      <button class="modal-close" data-action="click->modal#close">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <%= form_with model: [@room, @room.room_permissions.build], local: true, class: "invitation-form" do |f| %>
+        <div class="form-group">
+          <%= f.label :user_id, "メールアドレス" %>
+          <%= f.email_field :user_email, placeholder: "user@example.com", class: "form-input" %>
+        </div>
+
+        <div class="form-group">
+          <%= f.label :permission_type, "権限" %>
+          <%= f.select :permission_type, RoomPermission.permission_types.keys.map { |k| [k, k] }, {}, class: "form-select" %>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-action="click->modal#close">キャンセル</button>
+          <%= f.submit "招待する", class: "btn btn-primary" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
