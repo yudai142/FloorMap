@@ -86,5 +86,40 @@ RSpec.describe User, type: :model do
 
   describe 'associations' do
     it { is_expected.to have_many(:room_permissions) }
+    it { is_expected.to have_many(:rooms).dependent(:destroy) }
+  end
+
+  describe '#owner_of?' do
+    let(:manager) { create(:user, :manager) }
+    let(:other_user) { create(:user) }
+    let(:room) { create(:room, user: manager) }
+
+    it 'returns true when user is the owner' do
+      expect(manager.owner_of?(room)).to be true
+    end
+
+    it 'returns false when user is not the owner' do
+      expect(other_user.owner_of?(room)).to be false
+    end
+  end
+
+  describe '#has_permission_in?' do
+    let(:manager) { create(:user, :manager) }
+    let(:other_user) { create(:user) }
+    let(:room) { create(:room, user: manager) }
+
+    context 'when user has permission' do
+      before { create(:room_permission, room: room, user: other_user) }
+
+      it 'returns true' do
+        expect(other_user.has_permission_in?(room)).to be true
+      end
+    end
+
+    context 'when user does not have permission' do
+      it 'returns false' do
+        expect(other_user.has_permission_in?(room)).to be false
+      end
+    end
   end
 end

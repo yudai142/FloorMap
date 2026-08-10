@@ -84,4 +84,23 @@ RSpec.describe RoomPermission, type: :model do
       expect(permission.room).to eq(room)
     end
   end
+
+  describe "user_email attribute" do
+    let(:room) { create(:room) }
+    let(:user) { create(:user, email: 'test@example.com') }
+
+    context "when user_email is provided" do
+      it "finds user by email and sets user_id" do
+        permission = build(:room_permission, room:, user_email: 'test@example.com', permission_type: :view)
+        permission.valid?
+        expect(permission.user_id).to eq(user.id)
+      end
+
+      it "validates presence of user with that email" do
+        permission = build(:room_permission, room:, user_email: 'nonexistent@example.com', permission_type: :view)
+        expect(permission).not_to be_valid
+        expect(permission.errors[:user_email]).to include("メールアドレスが見つかりません")
+      end
+    end
+  end
 end
