@@ -7,7 +7,15 @@ Rails.application.routes.draw do
 
   resources :rooms do
     resources :room_permissions, only: [ :create, :destroy ]
-    resources :seats
+    resources :seats do
+      member do
+        patch :position
+      end
+      collection do
+        patch :batch_position
+      end
+    end
+    get :canvas_data
   end
 
   resources :room_permissions, only: :destroy
