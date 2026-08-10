@@ -1,6 +1,6 @@
 class SeatsController < ApplicationController
   before_action :set_room
-  before_action :set_seat, only: [ :show, :update, :destroy ]
+  before_action :set_seat, only: [ :show, :edit, :update, :destroy ]
 
   def index
     authorize Seat.new(room: @room)
@@ -11,12 +11,21 @@ class SeatsController < ApplicationController
     authorize @seat
   end
 
+  def new
+    @seat = @room.seats.build
+    authorize @seat
+  end
+
+  def edit
+    authorize @seat
+  end
+
   def create
     @seat = @room.seats.build(seat_params)
     authorize @seat
 
     if @seat.save
-      redirect_to @room, notice: "座席を作成しました"
+      redirect_to room_seats_path(@room), notice: "座席を作成しました"
     else
       render :new, status: :unprocessable_entity
     end
@@ -26,7 +35,7 @@ class SeatsController < ApplicationController
     authorize @seat
 
     if @seat.update(seat_params)
-      redirect_to @room, notice: "座席を更新しました"
+      redirect_to room_seats_path(@room), notice: "座席を更新しました"
     else
       render :edit, status: :unprocessable_entity
     end
@@ -36,7 +45,7 @@ class SeatsController < ApplicationController
     authorize @seat
     @seat.destroy
 
-    redirect_to @room, notice: "座席を削除しました"
+    redirect_to room_seats_path(@room), notice: "座席を削除しました"
   end
 
   private

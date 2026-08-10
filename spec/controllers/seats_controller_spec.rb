@@ -53,9 +53,9 @@ RSpec.describe SeatsController, type: :controller do
       expect(Seat.last.room).to eq(room)
     end
 
-    it 'redirects to the room show page' do
+    it 'redirects to the seats list page' do
       post :create, params: { room_id: room.id, seat: { row_number: 1, column_number: 2, seat_type: :regular } }
-      expect(response).to redirect_to(room_path(room))
+      expect(response).to redirect_to(room_seats_path(room))
     end
 
     context 'when user is not the owner' do
@@ -96,9 +96,9 @@ RSpec.describe SeatsController, type: :controller do
       expect(Seat.find_by(id: seat_id)).to be_nil
     end
 
-    it 'redirects to room show' do
+    it 'redirects to seats list' do
       delete :destroy, params: { room_id: room.id, id: seat.id }
-      expect(response).to redirect_to(room_path(room))
+      expect(response).to redirect_to(room_seats_path(room))
     end
 
     context 'when user is not the owner' do

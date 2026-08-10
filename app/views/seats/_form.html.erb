@@ -1,0 +1,174 @@
+<style>
+  .seat-form-container {
+    background-color: #f8fafc;
+    min-height: 100vh;
+    padding: 32px 64px;
+  }
+  .form-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .form-header {
+    margin-bottom: 32px;
+  }
+  .form-header h1 {
+    font-size: 28px;
+    font-weight: bold;
+    color: #0f172a;
+    margin: 0 0 8px 0;
+  }
+  .form-header p {
+    font-size: 14px;
+    color: #475569;
+    margin: 0;
+  }
+  .form-group {
+    margin-bottom: 20px;
+  }
+  .form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 6px;
+  }
+  .form-group input,
+  .form-group select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    box-sizing: border-box;
+  }
+  .form-group input:focus,
+  .form-group select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+  .form-group small {
+    display: block;
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 4px;
+  }
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 32px;
+  }
+  .btn-submit {
+    flex: 1;
+    padding: 10px 20px;
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .btn-submit:hover {
+    background-color: #2563eb;
+  }
+  .btn-cancel {
+    flex: 1;
+    padding: 10px 20px;
+    background-color: white;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .btn-cancel:hover {
+    background-color: #f8fafc;
+  }
+  .errors {
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    color: #dc2626;
+    font-size: 13px;
+  }
+  .errors h3 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+  }
+  .errors ul {
+    margin: 0;
+    padding-left: 20px;
+  }
+  .errors li {
+    margin: 4px 0;
+  }
+</style>
+
+<div class="seat-form-container">
+  <div class="form-card">
+    <div class="form-header">
+      <h1><%= action_name == "new" ? "座席を作成" : "座席を編集" %></h1>
+      <p><%= @room.name %> - 座席の配置情報を登録</p>
+    </div>
+
+    <% if @seat.errors.any? %>
+      <div class="errors">
+        <h3><%= pluralize(@seat.errors.count, "個のエラー") %>があります</h3>
+        <ul>
+          <% @seat.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <%= form_with(model: [@room, @seat], local: true) do |form| %>
+      <div class="form-row">
+        <div class="form-group">
+          <%= form.label :row_number, "行番号（0から開始）" %>
+          <%= form.number_field :row_number, min: 0 %>
+          <small>座席の行位置（A行=0, B行=1 ...）</small>
+        </div>
+
+        <div class="form-group">
+          <%= form.label :column_number, "列番号（1から開始）" %>
+          <%= form.number_field :column_number, min: 1 %>
+          <small>座席の列位置</small>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <%= form.label :seat_type, "座席タイプ" %>
+        <%= form.select :seat_type, [
+          ["通常座席", "regular"],
+          ["障害対応座席", "accessible"],
+          ["VIP座席", "vip"]
+        ] %>
+        <small>座席の種類を選択してください</small>
+      </div>
+
+      <div class="form-actions">
+        <%= form.submit action_name == "new" ? "作成" : "更新", class: "btn-submit" %>
+        <%= link_to "キャンセル", room_seats_path(@room), class: "btn-cancel" %>
+      </div>
+    <% end %>
+  </div>
+</div>

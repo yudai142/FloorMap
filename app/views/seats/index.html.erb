@@ -1,10 +1,173 @@
-<div class="seats-container">
-  <h1><%= @room.name %> - 座席一覧</h1>
-  <div class="seats-list">
-    <% @seats.each do |seat| %>
-      <div class="seat-item">
-        <%= seat.seat_identifier %>
-      </div>
-    <% end %>
+<style>
+  .seats-index {
+    background-color: #f8fafc;
+    min-height: 100vh;
+    padding: 32px 64px;
+  }
+  .seats-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+  }
+  .seats-header h1 {
+    font-size: 28px;
+    font-weight: bold;
+    color: #0f172a;
+    margin: 0;
+  }
+  .seats-header .subtitle {
+    font-size: 14px;
+    color: #475569;
+    margin: 4px 0 0 0;
+  }
+  .btn-create-seat {
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    text-decoration: none;
+  }
+  .btn-create-seat:hover {
+    background-color: #2563eb;
+  }
+  .seats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+  }
+  .seat-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.02);
+    display: flex;
+    flex-direction: column;
+  }
+  .seat-card-header {
+    padding: 20px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .seat-card-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .seat-card-title strong {
+    font-size: 18px;
+    font-weight: bold;
+    color: #0f172a;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .seat-badge {
+    background-color: #eff6ff;
+    color: #3b82f6;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .seat-row {
+    font-size: 13px;
+    color: #475569;
+    margin-bottom: 8px;
+  }
+  .seat-row-value {
+    font-weight: 600;
+    color: #0f172a;
+  }
+  .seat-card-footer {
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #e2e8f0;
+  }
+  .seat-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .seat-actions a {
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    text-decoration: none;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+    background: white;
+  }
+  .seat-actions a:hover {
+    background-color: #f8fafc;
+  }
+  .seat-actions a.delete {
+    color: #dc2626;
+    border-color: #fecaca;
+  }
+  .seat-actions a.delete:hover {
+    background-color: #fef2f2;
+  }
+  .empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: #94a3b8;
+  }
+  .empty-state p {
+    font-size: 14px;
+    margin: 8px 0;
+  }
+</style>
+
+<div class="seats-index">
+  <div class="seats-header">
+    <div>
+      <h1>座席一覧</h1>
+      <p class="subtitle"><%= @room.name %> - 全体の座席配置を管理</p>
+    </div>
+    <%= link_to "新規座席", new_room_seat_path(@room), class: "btn-create-seat" %>
   </div>
+
+  <% if @seats.any? %>
+    <div class="seats-grid">
+      <% @seats.each do |seat| %>
+        <div class="seat-card">
+          <div class="seat-card-header">
+            <div class="seat-card-title">
+              <strong><%= seat.seat_identifier %></strong>
+              <span class="seat-badge"><%= seat.seat_type == "regular" ? "通常座席" : seat.seat_type == "accessible" ? "障害対応" : "VIP座席" %></span>
+            </div>
+            <div class="seat-row">
+              <span>位置: </span>
+              <span class="seat-row-value">行 <%= seat.row_number + 1 %>, 列 <%= seat.column_number %></span>
+            </div>
+          </div>
+          <div class="seat-card-footer">
+            <div class="seat-actions">
+              <%= link_to "編集", edit_room_seat_path(@room, seat), class: "edit" %>
+              <%= link_to "削除", room_seat_path(@room, seat), method: :delete, data: { confirm: "本当に削除しますか？" }, class: "delete" %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="empty-state">
+      <p>座席がまだ作成されていません</p>
+      <p>
+        <%= link_to "座席を追加する", new_room_seat_path(@room), class: "btn-create-seat" %>
+      </p>
+    </div>
+  <% end %>
 </div>
