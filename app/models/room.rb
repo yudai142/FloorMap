@@ -41,4 +41,19 @@ class Room < ApplicationRecord
   def occupied_seat_count
     Session.where(seat_id: seats.ids, status: :active).select(:seat_id).distinct.count
   end
+
+  def occupancy_rate
+    return 0 if seat_count.zero?
+
+    ((occupied_seat_count.to_f / seat_count) * 100).round
+  end
+
+  def seats_grouped_by_row
+    seats.order(:row_number, :column_number).group_by(&:row_number)
+  end
+
+  def seat_with_session(seat)
+    session = Session.where(seat_id: seat.id, status: :active).last
+    { seat: seat, session: session, user: session&.user }
+  end
 end
