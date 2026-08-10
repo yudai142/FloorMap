@@ -1,6 +1,6 @@
 class SeatsController < ApplicationController
   before_action :set_room
-  before_action :set_seat, only: [ :show, :edit, :update, :destroy ]
+  before_action :set_seat, only: [ :show, :edit, :update, :destroy, :position ]
 
   def index
     authorize Seat.new(room: @room)
@@ -48,6 +48,29 @@ class SeatsController < ApplicationController
     redirect_to room_seats_path(@room), notice: "座席を削除しました"
   end
 
+  def position
+    authorize @seat
+
+    if @seat.update(position_params)
+      render json: @seat.canvas_data, status: :ok
+    else
+      render json: { errors: @seat.errors }, status: :unprocessable_entity
+    end
+  end
+
+  def batch_position
+    authorize @room, :update?
+    seats = @room.seats.where(id: batch_position_params.keys)
+
+    updated_seats = seats.map do |seat|
+      position = batch_position_params[seat.id.to_s]
+      seat.update(position_x: position['x'], position_y: position['y'])
+      seat
+    end
+
+    render json: updated_seats.map(&:canvas_data), status: :ok
+  end
+
   private
 
   def set_room
@@ -59,6 +82,14 @@ class SeatsController < ApplicationController
   end
 
   def seat_params
-    params.require(:seat).permit(:row_number, :column_number, :seat_type)
+    params.require(:seat).permit(:row_number, :column_number, :seat_type, :position_x, :position_y)
+  end
+
+  def position_params
+    params.require(:seat).permit(:position_x, :position_y)
+  end
+
+  def batch_position_params
+    params.require(:positions).permit!.to_h
   end
 end
