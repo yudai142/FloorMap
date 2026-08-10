@@ -4,7 +4,9 @@ export default class extends Controller {
   static targets = ["canvas"]
   static values = {
     roomId: String,
-    canvasData: Object
+    canvasData: Object,
+    gridSize: { type: Number, default: 40 },
+    snapToGrid: { type: Boolean, default: true }
   }
 
   connect() {
@@ -12,13 +14,14 @@ export default class extends Controller {
     this.ctx = this.canvas.getContext("2d")
     this.draggingSeat = null
     this.dragOffset = { x: 0, y: 0 }
+    this.shapes = [] // 図形（壁・パーティション等）
 
     this.canvas.width = this.canvas.offsetWidth
     this.canvas.height = this.canvas.offsetHeight
 
     this.loadCanvasData()
     this.setupEventListeners()
-    this.drawSeats()
+    this.draw()
   }
 
   loadCanvasData() {
@@ -27,7 +30,7 @@ export default class extends Controller {
       .then(data => {
         this.seats = data.seats || []
         this.room = data.room || {}
-        this.drawSeats()
+        this.draw()
       })
       .catch(error => console.error("Canvas data loading failed:", error))
   }
@@ -39,10 +42,77 @@ export default class extends Controller {
     this.canvas.addEventListener("mouseleave", e => this.handleMouseLeave(e))
   }
 
-  drawSeats() {
+  draw() {
     this.ctx.fillStyle = "#1e293b"
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
 
+    this.drawGrid()
+    this.drawShapes()
+    this.drawSeats()
+  }
+
+  drawGrid() {
+    const gridSize = this.gridSizeValue
+    this.ctx.strokeStyle = "rgba(255, 255, 255, 0.1)"
+    this.ctx.lineWidth = 1
+
+    for (let x = 0; x < this.canvas.width; x += gridSize) {
+      this.ctx.beginPath()
+      this.ctx.moveTo(x, 0)
+      this.ctx.lineTo(x, this.canvas.height)
+      this.ctx.stroke()
+    }
+
+    for (let y = 0; y < this.canvas.height; y += gridSize) {
+      this.ctx.beginPath()
+      this.ctx.moveTo(0, y)
+      this.ctx.lineTo(this.canvas.width, y)
+      this.ctx.stroke()
+    }
+  }
+
+  drawShapes() {
+    if (!this.shapes || this.shapes.length === 0) return
+
+    this.shapes.forEach(shape => {
+      switch (shape.type) {
+        case "rectangle":
+          this.drawRectangle(shape)
+          break
+        case "circle":
+          this.drawCircle(shape)
+          break
+        case "line":
+          this.drawLine(shape)
+          break
+      }
+    })
+  }
+
+  drawRectangle(shape) {
+    this.ctx.strokeStyle = shape.color || "#ef4444"
+    this.ctx.lineWidth = shape.lineWidth || 2
+    this.ctx.strokeRect(shape.x, shape.y, shape.width, shape.height)
+  }
+
+  drawCircle(shape) {
+    this.ctx.strokeStyle = shape.color || "#ef4444"
+    this.ctx.lineWidth = shape.lineWidth || 2
+    this.ctx.beginPath()
+    this.ctx.arc(shape.x + shape.radius / 2, shape.y + shape.radius / 2, shape.radius, 0, Math.PI * 2)
+    this.ctx.stroke()
+  }
+
+  drawLine(shape) {
+    this.ctx.strokeStyle = shape.color || "#ef4444"
+    this.ctx.lineWidth = shape.lineWidth || 2
+    this.ctx.beginPath()
+    this.ctx.moveTo(shape.x1, shape.y1)
+    this.ctx.lineTo(shape.x2, shape.y2)
+    this.ctx.stroke()
+  }
+
+  drawSeats() {
     if (!this.seats || this.seats.length === 0) return
 
     const padding = 40
@@ -124,7 +194,7 @@ export default class extends Controller {
     this.canvas.style.cursor = seat ? "grab" : "default"
 
     if (this.draggingSeat) {
-      this.drawSeats()
+      this.draw()
     }
   }
 
@@ -134,7 +204,15 @@ export default class extends Controller {
       const mouseX = e.clientX - rect.left
       const mouseY = e.clientY - rect.top
 
-      this.updateSeatPosition(this.draggingSeat, mouseX, mouseY)
+      let finalX = mouseX
+      let finalY = mouseY
+
+      if (this.snapToGridValue) {
+        finalX = Math.round(mouseX / this.gridSizeValue) * this.gridSizeValue
+        finalY = Math.round(mouseY / this.gridSizeValue) * this.gridSizeValue
+      }
+
+      this.updateSeatPosition(this.draggingSeat, finalX, finalY)
       this.draggingSeat = null
       this.canvas.style.cursor = "default"
     }
@@ -176,5 +254,26 @@ export default class extends Controller {
         this.loadCanvasData()
       })
       .catch(error => console.error("Position update failed:", error))
+  }
+
+  // 図形描画メソッド（外部から呼び出し可能）
+  addRectangle(x, y, width, height, color = "#ef4444", lineWidth = 2) {
+    this.shapes.push({ type: "rectangle", x, y, width, height, color, lineWidth })
+    this.draw()
+  }
+
+  addCircle(x, y, radius, color = "#ef4444", lineWidth = 2) {
+    this.shapes.push({ type: "circle", x, y, radius, color, lineWidth })
+    this.draw()
+  }
+
+  addLine(x1, y1, x2, y2, color = "#ef4444", lineWidth = 2) {
+    this.shapes.push({ type: "line", x1, y1, x2, y2, color, lineWidth })
+    this.draw()
+  }
+
+  clearShapes() {
+    this.shapes = []
+    this.draw()
   }
 }
