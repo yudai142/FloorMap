@@ -9,6 +9,9 @@ class Session < ApplicationRecord
 
   enum :status, { active: "active", completed: "completed", expired: "expired" }
 
+  after_create_commit { broadcast_seat_updated }
+  after_update_commit { broadcast_seat_updated }
+
   scope :active, -> { where(status: :active) }
   scope :completed, -> { where(status: :completed) }
   scope :expired, -> { where(status: :expired) }
@@ -21,5 +24,14 @@ class Session < ApplicationRecord
 
   def check_out!
     update(check_out_time: Time.current, status: :completed)
+  end
+
+  private
+
+  def broadcast_seat_updated
+    RoomsChannel.broadcast_to(seat.room, {
+      type: "seat_updated",
+      seat: seat.canvas_data
+    })
   end
 end
