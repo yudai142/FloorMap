@@ -64,7 +64,7 @@ class SeatsController < ApplicationController
 
     updated_seats = seats.map do |seat|
       position = batch_position_params[seat.id.to_s]
-      seat.update(position_x: position['x'], position_y: position['y'])
+      seat.update(position_x: position["x"], position_y: position["y"])
       seat
     end
 
