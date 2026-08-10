@@ -27,6 +27,6 @@ class RoomPermissionsController < ApplicationController
   end
 
   def room_permission_params
-    params.require(:room_permission).permit(:user_id, :permission_type)
+    params.require(:room_permission).permit(:user_id, :user_email, :permission_type)
   end
 end
