@@ -10,9 +10,22 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_10_110217) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_10_110218) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "notifications", force: :cascade do |t|
+    t.text "body"
+    t.datetime "created_at", null: false
+    t.string "notification_type"
+    t.datetime "read_at"
+    t.bigint "room_id", null: false
+    t.text "title"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["room_id"], name: "index_notifications_on_room_id"
+    t.index ["user_id"], name: "index_notifications_on_user_id"
+  end
 
   create_table "room_permissions", force: :cascade do |t|
     t.integer "permission_type", null: false
@@ -74,6 +87,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_10_110217) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "notifications", "rooms"
+  add_foreign_key "notifications", "users"
   add_foreign_key "room_permissions", "rooms"
   add_foreign_key "room_permissions", "users"
   add_foreign_key "rooms", "users"

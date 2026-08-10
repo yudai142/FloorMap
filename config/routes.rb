@@ -1,6 +1,12 @@
 Rails.application.routes.draw do
   devise_for :users
 
+  resources :notifications, only: :index do
+    collection do
+      patch :mark_all_as_read
+    end
+  end
+
   get "up" => "rails/health#show", as: :rails_health_check
 
   get "/" => "pages#home", as: :root
