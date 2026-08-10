@@ -4,4 +4,41 @@ class Room < ApplicationRecord
   has_many :seats, dependent: :destroy
 
   validates :name, presence: true
+
+  scope :search, ->(query) {
+    return all if query.blank?
+
+    where("LOWER(name) LIKE :query OR LOWER(description) LIKE :query",
+          query: "%#{query.downcase}%")
+  }
+
+  scope :by_owner, ->(user_id) { where(user_id: user_id) }
+
+  scope :accessible_by, ->(user) {
+    if user.admin?
+      all
+    else
+      joins("LEFT JOIN room_permissions ON room_permissions.room_id = rooms.id")
+        .where("rooms.user_id = ? OR room_permissions.user_id = ?", user.id, user.id)
+        .distinct
+    end
+  }
+
+  scope :sorted, ->(column, direction) {
+    if column.blank? || direction.blank?
+      order(created_at: :desc)
+    else
+      col = [ "name", "created_at" ].include?(column.to_s) ? column : "created_at"
+      dir = [ "desc", "asc" ].include?(direction.to_s) ? direction.to_sym : :desc
+      order(col => dir)
+    end
+  }
+
+  def seat_count
+    seats.count
+  end
+
+  def occupied_seat_count
+    Session.where(seat_id: seats.ids, status: :active).select(:seat_id).distinct.count
+  end
 end

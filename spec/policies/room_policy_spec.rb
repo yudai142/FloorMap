@@ -64,4 +64,55 @@ RSpec.describe RoomPolicy, type: :policy do
       expect(policy.destroy?).to be false
     end
   end
+
+  describe '#index?' do
+    it 'allows any authenticated user' do
+      policy = RoomPolicy.new(regular_user, room)
+      expect(policy.index?).to be true
+    end
+
+    it 'allows admin user' do
+      policy = RoomPolicy.new(admin_user, room)
+      expect(policy.index?).to be true
+    end
+
+    it 'allows manager user' do
+      policy = RoomPolicy.new(manager, room)
+      expect(policy.index?).to be true
+    end
+  end
+
+  describe '.scope' do
+    let(:policy_scope) { RoomPolicy::Scope.new(regular_user, Room.all) }
+
+    before do
+      create(:room, name: 'Regular User Room', user: regular_user)
+      create(:room, name: 'Manager Room', user: manager)
+      create(:room_permission, room: room, user: regular_user)
+    end
+
+    it 'returns rooms owned by user' do
+      scoped = policy_scope.resolve
+      expect(scoped).to include(Room.find_by(name: 'Regular User Room'))
+    end
+
+    it 'returns rooms shared with user' do
+      scoped = policy_scope.resolve
+      expect(scoped).to include(room)
+    end
+
+    it 'does not return rooms with no access' do
+      scoped = policy_scope.resolve
+      expect(scoped).not_to include(Room.find_by(name: 'Manager Room'))
+    end
+
+    context 'for admin user' do
+      let(:admin_policy_scope) { RoomPolicy::Scope.new(admin_user, Room.all) }
+
+      it 'returns all rooms' do
+        scoped = admin_policy_scope.resolve
+        expect(scoped.count).to eq(Room.count)
+      end
+    end
+  end
 end
