@@ -1,0 +1,197 @@
+<style>
+  .current-session {
+    background-color: #f8fafc;
+    min-height: 100vh;
+    padding: 32px 64px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .btn-back {
+    position: absolute;
+    top: 32px;
+    left: 64px;
+    display: inline-block;
+    padding: 8px 16px;
+    background-color: #f1f5f9;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .btn-back:hover {
+    background-color: #e2e8f0;
+  }
+  .session-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 24px;
+    padding: 40px;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.04);
+  }
+  .session-card h1 {
+    font-size: 24px;
+    font-weight: bold;
+    color: #0f172a;
+    margin: 0 0 8px 0;
+  }
+  .session-card .subtitle {
+    font-size: 14px;
+    color: #475569;
+    margin: 0 0 32px 0;
+  }
+  .session-info-group {
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .session-info-group:last-of-type {
+    border-bottom: none;
+  }
+  .session-info-label {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+  .session-info-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: #0f172a;
+  }
+  .session-seat {
+    color: #3b82f6;
+  }
+  .session-duration-display {
+    font-size: 32px;
+    font-weight: bold;
+    color: #3b82f6;
+  }
+  .session-time {
+    font-size: 14px;
+    color: #475569;
+  }
+  .session-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 32px;
+  }
+  .btn {
+    flex: 1;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-checkout {
+    background-color: #ef4444;
+    color: white;
+  }
+  .btn-checkout:hover {
+    background-color: #dc2626;
+  }
+  .btn-history {
+    background-color: #f1f5f9;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+  }
+  .btn-history:hover {
+    background-color: #e2e8f0;
+  }
+  .empty-state {
+    text-align: center;
+    padding: 40px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 24px;
+    max-width: 500px;
+  }
+  .empty-state h2 {
+    font-size: 20px;
+    font-weight: bold;
+    color: #0f172a;
+    margin: 0 0 8px 0;
+  }
+  .empty-state p {
+    font-size: 14px;
+    color: #475569;
+    margin: 8px 0 24px 0;
+  }
+  .empty-state a {
+    display: inline-block;
+    padding: 10px 24px;
+    background-color: #3b82f6;
+    color: white;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .empty-state a:hover {
+    background-color: #2563eb;
+  }
+</style>
+
+<%= link_to "← 戻る", root_path, class: "btn-back" %>
+
+<div class="current-session">
+  <% if @session.present? %>
+    <div class="session-card">
+      <h1>進行中のセッション</h1>
+      <p class="subtitle">現在、座席を利用中です</p>
+
+      <div class="session-info-group">
+        <div class="session-info-label">座席</div>
+        <div class="session-info-value">
+          <span class="session-seat"><%= @session.seat.seat_identifier %></span>
+          <div class="session-time"><%= @session.seat.room.name %></div>
+        </div>
+      </div>
+
+      <div class="session-info-group">
+        <div class="session-info-label">チェックイン時刻</div>
+        <div class="session-info-value session-time">
+          <%= @session.check_in_time.strftime("%Y年%m月%d日 %H:%M:%S") %>
+        </div>
+      </div>
+
+      <div class="session-info-group">
+        <div class="session-info-label">滞在時間</div>
+        <div class="session-duration-display">
+          <% elapsed = (Time.current - @session.check_in_time).to_i %>
+          <% hours = elapsed / 3600 %>
+          <% minutes = (elapsed % 3600) / 60 %>
+          <% if hours > 0 %>
+            <%= "#{hours}h#{minutes}m" %>
+          <% else %>
+            <%= "#{minutes}m" %>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="session-actions">
+        <%= button_to "チェックアウト", session_path(@session), method: :delete, class: "btn btn-checkout" %>
+        <%= link_to "履歴を見る", sessions_history_path, class: "btn btn-history" %>
+      </div>
+    </div>
+  <% else %>
+    <div class="empty-state">
+      <h2>現在のセッションなし</h2>
+      <p>座席にチェックインしていません</p>
+      <%= link_to "座席を選んでチェックイン", root_path %>
+    </div>
+  <% end %>
+</div>
