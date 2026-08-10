@@ -51,7 +51,7 @@ class RoomsController < ApplicationController
   end
 
   def canvas_data
-    authorize @room
+    authorize @room, :show?
 
     seats_with_sessions = @room.seats.map do |seat|
       session = Session.where(seat_id: seat.id, status: :active).last
@@ -67,7 +67,7 @@ class RoomsController < ApplicationController
   private
 
   def set_room
-    @room = Room.find(params[:id])
+    @room = Room.find(params[:id] || params[:room_id])
   end
 
   def room_params
