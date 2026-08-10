@@ -64,12 +64,11 @@ RSpec.describe RoomPermissionsController, type: :controller do
       before { sign_in other_user }
 
       it "denies non-room owner from creating permissions" do
-        expect do
-          post :create, params: {
-            room_id: room.id,
-            room_permission: { user_id: other_user.id, permission_type: :edit }
-          }
-        end.to raise_error(Pundit::NotAuthorizedError)
+        post :create, params: {
+          room_id: room.id,
+          room_permission: { user_id: other_user.id, permission_type: :edit }
+        }
+        expect(response).to redirect_to(root_path)
       end
     end
 
@@ -115,10 +114,8 @@ RSpec.describe RoomPermissionsController, type: :controller do
       before { sign_in other_user }
 
       it "denies non-room owner from destroying permissions" do
-        room_permission
-        expect do
-          delete :destroy, params: { id: room_permission.id }
-        end.to raise_error(Pundit::NotAuthorizedError)
+        delete :destroy, params: { id: room_permission.id }
+        expect(response).to redirect_to(root_path)
       end
     end
 

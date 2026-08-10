@@ -6,7 +6,7 @@ Rails.application.routes.draw do
   get "/" => "pages#home", as: :root
 
   resources :rooms do
-    resources :room_permissions, only: [:create, :destroy]
+    resources :room_permissions, only: [ :create, :destroy ]
   end
 
   resources :room_permissions, only: :destroy

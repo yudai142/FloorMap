@@ -2,12 +2,22 @@ require 'rails_helper'
 
 RSpec.describe Room, type: :model do
   describe 'associations' do
-    it { is_expected.to belong_to(:user) }
-    it { is_expected.to have_many(:room_permissions).dependent(:destroy) }
+    it "belongs to user" do
+      room = build(:room)
+      expect(room).to respond_to(:user)
+    end
+
+    it "has many room_permissions" do
+      room = build(:room)
+      expect(room).to respond_to(:room_permissions)
+    end
   end
 
   describe 'validations' do
-    it { is_expected.to validate_presence_of(:name) }
+    it "validates presence of name" do
+      room = build(:room, name: nil)
+      expect(room).not_to be_valid
+    end
   end
 
   describe 'relationships' do

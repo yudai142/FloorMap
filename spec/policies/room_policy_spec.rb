@@ -6,66 +6,62 @@ RSpec.describe RoomPolicy, type: :policy do
   let(:regular_user) { create(:user, :user) }
   let(:room) { create(:room, user: manager) }
 
-  subject { RoomPolicy.new(user, room) }
-
   describe '#show?' do
-    context 'when user is the owner' do
-      let(:user) { manager }
-      it { is_expected.to permit(:show) }
+    it 'allows owner to view room' do
+      policy = RoomPolicy.new(manager, room)
+      expect(policy.show?).to be true
     end
 
-    context 'when user has permission in the room' do
-      let(:user) { regular_user }
-
-      before { create(:room_permission, room: room, user: user) }
-
-      it { is_expected.to permit(:show) }
+    it 'allows user with permission to view room' do
+      create(:room_permission, room: room, user: regular_user)
+      policy = RoomPolicy.new(regular_user, room)
+      expect(policy.show?).to be true
     end
 
-    context 'when user has no permission' do
-      let(:user) { regular_user }
-      it { is_expected.not_to permit(:show) }
+    it 'denies user without permission' do
+      policy = RoomPolicy.new(regular_user, room)
+      expect(policy.show?).to be false
     end
   end
 
   describe '#create?' do
-    context 'when user is a manager' do
-      let(:user) { manager }
-      it { is_expected.to permit(:create) }
+    it 'allows manager to create room' do
+      policy = RoomPolicy.new(manager, room)
+      expect(policy.create?).to be true
     end
 
-    context 'when user is an admin' do
-      let(:user) { admin_user }
-      it { is_expected.to permit(:create) }
+    it 'allows admin to create room' do
+      policy = RoomPolicy.new(admin_user, room)
+      expect(policy.create?).to be true
     end
 
-    context 'when user is a regular user' do
-      let(:user) { regular_user }
-      it { is_expected.not_to permit(:create) }
+    it 'denies regular user from creating room' do
+      policy = RoomPolicy.new(regular_user, room)
+      expect(policy.create?).to be false
     end
   end
 
   describe '#update?' do
-    context 'when user is the owner' do
-      let(:user) { manager }
-      it { is_expected.to permit(:update) }
+    it 'allows owner to update room' do
+      policy = RoomPolicy.new(manager, room)
+      expect(policy.update?).to be true
     end
 
-    context 'when user is not the owner' do
-      let(:user) { regular_user }
-      it { is_expected.not_to permit(:update) }
+    it 'denies non-owner from updating room' do
+      policy = RoomPolicy.new(regular_user, room)
+      expect(policy.update?).to be false
     end
   end
 
   describe '#destroy?' do
-    context 'when user is the owner' do
-      let(:user) { manager }
-      it { is_expected.to permit(:destroy) }
+    it 'allows owner to destroy room' do
+      policy = RoomPolicy.new(manager, room)
+      expect(policy.destroy?).to be true
     end
 
-    context 'when user is not the owner' do
-      let(:user) { regular_user }
-      it { is_expected.not_to permit(:destroy) }
+    it 'denies non-owner from destroying room' do
+      policy = RoomPolicy.new(regular_user, room)
+      expect(policy.destroy?).to be false
     end
   end
 end

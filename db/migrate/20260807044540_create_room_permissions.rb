@@ -6,6 +6,6 @@ class CreateRoomPermissions < ActiveRecord::Migration[8.1]
       t.integer :permission_type, null: false
     end
 
-    add_index :room_permissions, [:user_id, :room_id], unique: true
+    add_index :room_permissions, [ :user_id, :room_id ], unique: true
   end
 end

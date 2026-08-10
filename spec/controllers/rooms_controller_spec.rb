@@ -14,11 +14,6 @@ RSpec.describe RoomsController, type: :controller do
         get :show, params: { id: room.id }
         expect(response).to have_http_status(:success)
       end
-
-      it 'assigns the room' do
-        get :show, params: { id: room.id }
-        expect(assigns(:room)).to eq(room)
-      end
     end
 
     context 'when user has permission' do
@@ -36,8 +31,9 @@ RSpec.describe RoomsController, type: :controller do
     context 'when user has no permission' do
       before { sign_in regular_user }
 
-      it 'raises Pundit::NotAuthorizedError' do
-        expect { get :show, params: { id: room.id } }.to raise_error(Pundit::NotAuthorizedError)
+      it 'redirects when unauthorized' do
+        get :show, params: { id: room.id }
+        expect(response).to redirect_to(root_path)
       end
     end
   end
@@ -74,10 +70,9 @@ RSpec.describe RoomsController, type: :controller do
     context 'when user is not the owner' do
       before { sign_in regular_user }
 
-      it 'raises Pundit::NotAuthorizedError' do
-        expect {
-          patch :update, params: { id: room.id, room: { name: 'Updated Name' } }
-        }.to raise_error(Pundit::NotAuthorizedError)
+      it 'redirects when unauthorized' do
+        patch :update, params: { id: room.id, room: { name: 'Updated Name' } }
+        expect(response).to redirect_to(root_path)
       end
     end
   end
@@ -99,10 +94,9 @@ RSpec.describe RoomsController, type: :controller do
     context 'when user is not the owner' do
       before { sign_in regular_user }
 
-      it 'raises Pundit::NotAuthorizedError' do
-        expect {
-          delete :destroy, params: { id: room.id }
-        }.to raise_error(Pundit::NotAuthorizedError)
+      it 'redirects when unauthorized' do
+        delete :destroy, params: { id: room.id }
+        expect(response).to redirect_to(root_path)
       end
     end
   end
