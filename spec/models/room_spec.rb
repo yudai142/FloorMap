@@ -170,5 +170,45 @@ RSpec.describe Room, type: :model do
         expect(room.occupied_seat_count).to eq(0)
       end
     end
+
+    describe '#seat_grid' do
+      it 'returns seats organized by row' do
+        create(:seat, room: room, row_number: 0, column_number: 1)
+        create(:seat, room: room, row_number: 0, column_number: 2)
+        create(:seat, room: room, row_number: 1, column_number: 1)
+
+        grid = room.seats.group_by(&:row_number)
+        expect(grid.keys).to include(0, 1)
+        expect(grid[0].count).to eq(2)
+      end
+
+      it 'sorts seats by column in each row' do
+        create(:seat, room: room, row_number: 0, column_number: 2)
+        create(:seat, room: room, row_number: 0, column_number: 1)
+
+        seats_in_row = room.seats.where(row_number: 0).order(:column_number)
+        expect(seats_in_row.first.column_number).to eq(1)
+        expect(seats_in_row.last.column_number).to eq(2)
+      end
+    end
+
+    describe '#seats_by_type' do
+      it 'groups seats by type' do
+        create(:seat, room: room, seat_type: 'regular')
+        create(:seat, room: room, seat_type: 'accessible')
+        create(:seat, room: room, seat_type: 'vip')
+
+        seats_by_type = room.seats.group_by(&:seat_type)
+        expect(seats_by_type.keys).to include('regular', 'accessible', 'vip')
+      end
+
+      it 'counts each seat type' do
+        create_list(:seat, 2, room: room, seat_type: 'regular')
+        create(:seat, room: room, seat_type: 'accessible')
+
+        regular_count = room.seats.where(seat_type: 'regular').count
+        expect(regular_count).to eq(2)
+      end
+    end
   end
 end
