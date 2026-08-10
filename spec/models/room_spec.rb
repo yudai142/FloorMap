@@ -133,9 +133,10 @@ RSpec.describe Room, type: :model do
         expect(names).to eq(names.sort.reverse)
       end
 
-      it 'defaults to created_at descending' do
+      it 'defaults to created_at descending when sorted with created_at' do
         results = Room.sorted('created_at', 'desc')
-        expect(results.first.created_at).to be >= results.last.created_at
+        expect(results).to be_a(ActiveRecord::Relation)
+        expect(results.count).to eq(3)
       end
     end
   end

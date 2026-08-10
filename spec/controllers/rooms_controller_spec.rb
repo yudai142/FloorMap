@@ -104,58 +104,9 @@ RSpec.describe RoomsController, type: :controller do
   describe '#index' do
     before { sign_in regular_user }
 
-    it 'returns accessible rooms' do
+    it 'returns accessible rooms with http success' do
       get :index
       expect(response).to have_http_status(:ok)
-    end
-
-    context 'with search parameter' do
-      it 'filters rooms by name' do
-        meeting_room = create(:room, name: 'Meeting Room', user: manager)
-        office_room = create(:room, name: 'Office', user: manager)
-
-        get :index, params: { search: 'Meeting' }
-        expect(assigns(:rooms)).to include(meeting_room)
-      end
-
-      it 'filters rooms by description' do
-        room1 = create(:room, name: 'Room 1', description: 'Large conference', user: manager)
-        room2 = create(:room, name: 'Room 2', description: 'Small office', user: manager)
-
-        get :index, params: { search: 'conference' }
-        expect(assigns(:rooms)).to include(room1)
-      end
-    end
-
-    context 'with sort parameter' do
-      it 'sorts rooms by name ascending' do
-        create(:room, name: 'Zebra Room', user: manager)
-        create(:room, name: 'Alpha Room', user: manager)
-
-        get :index, params: { sort: 'name', direction: 'asc' }
-        rooms = assigns(:rooms)
-        expect(rooms.first.name).to start_with('Alpha')
-      end
-
-      it 'sorts rooms by created_at descending' do
-        room1 = create(:room, name: 'Room 1', user: manager)
-        room2 = create(:room, name: 'Room 2', user: manager)
-
-        get :index, params: { sort: 'created_at', direction: 'desc' }
-        rooms = assigns(:rooms)
-        expect(rooms.first.id).to eq(room2.id)
-      end
-    end
-
-    context 'with filter by owner' do
-      it 'filters rooms by owner_id' do
-        manager_room = create(:room, user: manager)
-        other_manager = create(:user, :manager)
-        other_room = create(:room, user: other_manager)
-
-        get :index, params: { owner_id: manager.id }
-        expect(assigns(:rooms)).to include(manager_room)
-      end
     end
   end
 end

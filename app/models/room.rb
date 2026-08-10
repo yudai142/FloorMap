@@ -28,9 +28,9 @@ class Room < ApplicationRecord
     if column.blank? || direction.blank?
       order(created_at: :desc)
     else
-      column_safe = column.to_s.downcase == 'name' ? 'name' : 'created_at'
-      direction_safe = direction.to_s.downcase == 'desc' ? :desc : :asc
-      order(column_safe => direction_safe)
+      col = [ "name", "created_at" ].include?(column.to_s) ? column : "created_at"
+      dir = [ "desc", "asc" ].include?(direction.to_s) ? direction.to_sym : :desc
+      order(col => dir)
     end
   }
 
