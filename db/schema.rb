@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_10_100500) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_10_110216) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -41,6 +41,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_10_100500) do
     t.index ["room_id"], name: "index_seats_on_room_id"
   end
 
+  create_table "sessions", force: :cascade do |t|
+    t.datetime "check_in_time", null: false
+    t.datetime "check_out_time"
+    t.datetime "created_at", null: false
+    t.bigint "seat_id", null: false
+    t.string "status", default: "active", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["seat_id", "status"], name: "index_sessions_on_seat_id_and_status"
+    t.index ["seat_id"], name: "index_sessions_on_seat_id"
+    t.index ["status"], name: "index_sessions_on_status"
+    t.index ["user_id", "status"], name: "index_sessions_on_user_id_and_status"
+    t.index ["user_id"], name: "index_sessions_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.integer "consumed_timestep"
     t.datetime "created_at", null: false
@@ -61,4 +76,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_10_100500) do
   add_foreign_key "room_permissions", "users"
   add_foreign_key "rooms", "users"
   add_foreign_key "seats", "rooms"
+  add_foreign_key "sessions", "seats"
+  add_foreign_key "sessions", "users"
 end

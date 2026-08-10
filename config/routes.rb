@@ -11,4 +11,12 @@ Rails.application.routes.draw do
   end
 
   resources :room_permissions, only: :destroy
+  resources :sessions, only: [ :show ] do
+    collection do
+      post :check_in
+      delete :check_out
+      get :current_session
+      get :history
+    end
+  end
 end

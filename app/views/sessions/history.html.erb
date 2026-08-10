@@ -1,0 +1,183 @@
+<style>
+  .sessions-history {
+    background-color: #f8fafc;
+    min-height: 100vh;
+    padding: 32px 64px;
+  }
+  .sessions-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+  }
+  .sessions-header h1 {
+    font-size: 28px;
+    font-weight: bold;
+    color: #0f172a;
+    margin: 0;
+  }
+  .sessions-header .subtitle {
+    font-size: 14px;
+    color: #475569;
+    margin: 4px 0 0 0;
+  }
+  .sessions-table {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.02);
+  }
+  .sessions-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  .sessions-table thead {
+    background-color: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .sessions-table th {
+    padding: 16px 20px;
+    text-align: left;
+    font-weight: 600;
+    color: #475569;
+  }
+  .sessions-table td {
+    padding: 16px 20px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #0f172a;
+  }
+  .sessions-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+  .sessions-table tbody tr:hover {
+    background-color: #f8fafc;
+  }
+  .session-seat {
+    font-weight: 600;
+    color: #3b82f6;
+  }
+  .session-status {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .session-status.active {
+    background-color: #dcfce7;
+    color: #166534;
+  }
+  .session-status.completed {
+    background-color: #dbeafe;
+    color: #0c4a6e;
+  }
+  .session-status.expired {
+    background-color: #fee2e2;
+    color: #991b1b;
+  }
+  .session-duration {
+    font-weight: 500;
+    color: #0f172a;
+  }
+  .session-duration.long {
+    color: #dc2626;
+  }
+  .empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: #94a3b8;
+  }
+  .empty-state p {
+    font-size: 14px;
+    margin: 8px 0;
+  }
+  .btn-back {
+    display: inline-block;
+    padding: 8px 16px;
+    background-color: #f1f5f9;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    margin-bottom: 24px;
+  }
+  .btn-back:hover {
+    background-color: #e2e8f0;
+  }
+</style>
+
+<div class="sessions-history">
+  <%= link_to "← 戻る", root_path, class: "btn-back" %>
+
+  <div class="sessions-header">
+    <div>
+      <h1>セッション履歴</h1>
+      <p class="subtitle">あなたの座席利用履歴</p>
+    </div>
+  </div>
+
+  <% if @sessions.any? %>
+    <div class="sessions-table">
+      <table>
+        <thead>
+          <tr>
+            <th>座席</th>
+            <th>チェックイン時刻</th>
+            <th>チェックアウト時刻</th>
+            <th>滞在時間</th>
+            <th>ステータス</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @sessions.each do |session| %>
+            <tr>
+              <td>
+                <span class="session-seat">
+                  <%= link_to session.seat.seat_identifier, room_seat_path(session.seat.room, session.seat) %>
+                  <small style="color: #94a3b8;">(<%= session.seat.room.name %>)</small>
+                </span>
+              </td>
+              <td><%= session.check_in_time.strftime("%Y年%m月%d日 %H:%M") %></td>
+              <td>
+                <% if session.check_out_time %>
+                  <%= session.check_out_time.strftime("%Y年%m月%d日 %H:%M") %>
+                <% else %>
+                  <span style="color: #94a3b8;">-</span>
+                <% end %>
+              </td>
+              <td>
+                <span class="session-duration <%= 'long' if session.duration && session.duration > 14400 %>">
+                  <% if session.duration %>
+                    <% hours = session.duration / 3600 %>
+                    <% minutes = (session.duration % 3600) / 60 %>
+                    <%= "#{hours}時間#{minutes}分" %>
+                  <% else %>
+                    <span style="color: #94a3b8;">-</span>
+                  <% end %>
+                </span>
+              </td>
+              <td>
+                <span class="session-status <%= session.status %>">
+                  <% if session.status == "active" %>
+                    進行中
+                  <% elsif session.status == "completed" %>
+                    完了
+                  <% else %>
+                    期限切れ
+                  <% end %>
+                </span>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="empty-state">
+      <p>セッション履歴はありません</p>
+    </div>
+  <% end %>
+</div>
