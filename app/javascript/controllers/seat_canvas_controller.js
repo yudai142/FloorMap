@@ -10,7 +10,7 @@ export default class extends Controller {
   connect() {
     this.canvas = this.canvasTarget
     this.ctx = this.canvas.getContext("2d")
-    this.draggingseat = null
+    this.draggingSeat = null
     this.dragOffset = { x: 0, y: 0 }
 
     this.canvas.width = this.canvas.offsetWidth
@@ -69,7 +69,7 @@ export default class extends Controller {
 
   drawSeat(x, y, width, height, seat) {
     const isOccupied = seat.session !== null
-    const isHovered = this.draggingseat?.id === seat.id
+    const isHovered = this.draggingSeat?.id === seat.id
 
     this.ctx.strokeStyle = isOccupied ? "#3b82f6" : "#10b981"
     this.ctx.fillStyle = isOccupied ? "rgba(59, 130, 246, 0.2)" : "rgba(16, 185, 129, 0.1)"
@@ -106,7 +106,7 @@ export default class extends Controller {
 
     const seat = this.getSeatAtPoint(mouseX, mouseY)
     if (seat) {
-      this.draggingSet = seat
+      this.draggingSeat = seat
       this.dragOffset = {
         x: mouseX - seat._screenPos.x,
         y: mouseY - seat._screenPos.y
@@ -123,25 +123,25 @@ export default class extends Controller {
     const seat = this.getSeatAtPoint(mouseX, mouseY)
     this.canvas.style.cursor = seat ? "grab" : "default"
 
-    if (this.draggingSet) {
+    if (this.draggingSeat) {
       this.drawSeats()
     }
   }
 
   handleMouseUp(e) {
-    if (this.draggingSet) {
+    if (this.draggingSeat) {
       const rect = this.canvas.getBoundingClientRect()
       const mouseX = e.clientX - rect.left
       const mouseY = e.clientY - rect.top
 
-      this.updateSeatPosition(this.draggingSet, mouseX, mouseY)
-      this.draggingSet = null
+      this.updateSeatPosition(this.draggingSeat, mouseX, mouseY)
+      this.draggingSeat = null
       this.canvas.style.cursor = "default"
     }
   }
 
   handleMouseLeave(e) {
-    this.draggingSet = null
+    this.draggingSeat = null
     this.canvas.style.cursor = "default"
   }
 
