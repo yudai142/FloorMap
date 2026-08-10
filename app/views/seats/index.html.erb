@@ -96,11 +96,26 @@
     align-items: center;
     border-top: 1px solid #e2e8f0;
   }
+  .seat-status {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .seat-status.available {
+    background-color: #dcfce7;
+    color: #166534;
+  }
+  .seat-status.occupied {
+    background-color: #fee2e2;
+    color: #991b1b;
+  }
   .seat-actions {
     display: flex;
     gap: 8px;
   }
-  .seat-actions a {
+  .seat-actions a, .seat-actions button {
     padding: 8px 12px;
     border-radius: 6px;
     font-size: 13px;
@@ -108,8 +123,9 @@
     color: #334155;
     border: 1px solid #e2e8f0;
     background: white;
+    cursor: pointer;
   }
-  .seat-actions a:hover {
+  .seat-actions a:hover, .seat-actions button:hover {
     background-color: #f8fafc;
   }
   .seat-actions a.delete {
@@ -118,6 +134,20 @@
   }
   .seat-actions a.delete:hover {
     background-color: #fef2f2;
+  }
+  .seat-actions button.checkin {
+    background-color: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
+    padding: 8px 16px;
+  }
+  .seat-actions button.checkin:hover {
+    background-color: #bbf7d0;
+  }
+  .seat-status-info {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 4px;
   }
   .empty-state {
     text-align: center;
@@ -142,6 +172,7 @@
   <% if @seats.any? %>
     <div class="seats-grid">
       <% @seats.each do |seat| %>
+        <% current_session = seat.sessions.where(status: "active").last %>
         <div class="seat-card">
           <div class="seat-card-header">
             <div class="seat-card-title">
@@ -152,11 +183,33 @@
               <span>位置: </span>
               <span class="seat-row-value">行 <%= seat.row_number + 1 %>, 列 <%= seat.column_number %></span>
             </div>
+            <% if current_session.present? %>
+              <div style="margin-top: 12px;">
+                <span class="seat-status occupied">使用中</span>
+                <div class="seat-status-info"><%= current_session.user.email %></div>
+              </div>
+            <% else %>
+              <div style="margin-top: 12px;">
+                <span class="seat-status available">利用可能</span>
+              </div>
+            <% end %>
           </div>
           <div class="seat-card-footer">
             <div class="seat-actions">
-              <%= link_to "編集", edit_room_seat_path(@room, seat), class: "edit" %>
-              <%= link_to "削除", room_seat_path(@room, seat), method: :delete, data: { confirm: "本当に削除しますか？" }, class: "delete" %>
+              <% if current_session.present? && user_signed_in? && (current_user.id == current_session.user_id || current_user.admin?) %>
+                <%= button_to "チェックアウト", session_path(current_session), method: :delete, class: "checkin" %>
+              <% elsif !current_session.present? && user_signed_in? %>
+                <form action="<%= sessions_check_in_path %>" method="post" style="flex: 1;">
+                  <input type="hidden" name="seat_id" value="<%= seat.id %>">
+                  <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+                  <button type="submit" class="checkin">チェックイン</button>
+                </form>
+              <% end %>
+              <%= link_to "詳細", room_seat_path(@room, seat), class: "edit" %>
+              <% if user_signed_in? && current_user.admin? %>
+                <%= link_to "編集", edit_room_seat_path(@room, seat), class: "edit" %>
+                <%= link_to "削除", room_seat_path(@room, seat), method: :delete, data: { confirm: "本当に削除しますか？" }, class: "delete" %>
+              <% end %>
             </div>
           </div>
         </div>
