@@ -110,8 +110,8 @@ RSpec.describe Session, type: :model do
 
     before do
       create(:session, user:, seat:, status: :active)
-      create(:session, user:, seat:, :checked_out)
-      create(:session, user:, seat:, :expired)
+      create(:session, :checked_out, user:, seat:)
+      create(:session, :expired, user:, seat:)
     end
 
     it "filters active sessions" do
