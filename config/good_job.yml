@@ -1,0 +1,10 @@
+---
+queues:
+  - name: default
+    max_threads: 2
+
+cron:
+  check_daily_auto_checkout:
+    class: CheckDailyAutoCheckoutJob
+    cron: '59 23 * * *'
+    timezone: Asia/Tokyo

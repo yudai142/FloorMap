@@ -1,0 +1,69 @@
+<div class="max-w-4xl mx-auto px-6 py-8">
+  <div class="mb-8">
+    <div class="flex items-center gap-4 mb-4">
+      <%= link_to '← 戻る', admin_job_logs_path, class: "text-blue-600 hover:text-blue-800" %>
+    </div>
+    <h1 class="text-3xl font-bold text-slate-900 mb-2">ジョブ実行ログ詳細</h1>
+  </div>
+
+  <div class="bg-white rounded-lg shadow-sm p-8 space-y-6">
+    <!-- 基本情報 -->
+    <div>
+      <h2 class="text-xl font-bold text-slate-900 mb-4">基本情報</h2>
+      <div class="grid grid-cols-2 gap-6">
+        <div>
+          <p class="text-sm text-gray-600">ジョブ名</p>
+          <p class="text-lg font-semibold text-gray-900"><%= @job_log.job_type %></p>
+        </div>
+
+        <div>
+          <p class="text-sm text-gray-600">ステータス</p>
+          <div class="mt-1">
+            <% if @job_log.success? %>
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">成功</span>
+            <% elsif @job_log.failure? %>
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">失敗</span>
+            <% elsif @job_log.error? %>
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">エラー</span>
+            <% end %>
+          </div>
+        </div>
+
+        <div>
+          <p class="text-sm text-gray-600">開始時刻</p>
+          <p class="text-lg font-semibold text-gray-900"><%= @job_log.started_at&.strftime('%Y年%m月%d日 %H:%M:%S') %></p>
+        </div>
+
+        <div>
+          <p class="text-sm text-gray-600">終了時刻</p>
+          <p class="text-lg font-semibold text-gray-900">
+            <% if @job_log.ended_at %>
+              <%= @job_log.ended_at.strftime('%Y年%m月%d日 %H:%M:%S') %>
+            <% else %>
+              実行中...
+            <% end %>
+          </p>
+        </div>
+
+        <div>
+          <p class="text-sm text-gray-600">実行時間</p>
+          <p class="text-lg font-semibold text-gray-900">
+            <% if @job_log.execution_time %>
+              <%= @job_log.execution_time %>秒
+            <% else %>
+              計測中...
+            <% end %>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- メタデータ -->
+    <div>
+      <h2 class="text-xl font-bold text-slate-900 mb-4">実行詳細</h2>
+      <div class="bg-gray-50 rounded-lg p-4">
+        <pre class="text-sm text-gray-800 font-mono overflow-auto"><%= JSON.pretty_generate(@job_log.metadata || {}) %></pre>
+      </div>
+    </div>
+  </div>
+</div>

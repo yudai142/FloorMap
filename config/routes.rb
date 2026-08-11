@@ -33,4 +33,8 @@ Rails.application.routes.draw do
       get :history
     end
   end
+
+  namespace :admin do
+    resources :job_logs, only: [ :index, :show ]
+  end
 end

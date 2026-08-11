@@ -1,0 +1,77 @@
+<div class="max-w-6xl mx-auto px-6 py-8">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-slate-900 mb-2">ジョブ実行ログ</h1>
+    <p class="text-gray-600">バックグラウンドジョブの実行履歴と監視</p>
+  </div>
+
+  <!-- フィルタフォーム -->
+  <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+    <%= form_with url: admin_job_logs_path, method: :get, local: true, class: "flex gap-4 flex-wrap" do |f| %>
+      <div class="flex gap-2">
+        <%= f.select :job_type, ['CheckDailyAutoCheckoutJob'].map { |t| [t, t] }, { include_blank: 'すべてのジョブ' }, class: "px-3 py-2 border border-gray-300 rounded-md" %>
+      </div>
+
+      <div class="flex gap-2">
+        <%= f.select :status, [['成功', 'successful'], ['失敗', 'failed']], { include_blank: 'すべてのステータス' }, class: "px-3 py-2 border border-gray-300 rounded-md" %>
+      </div>
+
+      <div class="flex gap-2">
+        <%= f.submit 'フィルタ', class: "px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" %>
+        <%= link_to 'リセット', admin_job_logs_path, class: "px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300" %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- ログテーブル -->
+  <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+    <table class="w-full">
+      <thead class="bg-gray-50 border-b border-gray-200">
+        <tr>
+          <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900">ジョブ名</th>
+          <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900">ステータス</th>
+          <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900">実行時間</th>
+          <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900">実行日時</th>
+          <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900">詳細</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <% @job_logs.each do |log| %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 text-sm text-gray-900"><%= log.job_type %></td>
+            <td class="px-6 py-4 text-sm">
+              <% if log.success? %>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">成功</span>
+              <% elsif log.failure? %>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">失敗</span>
+              <% elsif log.error? %>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">エラー</span>
+              <% end %>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-600">
+              <% if log.execution_time %>
+                <%= log.execution_time %>秒
+              <% else %>
+                実行中...
+              <% end %>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-600"><%= log.started_at&.strftime('%Y年%m月%d日 %H:%M:%S') %></td>
+            <td class="px-6 py-4 text-sm">
+              <%= link_to '詳細', admin_job_log_path(log), class: "text-blue-600 hover:text-blue-800" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+
+    <% if @job_logs.empty? %>
+      <div class="text-center py-8 text-gray-500">
+        <p>ジョブログが見つかりません</p>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- ページネーション -->
+  <div class="mt-6 flex justify-center">
+    <%= paginate @job_logs %>
+  </div>
+</div>
