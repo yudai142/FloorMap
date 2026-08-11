@@ -1,11 +1,12 @@
 class Session < ApplicationRecord
-  belongs_to :user
+  belongs_to :user, optional: true
+  belongs_to :visitor, optional: true
   belongs_to :seat
 
-  validates :user_id, presence: true
   validates :seat_id, presence: true
   validates :check_in_time, presence: true
   validates :status, presence: true
+  validate :user_or_visitor_present
 
   enum :status, { active: "active", completed: "completed", expired: "expired" }
 
@@ -40,6 +41,8 @@ class Session < ApplicationRecord
   end
 
   def create_check_in_notification
+    return if user.nil?
+
     room = seat.room
     title = "<strong>#{user.email}</strong>さんが<strong>#{seat.seat_identifier}</strong>にチェックインしました。"
     body = "ユーザー #{user.email} が座席 #{seat.seat_identifier} にチェックインしました。"
@@ -48,6 +51,8 @@ class Session < ApplicationRecord
   end
 
   def create_check_out_notification
+    return if user.nil?
+
     room = seat.room
     title = "<strong>#{user.email}</strong>さんが<strong>#{seat.seat_identifier}</strong>からチェックアウトしました。"
     body = "ユーザー #{user.email} が座席 #{seat.seat_identifier} からチェックアウトしました。"

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_11_085407) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_11_140213) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -173,12 +173,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_085407) do
     t.bigint "seat_id", null: false
     t.string "status", default: "active", null: false
     t.datetime "updated_at", null: false
-    t.bigint "user_id", null: false
+    t.bigint "user_id"
+    t.bigint "visitor_id"
     t.index ["seat_id", "status"], name: "index_sessions_on_seat_id_and_status"
     t.index ["seat_id"], name: "index_sessions_on_seat_id"
     t.index ["status"], name: "index_sessions_on_status"
     t.index ["user_id", "status"], name: "index_sessions_on_user_id_and_status"
     t.index ["user_id"], name: "index_sessions_on_user_id"
+    t.index ["visitor_id"], name: "index_sessions_on_visitor_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -197,6 +199,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_085407) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  create_table "visitors", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "nickname", null: false
+    t.string "session_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_at"], name: "index_visitors_on_created_at"
+    t.index ["session_id"], name: "index_visitors_on_session_id", unique: true
+  end
+
   add_foreign_key "notifications", "rooms"
   add_foreign_key "notifications", "users"
   add_foreign_key "room_permissions", "rooms"
@@ -205,4 +216,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_085407) do
   add_foreign_key "seats", "rooms"
   add_foreign_key "sessions", "seats"
   add_foreign_key "sessions", "users"
+  add_foreign_key "sessions", "visitors"
 end

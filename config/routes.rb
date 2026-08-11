@@ -1,5 +1,5 @@
 Rails.application.routes.draw do
-  devise_for :users
+  devise_for :users, controllers: { sessions: "users/sessions" }
 
   resources :notifications, only: :index do
     collection do
@@ -36,5 +36,13 @@ Rails.application.routes.draw do
 
   namespace :admin do
     resources :job_logs, only: [ :index, :show ]
+  end
+
+  resources :visitors, only: [ :edit, :update ] do
+    collection do
+      get :check_in
+      post :check_in, action: :create_check_in
+      delete :check_out
+    end
   end
 end

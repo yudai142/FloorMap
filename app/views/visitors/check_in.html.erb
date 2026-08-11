@@ -1,0 +1,57 @@
+<div class="max-w-md mx-auto px-6 py-8">
+  <div class="bg-white rounded-lg shadow-md p-8">
+    <h1 class="text-2xl font-bold text-slate-900 mb-6 text-center">チェックイン</h1>
+
+    <% if @room %>
+      <div class="mb-6 p-4 bg-blue-50 rounded-lg">
+        <p class="text-sm text-gray-600">ルーム</p>
+        <p class="text-lg font-semibold text-gray-900"><%= @room.name %></p>
+      </div>
+    <% end %>
+
+    <% if @seat %>
+      <div class="mb-6 p-4 bg-green-50 rounded-lg">
+        <p class="text-sm text-gray-600">座席</p>
+        <p class="text-lg font-semibold text-gray-900"><%= @seat.seat_identifier %></p>
+        <p class="text-sm text-gray-600 mt-1">
+          <% case @seat.seat_type %>
+          <% when 'regular' %>
+            標準座席
+          <% when 'accessible' %>
+            アクセシブル座席
+          <% when 'vip' %>
+            VIP座席
+          <% end %>
+        </p>
+      </div>
+    <% end %>
+
+    <%= form_with url: visitors_check_in_path, method: :post, local: true do |f| %>
+      <%= f.hidden_field :seat_id, value: @seat&.id %>
+      <%= f.hidden_field :room_id, value: @room&.id %>
+
+      <div class="mb-6">
+        <label for="visitor_nickname" class="block text-sm font-medium text-gray-700 mb-2">
+          ニックネーム
+        </label>
+        <input type="text" id="visitor_nickname" name="visitor[nickname]"
+               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+               placeholder="お名前を入力してください"
+               required>
+        <p class="text-xs text-gray-500 mt-2">このニックネームでチェックインします</p>
+      </div>
+
+      <div class="flex gap-4">
+        <%= f.submit 'チェックイン', class: "flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium" %>
+        <%= link_to 'キャンセル', root_path, class: "flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium text-center" %>
+      </div>
+    <% end %>
+
+    <div class="mt-6 pt-6 border-t border-gray-200">
+      <p class="text-sm text-gray-600 text-center">
+        すでにアカウントをお持ちですか？
+        <%= link_to 'ログイン', new_user_session_path, class: "text-blue-600 hover:text-blue-800 font-medium" %>
+      </p>
+    </div>
+  </div>
+</div>

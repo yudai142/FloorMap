@@ -14,10 +14,25 @@ RSpec.describe Session, type: :model do
   end
 
   describe "validations" do
-    it "validates presence of user_id" do
-      session = build(:session, user_id: nil)
+    it "requires either user_id or visitor_id" do
+      seat = create(:seat)
+      session = build(:session, user_id: nil, visitor_id: nil, seat: seat)
       expect(session).not_to be_valid
-      expect(session.errors[:user_id]).to be_present
+      expect(session.errors[:base]).to be_present
+    end
+
+    it "allows session with user_id only" do
+      user = create(:user)
+      seat = create(:seat)
+      session = build(:session, user: user, visitor_id: nil, seat: seat)
+      expect(session).to be_valid
+    end
+
+    it "allows session with visitor_id only" do
+      visitor = create(:visitor)
+      seat = create(:seat)
+      session = build(:session, user_id: nil, visitor: visitor, seat: seat)
+      expect(session).to be_valid
     end
 
     it "validates presence of seat_id" do
