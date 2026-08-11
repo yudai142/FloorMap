@@ -37,7 +37,7 @@ RSpec.describe Session, type: :model do
 
     it 'includes active visitor session in canvas_data' do
       visitor = create(:visitor)
-      session = create(:session, visitor: visitor, seat: seat)
+      session = create(:session, visitor: visitor, user_id: nil, seat: seat)
 
       expect(seat.canvas_data[:session]).to include({
         id: session.id,

@@ -33,6 +33,12 @@ class Session < ApplicationRecord
 
   private
 
+  def user_or_visitor_present
+    if user_id.blank? && visitor_id.blank?
+      errors.add(:base, "User or Visitor must be present")
+    end
+  end
+
   def broadcast_seat_updated
     RoomsChannel.broadcast_to(seat.room, {
       type: "seat_updated",
