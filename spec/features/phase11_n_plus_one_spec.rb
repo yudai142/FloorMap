@@ -19,11 +19,11 @@ RSpec.describe 'N+1 Query Detection and Optimization', type: :request do
       end
 
       it 'Bullet is enabled' do
-        expect(Bullet.enable).to be_truthy
+        expect(Bullet.enable?).to be_truthy
       end
 
       it 'Bullet raises errors in test environment' do
-        expect(Bullet.raise).to be_truthy if Rails.env.test?
+        expect(Bullet.raise?).to be_truthy if Rails.env.test?
       end
     end
 
