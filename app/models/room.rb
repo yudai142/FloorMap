@@ -35,22 +35,30 @@ class Room < ApplicationRecord
   }
 
   def seat_count
-    seats.count
+    Rails.cache.fetch("room:#{id}:seat_count", expires_in: 1.hour) do
+      seats.count
+    end
   end
 
   def occupied_seat_count
-    Session.where(seat_id: seats.ids, status: :active).select(:seat_id).distinct.count
+    Rails.cache.fetch("room:#{id}:occupied_seat_count", expires_in: 30.minutes) do
+      Session.where(seat_id: seats.ids, status: :active).select(:seat_id).distinct.count
+    end
   end
 
   def occupancy_rate
     return 0 if seat_count.zero?
 
-    ((occupied_seat_count.to_f / seat_count) * 100).round
+    Rails.cache.fetch("room:#{id}:occupancy_rate", expires_in: 30.minutes) do
+      ((occupied_seat_count.to_f / seat_count) * 100).round
+    end
   end
 
   def seats_grouped_by_row
-    seats.order(:row_number, :column_number).group_by(&:row_number)
-  end
+    Rails.cache.fetch("room:#{id}:seats_grouped_by_row", expires_in: 1.hour) do
+      seats.order(:row_number, :column_number).group_by(&:row_number)
+    end
+end
 
   def seat_with_session(seat)
     session = Session.where(seat_id: seat.id, status: :active).last

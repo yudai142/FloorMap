@@ -13,6 +13,8 @@ class Session < ApplicationRecord
   after_update_commit { broadcast_seat_updated }
   after_create_commit { create_check_in_notification }
   after_update_commit :create_check_out_notification, if: :just_completed?
+  after_create_commit :clear_caches
+  after_update_commit :clear_caches
 
   scope :active, -> { where(status: :active) }
   scope :completed, -> { where(status: :completed) }
@@ -64,5 +66,13 @@ class Session < ApplicationRecord
 
   def just_completed?
     status_was == "active" && status == "completed"
+  end
+
+  private
+
+  def clear_caches
+    Rails.cache.delete("seat:#{seat_id}:canvas_data")
+    Rails.cache.delete("room:#{seat.room_id}:occupied_seat_count")
+    Rails.cache.delete("room:#{seat.room_id}:occupancy_rate")
   end
 end

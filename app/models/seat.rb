@@ -12,9 +12,23 @@ class Seat < ApplicationRecord
 
   enum :seat_type, { regular: "regular", accessible: "accessible", vip: "vip" }
 
+  after_update_commit :clear_caches
+  after_destroy_commit :clear_caches
+
+  def clear_caches
+    Rails.cache.delete("seat:#{id}:identifier")
+    Rails.cache.delete("seat:#{id}:canvas_data")
+    Rails.cache.delete("room:#{room_id}:seat_count")
+    Rails.cache.delete("room:#{room_id}:occupied_seat_count")
+    Rails.cache.delete("room:#{room_id}:occupancy_rate")
+    Rails.cache.delete("room:#{room_id}:seats_grouped_by_row")
+  end
+
   def seat_identifier
-    row_letter = (row_number + 65).chr
-    "#{row_letter}#{column_number}"
+    Rails.cache.fetch("seat:#{id}:identifier", expires_in: 1.hour) do
+      row_letter = (row_number + 65).chr
+      "#{row_letter}#{column_number}"
+    end
   end
 
   def move_to(x:, y:)
@@ -26,17 +40,19 @@ class Seat < ApplicationRecord
   end
 
   def canvas_data
-    active_session = sessions.active.last
-    {
-      id: id,
-      seat_identifier: seat_identifier,
-      position_x: position_x,
-      position_y: position_y,
-      row_number: row_number,
-      column_number: column_number,
-      seat_type: seat_type,
-      grid_position: grid_position,
-      session: active_session ? { id: active_session.id, user_id: active_session.user_id } : nil
-    }
+    Rails.cache.fetch("seat:#{id}:canvas_data", expires_in: 5.minutes) do
+      active_session = sessions.active.last
+      {
+        id: id,
+        seat_identifier: seat_identifier,
+        position_x: position_x,
+        position_y: position_y,
+        row_number: row_number,
+        column_number: column_number,
+        seat_type: seat_type,
+        grid_position: grid_position,
+        session: active_session ? { id: active_session.id, user_id: active_session.user_id } : nil
+      }
+    end
   end
 end

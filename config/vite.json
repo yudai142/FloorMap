@@ -1,0 +1,9 @@
+{
+  "autoBuild": true,
+  "publicOutputDir": "vite-dist",
+  "publicDir": "public",
+  "assetsDir": "app/assets",
+  "entrypoints": [],
+  "codegenDir": "app/components",
+  "aliasesToOptimize": []
+}
