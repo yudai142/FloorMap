@@ -17,7 +17,7 @@ class RoomExporter
   private
 
   def headers
-    ['ルーム名', '座席数', '占有座席数', '占有率']
+    ["ルーム名", "座席数", "占有座席数", "占有率"]
   end
 
   def room_row(room)
@@ -31,7 +31,7 @@ class RoomExporter
 
   def rooms
     case @user.role
-    when 'admin'
+    when "admin"
       Room.all
     else
       @user.rooms
