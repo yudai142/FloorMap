@@ -1,6 +1,6 @@
 # SimpleCov coverage tracking
-require 'simplecov'
-SimpleCov.formatters = [SimpleCov::Formatter::HTMLFormatter]
+require "simplecov"
+SimpleCov.formatters = [ SimpleCov::Formatter::HTMLFormatter ]
 SimpleCov.start('rails') do
   add_filter '/bin/'
   add_filter '/db/'
