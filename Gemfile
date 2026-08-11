@@ -50,7 +50,7 @@ gem "devise-two-factor"
 gem "pundit"
 
 # Real-time & Jobs
-gem "redis", "~> 5.0"
+gem "redis", "~> 6.0"
 gem "good_job"
 
 # API Documentation
