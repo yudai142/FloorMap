@@ -1,23 +1,23 @@
 # SimpleCov coverage tracking
 require "simplecov"
 SimpleCov.formatters = [ SimpleCov::Formatter::HTMLFormatter ]
-SimpleCov.start('rails') do
-  add_filter '/bin/'
-  add_filter '/db/'
-  add_filter '/spec/'
-  add_filter '/config/'
-  add_filter 'config/environments'
-  add_filter 'config/initializers'
-  add_filter 'config/puma.rb'
+SimpleCov.start("rails") do
+  skip "/bin/"
+  skip "/db/"
+  skip "/spec/"
+  skip "/config/"
+  skip "config/environments"
+  skip "config/initializers"
+  skip "config/puma.rb"
 
-  add_group 'Models', '/app/models/'
-  add_group 'Controllers', '/app/controllers/'
-  add_group 'Services', '/app/services/'
-  add_group 'Policies', '/app/policies/'
-  add_group 'Channels', '/app/channels/'
-  add_group 'Mailers', '/app/mailers/'
-  add_group 'Helpers', '/app/helpers/'
-  add_group 'Jobs', '/app/jobs/'
+  group "Models", "/app/models/"
+  group "Controllers", "/app/controllers/"
+  group "Services", "/app/services/"
+  group "Policies", "/app/policies/"
+  group "Channels", "/app/channels/"
+  group "Mailers", "/app/mailers/"
+  group "Helpers", "/app/helpers/"
+  group "Jobs", "/app/jobs/"
 
   maximum_coverage_drop 5
   minimum_coverage 80
