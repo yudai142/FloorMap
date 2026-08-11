@@ -9,6 +9,10 @@ Rails.application.routes.draw do
 
   get "up" => "rails/health#show", as: :rails_health_check
 
+  # Swagger UI for API documentation
+  mount Rswag::Ui::Engine => "/api-docs"
+  mount Rswag::Api::Engine => "/api-docs"
+
   get "/" => "pages#home", as: :root
 
   resources :rooms do
@@ -19,9 +23,13 @@ Rails.application.routes.draw do
       end
       collection do
         patch :batch_position
+        get :export
       end
     end
     get :canvas_data
+    collection do
+      get :export
+    end
   end
 
   resources :room_permissions, only: :destroy

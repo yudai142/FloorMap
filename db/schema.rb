@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_11_140213) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_12_075000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -208,6 +208,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_140213) do
     t.index ["session_id"], name: "index_visitors_on_session_id", unique: true
   end
 
+  create_table "share_links", force: :cascade do |t|
+    t.bigint "room_id", null: false
+    t.string "token", null: false
+    t.datetime "expires_at"
+    t.integer "access_count", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["token"], name: "index_share_links_on_token", unique: true
+  end
+
   add_foreign_key "notifications", "rooms"
   add_foreign_key "notifications", "users"
   add_foreign_key "room_permissions", "rooms"
@@ -217,4 +227,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_140213) do
   add_foreign_key "sessions", "seats"
   add_foreign_key "sessions", "users"
   add_foreign_key "sessions", "visitors"
+  add_foreign_key "share_links", "rooms"
 end

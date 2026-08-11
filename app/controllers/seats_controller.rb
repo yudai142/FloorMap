@@ -7,6 +7,12 @@ class SeatsController < ApplicationController
     @seats = @room.seats
   end
 
+  def export
+    authorize Seat.new(room: @room)
+    exporter = SeatExporter.new(@room)
+    send_data exporter.to_csv, filename: "#{@room.name}_seats_#{Time.current.strftime("%Y%m%d_%H%M%S")}.csv", type: "text/csv; charset=utf-8"
+  end
+
   def show
     authorize @seat
   end

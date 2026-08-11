@@ -2,6 +2,7 @@ class Room < ApplicationRecord
   belongs_to :user
   has_many :room_permissions, dependent: :destroy
   has_many :seats, dependent: :destroy
+  has_many :share_links, dependent: :destroy
 
   validates :name, presence: true
 
@@ -16,11 +17,12 @@ class Room < ApplicationRecord
 
   scope :accessible_by, ->(user) {
     if user.admin?
-      all
+      all.includes(:seats, :room_permissions)
     else
       joins("LEFT JOIN room_permissions ON room_permissions.room_id = rooms.id")
         .where("rooms.user_id = ? OR room_permissions.user_id = ?", user.id, user.id)
         .distinct
+        .includes(:seats, :room_permissions)
     end
   }
 
