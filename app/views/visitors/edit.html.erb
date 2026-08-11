@@ -1,0 +1,54 @@
+<div class="max-w-md mx-auto px-6 py-8">
+  <div class="bg-white rounded-lg shadow-md p-8">
+    <h1 class="text-2xl font-bold text-slate-900 mb-6 text-center">ニックネーム変更</h1>
+
+    <% if @room %>
+      <div class="mb-6 p-4 bg-blue-50 rounded-lg">
+        <p class="text-sm text-gray-600">現在のルーム</p>
+        <p class="text-lg font-semibold text-gray-900"><%= @room.name %></p>
+        <% if @visitor.current_seat %>
+          <p class="text-sm text-gray-600 mt-1">座席: <strong><%= @visitor.current_seat.seat_identifier %></strong></p>
+        <% end %>
+      </div>
+    <% end %>
+
+    <%= form_with model: @visitor, local: true do |f| %>
+      <% if @visitor.errors.any? %>
+        <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <h2 class="text-sm font-medium text-red-800 mb-2">エラーが発生しました</h2>
+          <ul class="list-disc list-inside text-sm text-red-700">
+            <% @visitor.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="mb-6">
+        <label for="visitor_nickname" class="block text-sm font-medium text-gray-700 mb-2">
+          新しいニックネーム
+        </label>
+        <%= f.text_field :nickname,
+            class: "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500",
+            placeholder: "新しいニックネームを入力してください",
+            maxlength: 255 %>
+        <p class="text-xs text-gray-500 mt-2">1〜255文字で入力してください</p>
+      </div>
+
+      <div class="flex gap-4">
+        <%= f.submit '変更する', class: "flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium" %>
+        <%= link_to 'キャンセル', @room || root_path, class: "flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium text-center" %>
+      </div>
+    <% end %>
+
+    <div class="mt-6 pt-6 border-t border-gray-200">
+      <form method="post" action="<%= visitors_check_out_path %>" style="display: inline;">
+        <input type="hidden" name="_method" value="delete">
+        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+        <button type="submit" class="text-sm text-red-600 hover:text-red-800 font-medium w-full text-center py-2">
+          チェックアウト
+        </button>
+      </form>
+    </div>
+  </div>
+</div>

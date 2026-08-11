@@ -25,12 +25,25 @@ RSpec.describe Session, type: :model do
       ))
     end
 
-    it 'includes active session in canvas_data' do
+    it 'includes active user session in canvas_data' do
       session = create(:session, user: user, seat: seat)
 
       expect(seat.canvas_data[:session]).to eq({
         id: session.id,
-        user_id: session.user_id
+        user_id: session.user_id,
+        type: "user"
+      })
+    end
+
+    it 'includes active visitor session in canvas_data' do
+      visitor = create(:visitor)
+      session = create(:session, visitor: visitor, user_id: nil, seat: seat)
+
+      expect(seat.canvas_data[:session]).to include({
+        id: session.id,
+        visitor_id: visitor.id,
+        type: "visitor",
+        name: visitor.display_name
       })
     end
 

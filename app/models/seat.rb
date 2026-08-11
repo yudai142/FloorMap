@@ -42,6 +42,16 @@ class Seat < ApplicationRecord
   def canvas_data
     Rails.cache.fetch("seat:#{id}:canvas_data", expires_in: 5.minutes) do
       active_session = sessions.active.last
+      session_data = nil
+
+      if active_session
+        if active_session.user_id
+          session_data = { id: active_session.id, user_id: active_session.user_id, type: "user" }
+        elsif active_session.visitor_id
+          session_data = { id: active_session.id, visitor_id: active_session.visitor_id, type: "visitor", name: active_session.visitor&.display_name }
+        end
+      end
+
       {
         id: id,
         seat_identifier: seat_identifier,
@@ -51,7 +61,7 @@ class Seat < ApplicationRecord
         column_number: column_number,
         seat_type: seat_type,
         grid_position: grid_position,
-        session: active_session ? { id: active_session.id, user_id: active_session.user_id } : nil
+        session: session_data
       }
     end
   end
