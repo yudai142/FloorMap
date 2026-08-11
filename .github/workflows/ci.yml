@@ -159,7 +159,7 @@ jobs:
         run: bin/rails db:test:prepare && ([ -d spec/system ] && bundle exec rspec spec/system || echo "No system tests defined yet")
 
       - name: Keep screenshots from failed system tests
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: screenshots
