@@ -40,7 +40,7 @@ class CheckDailyAutoCheckoutJob < ApplicationJob
     threshold_time = Time.current - timeout_hours.hours
 
     expired_sessions = Session.where(status: :active)
-                              .where('check_in_time < ?', threshold_time)
+                              .where("check_in_time < ?", threshold_time)
 
     count = 0
     expired_sessions.each do |session|

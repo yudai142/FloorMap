@@ -89,7 +89,7 @@ RSpec.describe Room, type: :model do
         create(:seat, room: room, row_number: 1, column_number: 1)
 
         result = room.seats_grouped_by_row
-        expect(result.keys).to eq([0, 1])
+        expect(result.keys).to eq([ 0, 1 ])
         expect(result[0].length).to eq(2)
         expect(result[1].length).to eq(1)
       end

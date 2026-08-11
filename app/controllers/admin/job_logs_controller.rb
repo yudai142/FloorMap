@@ -19,6 +19,6 @@ class Admin::JobLogsController < ApplicationController
   end
 
   def authorize_admin!
-    redirect_to root_path, alert: 'Unauthorized' unless current_user.admin?
+    redirect_to root_path, alert: "Unauthorized" unless current_user.admin?
   end
 end
