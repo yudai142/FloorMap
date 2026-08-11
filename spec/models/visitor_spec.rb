@@ -83,7 +83,7 @@ RSpec.describe Visitor, type: :model do
         visitor1 = create(:visitor, created_at: 1.hour.ago)
         visitor2 = create(:visitor, created_at: 2.hours.ago)
 
-        expect(Visitor.recent).to eq([visitor1, visitor2])
+        expect(Visitor.recent).to eq([ visitor1, visitor2 ])
       end
     end
   end
