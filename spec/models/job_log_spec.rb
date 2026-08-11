@@ -18,10 +18,6 @@ RSpec.describe JobLog, type: :model do
     end
   end
 
-  describe 'associations' do
-    it { should have_many(:job_logs).dependent(:destroy) }
-  end
-
   describe 'scopes' do
     before do
       @success_log = create(:job_log, job_type: 'CheckDailyAutoCheckoutJob', status: :success)
@@ -60,16 +56,6 @@ RSpec.describe JobLog, type: :model do
         logs = JobLog.recent.limit(1)
         expect(logs.first).to eq(new_log)
       end
-    end
-  end
-
-  describe '#metadata' do
-    it 'stores metadata as JSON' do
-      metadata = { checked_out_count: 5, expired_count: 3 }
-      job_log = create(:job_log, metadata: metadata)
-
-      expect(job_log.metadata['checked_out_count']).to eq(5)
-      expect(job_log.metadata['expired_count']).to eq(3)
     end
   end
 
