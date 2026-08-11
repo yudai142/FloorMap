@@ -1,4 +1,4 @@
-require 'csv'
+require "csv"
 
 class RoomExporter
   def initialize(user)
@@ -17,7 +17,7 @@ class RoomExporter
   private
 
   def headers
-    ["ルーム名", "座席数", "占有座席数", "占有率"]
+    [ "ルーム名", "座席数", "占有座席数", "占有率" ]
   end
 
   def room_row(room)
