@@ -26,6 +26,7 @@ class Seat < ApplicationRecord
   end
 
   def canvas_data
+    active_session = sessions.active.last
     {
       id: id,
       seat_identifier: seat_identifier,
@@ -34,7 +35,8 @@ class Seat < ApplicationRecord
       row_number: row_number,
       column_number: column_number,
       seat_type: seat_type,
-      grid_position: grid_position
+      grid_position: grid_position,
+      session: active_session ? { id: active_session.id, user_id: active_session.user_id } : nil
     }
   end
 end

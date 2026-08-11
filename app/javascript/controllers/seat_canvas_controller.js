@@ -21,6 +21,7 @@ export default class extends Controller {
 
     this.loadCanvasData()
     this.setupEventListeners()
+    this.setupActionCable()
     this.draw()
   }
 
@@ -40,6 +41,22 @@ export default class extends Controller {
     this.canvas.addEventListener("mousemove", e => this.handleMouseMove(e))
     this.canvas.addEventListener("mouseup", e => this.handleMouseUp(e))
     this.canvas.addEventListener("mouseleave", e => this.handleMouseLeave(e))
+  }
+
+  setupActionCable() {
+    import("channels/rooms_channel").then(module => {
+      module.subscribeToRoom(this.roomIdValue, (updatedSeat) => {
+        this.updateSeatFromBroadcast(updatedSeat)
+      })
+    })
+  }
+
+  updateSeatFromBroadcast(updatedSeat) {
+    const seatIndex = this.seats.findIndex(s => s.id === updatedSeat.id)
+    if (seatIndex !== -1) {
+      this.seats[seatIndex] = updatedSeat
+      this.draw()
+    }
   }
 
   draw() {
