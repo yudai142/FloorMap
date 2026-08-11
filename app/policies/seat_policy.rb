@@ -22,4 +22,8 @@ class SeatPolicy < ApplicationPolicy
   def position?
     user.owner_of?(@record.room) || user.admin?
   end
+
+  def export?
+    user.owner_of?(@record.room) || user.admin?
+  end
 end

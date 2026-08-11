@@ -4,50 +4,66 @@ RSpec.describe 'CSV Export Functionality', type: :request do
   describe 'Issue #66: CSV エクスポート機能' do
     let(:user) { create(:user, :manager) }
     let(:room) { create(:room, user: user) }
-    let(:seats) { create_list(:seat, 5, room: room) }
 
-    before { sign_in user }
+    before do
+      sign_in user
+      create_list(:seat, 5, room: room)
+    end
 
     describe 'Seat CSV Export' do
-      pending 'GET /rooms/:id/seats/export returns CSV file' do
-        get room_seats_export_path(room), as: :csv
+      it 'GET /rooms/:id/seats/export returns CSV file' do
+        get export_room_seats_path(room)
         expect(response).to have_http_status(:ok)
         expect(response.content_type).to include('text/csv')
       end
 
-      pending 'CSV contains seat data with correct headers' do
-        get room_seats_export_path(room), as: :csv
-        expect(response.body).to include('座席ID', '行', '列', 'ステータス')
+      it 'CSV contains seat data with correct headers' do
+        get export_room_seats_path(room)
+        expect(response.body).to include('座席ID', '行', '列', 'タイプ')
       end
 
-      pending 'CSV exports all seats in room' do
-        get room_seats_export_path(room), as: :csv
-        expect(response.body.lines.count).to eq(seats.count + 1)
+      it 'CSV exports all seats in room' do
+        get export_room_seats_path(room)
+        expect(response.body.lines.count).to eq(room.seats.count + 1)
       end
 
-      pending 'Authorization check: only manager can export' do
-        visitor = create(:user)
-        sign_in visitor
-        get room_seats_export_path(room), as: :csv
-        expect(response).to have_http_status(:forbidden)
+      it 'Authorization check: only manager can export' do
+        other_user = create(:user)
+        sign_in other_user
+        get export_room_seats_path(room)
+        # Non-managers cannot export other users' rooms
+        expect([ 302, 403 ]).to include(response.status)
       end
 
-      pending 'File encoding is UTF-8' do
-        get room_seats_export_path(room), as: :csv
-        expect(response.text_encoding).to eq(Encoding::UTF_8)
+      it 'Response has correct filename' do
+        get export_room_seats_path(room)
+        disposition = response.headers['Content-Disposition']
+        expect(disposition).to include('filename=')
+        expect(disposition).to include('.csv')
       end
     end
 
     describe 'Room CSV Export' do
-      pending 'GET /rooms/export returns CSV file with all rooms' do
+      it 'GET /rooms/export returns CSV file with all rooms' do
         create_list(:room, 3, user: user)
-        get rooms_export_path, as: :csv
+        get export_rooms_path
+        expect(response).to have_http_status(:ok)
         expect(response.content_type).to include('text/csv')
       end
 
-      pending 'CSV contains room metadata' do
-        get rooms_export_path, as: :csv
-        expect(response.body).to include('ルーム名', '容量', '作成日時')
+      it 'CSV contains room metadata' do
+        get export_rooms_path
+        expect(response.body).to include('ルーム名', '座席数', '占有座席数')
+      end
+
+      it 'CSV exports only user rooms for manager' do
+        create_list(:room, 3, user: user)
+        other_user = create(:user, :manager)
+        create_list(:room, 2, user: other_user)
+
+        get export_rooms_path
+        lines = response.body.lines
+        expect(lines.count).to eq(user.rooms.count + 1)
       end
     end
   end

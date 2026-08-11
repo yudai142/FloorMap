@@ -19,9 +19,13 @@ Rails.application.routes.draw do
       end
       collection do
         patch :batch_position
+        get :export
       end
     end
     get :canvas_data
+    collection do
+      get :export
+    end
   end
 
   resources :room_permissions, only: :destroy

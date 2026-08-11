@@ -64,6 +64,11 @@ class RoomsController < ApplicationController
     }
   end
 
+  def export
+    exporter = RoomExporter.new(current_user)
+    send_data exporter.to_csv, filename: "rooms_#{Time.current.strftime('%Y%m%d_%H%M%S')}.csv", type: 'text/csv; charset=utf-8'
+  end
+
   private
 
   def set_room
