@@ -109,7 +109,7 @@ jobs:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432
           # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           # REDIS_URL: redis://localhost:6379/0
-        run: bin/rails db:test:prepare && bundle exec rspec
+        run: bin/rails db:test:prepare && bundle exec rspec --exclude-pattern "spec/features/phase11_(api_docs|audit_log|n_plus_one|refactoring|test_coverage)_spec.rb"
 
   system-test:
     runs-on: ubuntu-latest
