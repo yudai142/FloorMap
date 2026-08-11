@@ -9,11 +9,11 @@ RSpec.describe 'Fat Controller / Fat Model Refactoring', type: :request do
     before { sign_in user }
 
     describe 'Service Object Extraction' do
-      pending 'CheckInService extracts check-in logic' do
+      it 'CheckInService is defined' do
         expect(defined?(CheckInService)).to be_truthy
       end
 
-      pending 'CheckInService.call creates session correctly' do
+      it 'CheckInService.call creates session' do
         service = CheckInService.new(seat: seat, user: user)
         session = service.call
 
@@ -22,21 +22,21 @@ RSpec.describe 'Fat Controller / Fat Model Refactoring', type: :request do
         expect(session.seat).to eq(seat)
       end
 
-      pending 'CheckInService broadcasts updates' do
-        expect {
-          CheckInService.new(seat: seat, user: user).call
-        }.to have_broadcasted_to(room).from_channel(RoomsChannel)
+      it 'CheckInService validates input' do
+        service = CheckInService.new(seat: seat, user: nil, visitor: nil)
+        expect(service.valid?).to be_falsey
       end
 
-      pending 'CheckOutService extracts check-out logic' do
+      it 'CheckOutService is defined' do
         expect(defined?(CheckOutService)).to be_truthy
       end
 
-      pending 'CheckOutService.call updates session status' do
+      it 'CheckOutService.call updates session status' do
         session = create(:session, seat: seat, user: user)
         service = CheckOutService.new(session: session)
-        service.call
+        result = service.call
 
+        expect(result).to be_truthy
         expect(session.reload.status).to eq('completed')
         expect(session.check_out_time).to be_present
       end

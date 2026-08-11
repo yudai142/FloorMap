@@ -1,0 +1,14 @@
+class CreateShareLinks < ActiveRecord::Migration[8.1]
+  def change
+    create_table :share_links do |t|
+      t.references :room, null: false, foreign_key: true
+      t.string :token, null: false, unique: true
+      t.datetime :expires_at
+      t.integer :access_count, default: 0
+
+      t.timestamps
+    end
+
+    add_index :share_links, :token, unique: true
+  end
+end

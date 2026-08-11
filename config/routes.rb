@@ -9,6 +9,10 @@ Rails.application.routes.draw do
 
   get "up" => "rails/health#show", as: :rails_health_check
 
+  # Swagger UI for API documentation
+  mount Rswag::Ui::Engine => '/api-docs'
+  mount Rswag::Api::Engine => '/api-docs'
+
   get "/" => "pages#home", as: :root
 
   resources :rooms do
