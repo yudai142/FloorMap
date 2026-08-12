@@ -1,52 +1,32 @@
 services:
   - type: web
     name: floormap-web
-    env: ruby
-    plan: standard
-    buildCommand: bundle install && bundle exec rake assets:precompile && bundle exec rake db:migrate
+    runtime: ruby
+    runtimeVersion: 3.3.0
+    buildCommand: bundle install && bundle exec rails assets:precompile && bundle exec rails db:migrate
     startCommand: bundle exec puma -t 5:5 -p 3000
     envVars:
       - key: DATABASE_URL
-        scope: run
-        value: ${DATABASE_URL}
+        fromDatabase:
+          name: floormap-db
+          property: connectionString
       - key: REDIS_URL
-        scope: run
-        value: ${REDIS_URL}
+        fromService:
+          name: floormap-redis
+          property: connectionString
       - key: RAILS_ENV
-        scope: run
         value: production
-      - key: RAILS_MASTER_KEY
-        scope: run
-        secretKey: RAILS_MASTER_KEY
-    healthCheckPath: /up
+      - key: RAILS_LOG_TO_STDOUT
+        value: true
+      - key: RAILS_SERVE_STATIC_FILES
+        value: true
 
-  - type: pserv
+  - type: postgres
     name: floormap-db
-    env: postgres
-    plan: standard
     ipAllowList: []
-    envVars:
-      - key: POSTGRES_DB
-        value: floormap_production
-      - key: POSTGRES_USER
-        value: postgres
-      - key: POSTGRES_PASSWORD
-        scope: run
-        secretKey: DATABASE_PASSWORD
+    plan: starter
 
-  - type: pserv
+  - type: redis
     name: floormap-redis
-    env: redis
-    plan: standard
     ipAllowList: []
-
-databases:
-  - name: floormap-db
-    databaseName: floormap_production
-    user: postgres
-    version: '15'
-
-  - name: floormap-redis
-    databaseName: default
-    plan: standard
-    maxmemoryPolicy: allkeys-lru
+    plan: starter
