@@ -117,7 +117,7 @@ RSpec.describe 'Check-in / Check-out Functionality', type: :request do
         it 'displays user session history' do
           completed_session = create(:session, :checked_out, user: user, seat: seat)
 
-          get sessions_history_path
+          get history_sessions_path
           expect(response).to have_http_status(:success)
           expect(response.body).to include(seat.seat_identifier)
         end
@@ -126,7 +126,7 @@ RSpec.describe 'Check-in / Check-out Functionality', type: :request do
           session = create(:session, :checked_out, user: user, seat: seat,
                           check_in_time: 2.hours.ago, check_out_time: 1.hour.ago)
 
-          get sessions_history_path
+          get history_sessions_path
           expect(response.body).to include("1h 0m")
         end
 
@@ -134,7 +134,7 @@ RSpec.describe 'Check-in / Check-out Functionality', type: :request do
           active_session = create(:session, user: user, seat: seat, status: :active)
           completed_session = create(:session, :checked_out, user: user, seat: seat)
 
-          get sessions_history_path
+          get history_sessions_path
           expect(response.body).to include(completed_session.seat.seat_identifier)
           expect(response.body).not_to include(active_session.seat.seat_identifier)
         end

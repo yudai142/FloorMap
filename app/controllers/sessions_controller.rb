@@ -1,14 +1,14 @@
 class SessionsController < ApplicationController
-  before_action :authenticate_user!, except: [:check_in_form, :check_in]
-  before_action :authorize_session, only: [:check_out]
+  before_action :authenticate_user!, except: [ :check_in_form, :check_in ]
+  before_action :authorize_session, only: [ :check_out ]
 
   def check_in_form
     @rooms = current_user ? current_user.rooms : []
     @seats = if params[:room_id].present?
-               Seat.where(room_id: params[:room_id]).order(:row_number, :column_number)
-             else
-               Seat.none
-             end
+      Seat.where(room_id: params[:room_id]).order(:row_number, :column_number)
+    else
+      Seat.none
+    end
     @current_session = current_user&.sessions&.active&.last
   end
 
@@ -45,10 +45,10 @@ class SessionsController < ApplicationController
 
   def history
     @sessions = if current_user
-                  current_user.sessions.completed.recent.page(params[:page])
-                else
-                  Session.none
-                end
+      current_user.sessions.completed.recent.page(params[:page])
+    else
+      Session.none
+    end
   end
 
   private

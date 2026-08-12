@@ -12,7 +12,7 @@ class Session < ApplicationRecord
   validate :user_or_visitor_present
 
   scope :active, -> { where(status: :active) }
-  scope :completed, -> { where(status: [:checked_out, :timed_out]) }
+  scope :completed, -> { where(status: [ :checked_out, :timed_out ]) }
   scope :by_user, ->(user) { where(user_id: user.id) }
   scope :by_visitor, ->(visitor) { where(visitor_id: visitor.id) }
   scope :by_date, ->(date) { where(created_at: date.beginning_of_day..date.end_of_day) }
