@@ -43,7 +43,7 @@ RSpec.describe Room, type: :model do
         user2 = create(:user)
 
         create(:session, user: user2, seat: seat1, status: :active)
-        create(:session, user: user2, seat: seat2, status: :completed)
+        create(:session, user: user2, seat: seat2, status: :checked_out)
 
         expect(room.occupied_seat_count).to eq(1)
       end

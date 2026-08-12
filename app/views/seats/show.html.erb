@@ -167,10 +167,12 @@
         <div class="detail-label">座席タイプ</div>
         <div class="detail-value">
           <span class="status-badge <%= @seat.seat_type %>">
-            <% case @seat.seat_type %>
-              <% when "regular" %>通常座席
-              <% when "accessible" %>障害対応座席
-              <% when "vip" %>VIP座席
+            <% if @seat.seat_type == "regular" %>
+              通常座席
+            <% elsif @seat.seat_type == "accessible" %>
+              障害対応座席
+            <% elsif @seat.seat_type == "vip" %>
+              VIP座席
             <% end %>
           </span>
         </div>

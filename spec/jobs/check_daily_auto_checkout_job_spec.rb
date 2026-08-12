@@ -14,7 +14,7 @@ RSpec.describe CheckDailyAutoCheckoutJob, type: :job do
 
         expect {
           CheckDailyAutoCheckoutJob.perform_now
-        }.to change { session.reload.status }.from('active').to('expired')
+        }.to change { session.reload.status }.from('active').to('timed_out')
       end
 
       it 'sets check_out_time when checking out' do
@@ -31,7 +31,7 @@ RSpec.describe CheckDailyAutoCheckoutJob, type: :job do
 
         expect {
           CheckDailyAutoCheckoutJob.perform_now
-        }.to change { Session.where(status: :expired).count }.by(2)
+        }.to change { Session.where(status: :timed_out).count }.by(2)
       end
     end
 
@@ -47,7 +47,7 @@ RSpec.describe CheckDailyAutoCheckoutJob, type: :job do
 
     context 'with already completed sessions' do
       it 'ignores completed sessions' do
-        session = create(:session, user: user, seat: seat, status: :completed, check_in_time: 25.hours.ago)
+        session = create(:session, user: user, seat: seat, status: :checked_out, check_in_time: 25.hours.ago)
 
         expect {
           CheckDailyAutoCheckoutJob.perform_now

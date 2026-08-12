@@ -41,7 +41,7 @@ RSpec.describe RoomsChannel, type: :channel do
       session = create(:session, seat: seat, user: user)
 
       expect {
-        session.update(status: :completed)
+        session.update(status: :checked_out)
       }.to have_broadcasted_to(room).with(hash_including(type: "seat_updated"))
     end
   end
