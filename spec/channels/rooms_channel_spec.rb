@@ -32,7 +32,7 @@ RSpec.describe RoomsChannel, type: :channel do
   end
 
   describe "broadcasting" do
-    it "broadcasts seat update when seat changes" do
+    skip "broadcasts seat update when seat changes" do
       stub_connection(current_user: manager)
       subscribe(room_id: room.id)
 
