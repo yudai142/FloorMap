@@ -32,11 +32,11 @@
                   <%= session.room.name %>
                 </td>
                 <td class="px-6 py-4 text-sm text-gray-900">
-                  <%= l(session.check_in_time, format: :time) %>
+                  <%= session.check_in_time.strftime("%H:%M") %>
                 </td>
                 <td class="px-6 py-4 text-sm text-gray-900">
                   <% if session.check_out_time %>
-                    <%= l(session.check_out_time, format: :time) %>
+                    <%= session.check_out_time.strftime("%H:%M") %>
                   <% else %>
                     <span class="text-gray-400">-</span>
                   <% end %>

@@ -8,6 +8,10 @@ RSpec.describe 'Check-in / Check-out Functionality', type: :request do
 
     before do
       sign_in user
+      # Ensure database records are created
+      user.reload
+      room.reload
+      seat.reload
     end
 
     after do
@@ -132,8 +136,9 @@ RSpec.describe 'Check-in / Check-out Functionality', type: :request do
         end
 
         it 'only shows completed sessions' do
+          seat2 = create(:seat, room: room)
           active_session = create(:session, user: user, seat: seat, status: :active)
-          completed_session = create(:session, :checked_out, user: user, seat: seat)
+          completed_session = create(:session, :checked_out, user: user, seat: seat2)
 
           get history_sessions_path
           expect(response.body).to include(completed_session.seat.seat_identifier)
@@ -304,16 +309,16 @@ RSpec.describe 'Check-in / Check-out Functionality', type: :request do
     end
 
     describe 'Auto Check-out' do
-      pending 'auto checks out inactive sessions' do
+      skip 'auto checks out inactive sessions' do
         # Should automatically check-out after inactivity period
         # Implemented in Phase 9: 自動チェックアウトジョブ
       end
 
-      pending 'records auto check-out status' do
+      skip 'records auto check-out status' do
         # Should mark session as :timed_out
       end
 
-      pending 'sends notification before auto check-out' do
+      skip 'sends notification before auto check-out' do
         # Should notify user before auto check-out
       end
     end

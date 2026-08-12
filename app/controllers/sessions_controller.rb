@@ -1,6 +1,5 @@
 class SessionsController < ApplicationController
   before_action :authenticate_user!, except: [ :check_in_form, :check_in ]
-  before_action :authorize_session, only: [ :check_out ]
 
   def check_in_form
     @rooms = current_user ? current_user.rooms : []
@@ -35,7 +34,9 @@ class SessionsController < ApplicationController
     @session = Session.find_by(id: params[:session_id])
     return render json: { error: "セッションが見つかりません" }, status: :not_found unless @session
 
-    authorize_session
+    unless @session.user_id == current_user.id || current_user.admin?
+      return render json: { error: "権限がありません" }, status: :forbidden
+    end
 
     if @session.update(check_out_time: Time.current, status: "checked_out")
       broadcast_check_out(@session, @session.room)
@@ -54,13 +55,6 @@ class SessionsController < ApplicationController
   end
 
   private
-
-  def authorize_session
-    session = Session.find_by(id: params[:session_id])
-    unless session && (session.user_id == current_user.id || current_user.admin?)
-      render json: { error: "権限がありません" }, status: :forbidden
-    end
-  end
 
   def broadcast_check_in(session, room)
     ActionCable.server.broadcast(
