@@ -178,17 +178,20 @@ RSpec.describe 'Check-in / Check-out Functionality', type: :request do
 
       describe 'Session Scopes' do
         it 'active scope returns only active sessions' do
-          active = create(:session, user: user, seat: seat, status: :active)
-          completed = create(:session, :checked_out, user: user, seat: seat)
+          seat2 = create(:seat, room: room)
+          active = create(:session, user: user, seat: seat, status: "active")
+          completed = create(:session, :checked_out, user: user, seat: seat2)
 
           expect(Session.active).to include(active)
           expect(Session.active).not_to include(completed)
         end
 
         it 'completed scope returns checked_out and timed_out sessions' do
-          active = create(:session, user: user, seat: seat, status: :active)
-          checked_out = create(:session, :checked_out, user: user, seat: seat)
-          timed_out = create(:session, :timed_out, user: user, seat: seat)
+          seat2 = create(:seat, room: room)
+          seat3 = create(:seat, room: room)
+          active = create(:session, user: user, seat: seat, status: "active")
+          checked_out = create(:session, :checked_out, user: user, seat: seat2)
+          timed_out = create(:session, :timed_out, user: user, seat: seat3)
 
           expect(Session.completed).to include(checked_out, timed_out)
           expect(Session.completed).not_to include(active)
@@ -204,16 +207,18 @@ RSpec.describe 'Check-in / Check-out Functionality', type: :request do
         end
 
         it 'by_date scope filters by date' do
+          seat2 = create(:seat, room: room)
           today = create(:session, user: user, seat: seat)
-          yesterday = create(:session, user: user, seat: seat, created_at: 1.day.ago)
+          yesterday = create(:session, user: user, seat: seat2, created_at: 1.day.ago)
 
           expect(Session.by_date(Date.today)).to include(today)
           expect(Session.by_date(Date.today)).not_to include(yesterday)
         end
 
         it 'recent scope returns sessions in descending order' do
+          seat2 = create(:seat, room: room)
           session1 = create(:session, user: user, seat: seat, created_at: 1.hour.ago)
-          session2 = create(:session, user: user, seat: seat, created_at: 2.hours.ago)
+          session2 = create(:session, user: user, seat: seat2, created_at: 2.hours.ago)
 
           expect(Session.recent.first).to eq(session1)
           expect(Session.recent.last).to eq(session2)
@@ -248,10 +253,11 @@ RSpec.describe 'Check-in / Check-out Functionality', type: :request do
       end
 
       it 'prevents user from checking out others session' do
+        seat2 = create(:seat, room: room)
         sign_out user
         sign_in other_user
 
-        session = create(:session, user: user, seat: seat, status: :active)
+        session = create(:session, user: user, seat: seat2, status: "active")
         delete check_out_sessions_path, params: { session_id: session.id }
 
         expect(response).to have_http_status(:forbidden)
@@ -259,11 +265,12 @@ RSpec.describe 'Check-in / Check-out Functionality', type: :request do
       end
 
       it 'allows admin to manage all sessions' do
+        seat2 = create(:seat, room: room)
         admin = create(:user, :admin)
         sign_out user
         sign_in admin
 
-        session = create(:session, user: user, seat: seat, status: :active)
+        session = create(:session, user: user, seat: seat2, status: "active")
         delete check_out_sessions_path, params: { session_id: session.id }
 
         expect(response).to have_http_status(:redirect)

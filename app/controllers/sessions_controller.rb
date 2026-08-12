@@ -35,6 +35,8 @@ class SessionsController < ApplicationController
     @session = Session.find_by(id: params[:session_id])
     return render json: { error: "セッションが見つかりません" }, status: :not_found unless @session
 
+    authorize_session
+
     if @session.update(check_out_time: Time.current, status: "checked_out")
       broadcast_check_out(@session, @session.room)
       redirect_to sessions_path, notice: "チェックアウトしました"
