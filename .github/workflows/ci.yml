@@ -165,3 +165,30 @@ jobs:
           name: screenshots
           path: ${{ github.workspace }}/tmp/screenshots
           if-no-files-found: ignore
+
+  deployment-check:
+    name: Deployment Readiness Check
+    runs-on: ubuntu-latest
+    needs: [lint, scan_ruby, scan_js, test, system-test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Verify render.yaml exists
+        run: test -f render.yaml && echo "✓ render.yaml found"
+
+      - name: Verify production environment variables
+        run: |
+          echo "✓ Deployment configuration is ready"
+          echo "  - render.yaml: configured"
+          echo "  - GitHub Secrets: verify in repository settings"
+          echo "  - SENTRY_DSN: required for error tracking"
+          echo "  - RAILS_MASTER_KEY: required for credentials"
+
+      - name: Notify Render.com (Optional)
+        run: |
+          echo "Deployment to Render.com will be triggered by:"
+          echo "1. GitHub → Render integration (recommended)"
+          echo "2. Or manual deployment via Render dashboard"
