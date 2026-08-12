@@ -69,4 +69,17 @@ RSpec.configure do |config|
   config.filter_rails_from_backtrace!
   # arbitrary gems may also be filtered via:
   # config.filter_gems_from_backtrace("gem name")
+
+  # Prepare test database
+  config.before(:suite) do
+    ActiveRecord::Migration.maintain_test_schema!
+    ActiveRecord::Base.connection.tables.each do |table|
+      ActiveRecord::Base.connection.execute("TRUNCATE TABLE #{table} CASCADE")
+    end
+  end
+
+  # Clean up database before each test
+  config.before(:each) do
+    FactoryBot.rewind_sequences
+  end
 end

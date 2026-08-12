@@ -4,7 +4,7 @@ class Session < ApplicationRecord
   belongs_to :seat
   has_one :room, through: :seat
 
-  enum :status, { active: 0, checked_out: 1, timed_out: 2 }, validate: true
+  enum :status, { active: "active", checked_out: "checked_out", timed_out: "timed_out" }, validate: true
 
   validates :seat_id, :check_in_time, presence: true
   validates :status, presence: true

@@ -44,11 +44,12 @@ RSpec.describe 'Check-in / Check-out Functionality', type: :request do
             post check_in_sessions_path, params: { seat_id: seat.id }
           }.to change(Session, :count).by(1)
 
-          session = Session.last
-          expect(session.user_id).to eq(user.id)
-          expect(session.seat_id).to eq(seat.id)
-          expect(session.status).to eq("active")
-          expect(session.check_in_time).to be_present
+          expect(response).to have_http_status(:redirect)
+          new_session = Session.last
+          expect(new_session.user_id).to eq(user.id)
+          expect(new_session.seat_id).to eq(seat.id)
+          expect(new_session.status).to eq("active")
+          expect(new_session.check_in_time).to be_present
         end
 
         it 'validates seat exists' do
