@@ -22,7 +22,7 @@ RUN bundle install
 COPY . .
 
 # npm パッケージをインストール
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # Vite を初期化・ビルド
 RUN bundle exec vite install --force 2>/dev/null || true

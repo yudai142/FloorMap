@@ -1,20 +1,24 @@
 FactoryBot.define do
   factory :session do
-    user
-    seat
-    check_in_time { Time.current }
+    association :seat
+    association :user
+    check_in_time { Time.current - 2.hours }
     check_out_time { nil }
-    status { :active }
+    status { "active" }
 
     trait :checked_out do
-      check_out_time { Time.current + 1.hour }
-      status { :completed }
+      check_out_time { Time.current }
+      status { "checked_out" }
     end
 
-    trait :expired do
-      check_in_time { 24.hours.ago }
-      check_out_time { nil }
-      status { :expired }
+    trait :timed_out do
+      check_out_time { Time.current }
+      status { "timed_out" }
+    end
+
+    trait :with_visitor do
+      user { nil }
+      association :visitor
     end
   end
 end
