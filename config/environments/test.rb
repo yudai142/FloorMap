@@ -50,4 +50,9 @@ Rails.application.configure do
 
   # Raise error when a before_action's only/except options reference missing actions.
   config.action_controller.raise_on_missing_callback_actions = true
+
+  # Disable Bullet notifications in test environment to focus on test pass/fail
+  config.after_initialize do
+    Bullet.enable = false if defined?(Bullet)
+  end
 end
