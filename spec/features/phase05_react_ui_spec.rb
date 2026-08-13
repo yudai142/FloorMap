@@ -93,6 +93,7 @@ RSpec.describe 'React UI Components', type: :request do
       describe 'Room List Component' do
         it 'displays all user rooms' do
           create_list(:room, 3, user: user)
+          Bullet.clear
           get rooms_path
           expect(response).to have_http_status(:success)
           expect(response.body).to include('Meeting Room')
@@ -100,12 +101,14 @@ RSpec.describe 'React UI Components', type: :request do
 
         it 'handles room pagination' do
           create_list(:room, 2, user: user)
+          Bullet.clear
           get rooms_path
           expect(response).to have_http_status(:success)
         end
 
         it 'displays room information' do
           room_data = create(:room, user: user, name: 'Conference Room')
+          Bullet.clear
           get rooms_path
           expect(response.body).to include('Conference Room')
         end
@@ -201,6 +204,7 @@ RSpec.describe 'React UI Components', type: :request do
     describe 'Performance' do
       it 'loads room list efficiently' do
         create_list(:room, 10, user: user)
+        Bullet.clear
         get rooms_path
         expect(response).to have_http_status(:success)
       end
