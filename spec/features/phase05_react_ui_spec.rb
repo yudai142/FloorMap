@@ -84,7 +84,7 @@ RSpec.describe 'React UI Components', type: :request do
 
           get room_path(room)
           # Redirect to home or show 403 forbidden
-          expect([302, 403]).to include(response.status)
+          expect([ 302, 403 ]).to include(response.status)
         end
       end
     end
