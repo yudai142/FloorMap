@@ -458,7 +458,7 @@
                 <% if session.present? && user_signed_in? && (current_user.id == session.user_id || current_user.admin?) %>
                   <%= button_to "解放", session_path(session), method: :delete, class: "action-btn release" %>
                 <% elsif !session.present? && user_signed_in? %>
-                  <% form_with url: sessions_check_in_path, method: :post, local: true do |f| %>
+                  <% form_with url: check_in_sessions_path, method: :post, local: true do |f| %>
                     <%= f.hidden_field :seat_id, value: seat.id %>
                     <%= f.submit "確保", class: "action-btn reserve" %>
                   <% end %>
