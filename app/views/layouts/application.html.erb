@@ -22,8 +22,10 @@
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
 
     <%# Vite entrypoint %>
-    <%= vite_javascript_tag "application", "data-turbo-track": "reload" %>
-    <%= vite_stylesheet_tag "application", "data-turbo-track": "reload" %>
+    <% unless Rails.env.test? %>
+      <%= vite_javascript_tag "application", "data-turbo-track": "reload" %>
+      <%= vite_stylesheet_tag "application", "data-turbo-track": "reload" %>
+    <% end %>
   </head>
 
   <body>

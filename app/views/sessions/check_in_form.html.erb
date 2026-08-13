@@ -1,0 +1,156 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <!-- チェックイン フォーム -->
+    <div class="md:col-span-2">
+      <div class="bg-white rounded-lg shadow-lg p-6">
+        <h1 class="text-3xl font-bold mb-6">チェックイン</h1>
+
+        <!-- 現在のセッション表示 -->
+        <% if @current_session %>
+          <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+            <p class="text-sm text-blue-700">
+              <strong>現在のセッション:</strong>
+              座席 <%= @current_session.seat.seat_identifier %> に
+              <%= time_ago_in_words(@current_session.check_in_time) %> 前にチェックイン
+            </p>
+          </div>
+        <% end %>
+
+        <!-- ルーム選択 -->
+        <form id="check-in-form" class="space-y-6">
+          <div>
+            <label for="room_id" class="block text-sm font-medium text-gray-700 mb-2">
+              ルームを選択
+            </label>
+            <select
+              id="room_id"
+              name="room_id"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">-- ルームを選択してください --</option>
+              <% @rooms.each do |room| %>
+                <option value="<%= room.id %>" <%= 'selected' if params[:room_id].to_i == room.id %>>
+                  <%= room.name %>
+                </option>
+              <% end %>
+            </select>
+          </div>
+
+          <!-- 座席グリッド -->
+          <div id="seats-container" class="mt-6">
+            <% if @seats.any? %>
+              <p class="text-sm text-gray-600 mb-4">利用可能な座席を選択してください</p>
+              <div class="grid grid-cols-6 gap-2">
+                <% @seats.each do |seat| %>
+                  <label class="cursor-pointer">
+                    <input
+                      type="radio"
+                      name="seat_id"
+                      value="<%= seat.id %>"
+                      class="hidden"
+                    />
+                    <div class="p-3 border-2 border-gray-300 rounded-lg text-center hover:border-blue-500 transition-colors"
+                         id="seat-<%= seat.id %>">
+                      <span class="text-sm font-medium"><%= seat.seat_identifier %></span>
+                    </div>
+                  </label>
+                <% end %>
+              </div>
+            <% elsif params[:room_id].present? %>
+              <p class="text-gray-500 text-center py-8">このルームに座席がありません</p>
+            <% else %>
+              <p class="text-gray-500 text-center py-8">ルームを選択して座席を表示します</p>
+            <% end %>
+          </div>
+
+          <!-- チェックインボタン -->
+          <% if @seats.any? %>
+            <button
+              type="submit"
+              class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              チェックイン
+            </button>
+          <% end %>
+        </form>
+      </div>
+    </div>
+
+    <!-- サイドバー -->
+    <div>
+      <div class="bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-xl font-bold mb-4">ヘルプ</h2>
+        <div class="space-y-4">
+          <div>
+            <h3 class="font-medium text-gray-900">チェックインする方法</h3>
+            <ol class="text-sm text-gray-600 mt-2 space-y-1">
+              <li>1. ルームを選択</li>
+              <li>2. 座席を選択</li>
+              <li>3. 「チェックイン」をクリック</li>
+            </ol>
+          </div>
+          <div class="pt-4 border-t">
+            <% if user_signed_in? %>
+              <%= link_to "履歴を見る", history_sessions_path, class: "text-blue-600 hover:text-blue-800 font-medium" %>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const roomSelect = document.getElementById('room_id');
+    const form = document.getElementById('check-in-form');
+
+    roomSelect.addEventListener('change', function() {
+      if (this.value) {
+        window.location.href = `<%= check_in_form_sessions_path %>`+ '?room_id=' + this.value;
+      }
+    });
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const seatId = document.querySelector('input[name="seat_id"]:checked')?.value;
+      const roomId = roomSelect.value;
+
+      if (!seatId) {
+        alert('座席を選択してください');
+        return;
+      }
+
+      // フォーム送信
+      const submitForm = document.createElement('form');
+      submitForm.method = 'POST';
+      submitForm.action = `<%= check_in_sessions_path %>`;
+
+      const seatInput = document.createElement('input');
+      seatInput.type = 'hidden';
+      seatInput.name = 'seat_id';
+      seatInput.value = seatId;
+
+      const tokenInput = document.createElement('input');
+      tokenInput.type = 'hidden';
+      tokenInput.name = 'authenticity_token';
+      tokenInput.value = document.querySelector('meta[name="csrf-token"]').content;
+
+      submitForm.appendChild(seatInput);
+      submitForm.appendChild(tokenInput);
+      document.body.appendChild(submitForm);
+      submitForm.submit();
+    });
+
+    // 座席選択時のビジュアル反応
+    document.querySelectorAll('input[name="seat_id"]').forEach(radio => {
+      radio.addEventListener('change', function() {
+        document.querySelectorAll('#seats-container [id^="seat-"]').forEach(el => {
+          el.classList.remove('border-blue-500', 'bg-blue-100');
+          el.classList.add('border-gray-300');
+        });
+        document.getElementById(`seat-${this.value}`).classList.add('border-blue-500', 'bg-blue-100');
+      });
+    });
+  });
+</script>

@@ -2,88 +2,32 @@ class Session < ApplicationRecord
   belongs_to :user, optional: true
   belongs_to :visitor, optional: true
   belongs_to :seat
+  has_one :room, through: :seat
 
-  validates :seat_id, presence: true
-  validates :check_in_time, presence: true
+  enum :status, { active: "active", checked_out: "checked_out", timed_out: "timed_out" }, validate: true
+
+  validates :seat_id, :check_in_time, presence: true
   validates :status, presence: true
+  validates :user_id, uniqueness: { scope: :seat_id, conditions: -> { where(status: :active) } }, allow_nil: true
   validate :user_or_visitor_present
 
-  enum :status, { active: "active", completed: "completed", expired: "expired" }
-
-  after_create_commit { broadcast_seat_updated }
-  after_update_commit { broadcast_seat_updated }
-  after_create_commit { create_check_in_notification }
-  after_update_commit :create_check_out_notification, if: :just_completed?
-  after_create_commit :clear_caches
-  after_update_commit :clear_caches
-
   scope :active, -> { where(status: :active) }
-  scope :completed, -> { where(status: :completed) }
-  scope :expired, -> { where(status: :expired) }
+  scope :completed, -> { where(status: [ :checked_out, :timed_out ]) }
+  scope :by_user, ->(user) { where(user_id: user.id) }
+  scope :by_visitor, ->(visitor) { where(visitor_id: visitor.id) }
+  scope :by_date, ->(date) { where(created_at: date.beginning_of_day..date.end_of_day) }
+  scope :recent, -> { order(created_at: :desc) }
 
   def duration
-    return nil if check_out_time.nil?
-
-    (check_out_time - check_in_time).to_i
-  end
-
-  def check_out!
-    update(check_out_time: Time.current, status: :completed)
+    end_time = check_out_time || Time.current
+    (end_time - check_in_time).to_i
   end
 
   private
 
   def user_or_visitor_present
-    if user_id.blank? && visitor_id.blank?
-      errors.add(:base, "User or Visitor must be present")
-    end
-  end
+    return if user_id.present? || visitor_id.present?
 
-  def broadcast_seat_updated
-    RoomsChannel.broadcast_to(seat.room, {
-      type: "seat_updated",
-      seat: seat.canvas_data
-    })
-  end
-
-  def create_check_in_notification
-    return if user.nil?
-
-    room = seat.room
-    title = "<strong>#{user.email}</strong>さんが<strong>#{seat.seat_identifier}</strong>にチェックインしました。"
-    body = "ユーザー #{user.email} が座席 #{seat.seat_identifier} にチェックインしました。"
-
-    create_notifications_for_room(room, "check_in", title, body)
-  end
-
-  def create_check_out_notification
-    return if user.nil?
-
-    room = seat.room
-    title = "<strong>#{user.email}</strong>さんが<strong>#{seat.seat_identifier}</strong>からチェックアウトしました。"
-    body = "ユーザー #{user.email} が座席 #{seat.seat_identifier} からチェックアウトしました。"
-
-    create_notifications_for_room(room, "check_out", title, body)
-  end
-
-  def create_notifications_for_room(room, notification_type, title, body)
-    room.user.notifications.create!(
-      room: room,
-      notification_type: notification_type,
-      title: title,
-      body: body
-    )
-  end
-
-  def just_completed?
-    status_was == "active" && status == "completed"
-  end
-
-  private
-
-  def clear_caches
-    Rails.cache.delete("seat:#{seat_id}:canvas_data")
-    Rails.cache.delete("room:#{seat.room_id}:occupied_seat_count")
-    Rails.cache.delete("room:#{seat.room_id}:occupancy_rate")
+    errors.add(:base, "ユーザーまたは訪問者のいずれかが必要です")
   end
 end

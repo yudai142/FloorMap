@@ -55,7 +55,7 @@ RSpec.describe Seat, type: :model do
 
       it 'アクティブなセッションがない場合は session: nil を返す' do
         user2 = create(:user)
-        create(:session, user: user2, seat: seat, status: :completed)
+        create(:session, user: user2, seat: seat, status: :checked_out)
 
         data = seat.canvas_data
         expect(data[:session]).to be_nil

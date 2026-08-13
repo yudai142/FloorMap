@@ -5,5 +5,9 @@
   "assetsDir": "app/assets",
   "entrypoints": [],
   "codegenDir": "app/components",
-  "aliasesToOptimize": []
+  "aliasesToOptimize": [],
+  "test": {
+    "autoBuild": false,
+    "skipManifestRead": true
+  }
 }

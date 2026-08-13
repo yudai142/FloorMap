@@ -183,6 +183,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_12_075000) do
     t.index ["visitor_id"], name: "index_sessions_on_visitor_id"
   end
 
+  create_table "share_links", force: :cascade do |t|
+    t.integer "access_count", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "expires_at"
+    t.bigint "room_id", null: false
+    t.string "token", null: false
+    t.datetime "updated_at", null: false
+    t.index ["room_id"], name: "index_share_links_on_room_id"
+    t.index ["token"], name: "index_share_links_on_token", unique: true
+  end
+
   create_table "users", force: :cascade do |t|
     t.integer "consumed_timestep"
     t.datetime "created_at", null: false
@@ -206,16 +217,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_12_075000) do
     t.datetime "updated_at", null: false
     t.index ["created_at"], name: "index_visitors_on_created_at"
     t.index ["session_id"], name: "index_visitors_on_session_id", unique: true
-  end
-
-  create_table "share_links", force: :cascade do |t|
-    t.bigint "room_id", null: false
-    t.string "token", null: false
-    t.datetime "expires_at"
-    t.integer "access_count", default: 0
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["token"], name: "index_share_links_on_token", unique: true
   end
 
   add_foreign_key "notifications", "rooms"
