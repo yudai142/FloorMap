@@ -285,10 +285,12 @@
           <% ["regular", "accessible", "vip"].each do |type| %>
             <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
               <span style="font-size: 13px; color: #475569;">
-                <% case type %>
-                  <% when "regular" %>通常座席
-                  <% when "accessible" %>障害対応座席
-                  <% when "vip" %>VIP座席
+                <% if type == "regular" %>
+                  通常座席
+                <% elsif type == "accessible" %>
+                  障害対応座席
+                <% elsif type == "vip" %>
+                  VIP座席
                 <% end %>
               </span>
               <span style="font-weight: 600; color: #0f172a;"><%= @room.seats.where(seat_type: type).count %> 席</span>
