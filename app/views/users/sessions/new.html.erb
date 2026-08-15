@@ -1,26 +1,26 @@
 <h2>Log in</h2>
 
-<%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
+<form action="<%= user_session_path %>" method="POST">
+  <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+
   <div class="field">
-    <p><%= f.label :email %></p>
-    <p><%= f.email_field :email, autofocus: true, autocomplete: "email" %></p>
+    <p><label for="user_email">Email</label></p>
+    <p><input type="email" name="user[email]" id="user_email" autofocus autocomplete="email"></p>
   </div>
 
   <div class="field">
-    <p><%= f.label :password %></p>
-    <p><%= f.password_field :password, autocomplete: "current-password" %></p>
+    <p><label for="user_password">Password</label></p>
+    <p><input type="password" name="user[password]" id="user_password" autocomplete="current-password"></p>
   </div>
 
-  <% if devise_mapping.rememberable? %>
-    <div class="field">
-      <p><%= f.check_box :remember_me %></p>
-      <p><%= f.label :remember_me %></p>
-    </div>
-  <% end %>
+  <div class="field">
+    <p><input type="checkbox" name="user[remember_me]" id="user_remember_me" value="1"></p>
+    <p><label for="user_remember_me">Remember me</label></p>
+  </div>
 
   <div class="actions">
-    <%= f.submit "Log in" %>
+    <button type="submit" name="commit" value="Log in">Log in</button>
   </div>
-<% end %>
+</form>
 
 <%= render "users/shared/links" %>
