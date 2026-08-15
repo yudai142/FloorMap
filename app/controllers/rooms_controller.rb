@@ -3,7 +3,7 @@ class RoomsController < ApplicationController
 
   def index
     authorize Room
-    @rooms = policy_scope(Room).includes(:seats)
+    @rooms = policy_scope(Room)
     @rooms = @rooms.search(params[:search]) if params[:search].present?
     @rooms = @rooms.by_owner(params[:owner_id]) if params[:owner_id].present?
     @rooms = @rooms.sorted(params[:sort], params[:direction]) if params[:sort].present?

@@ -1,7 +1,23 @@
+<nav style="background-color: white; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); padding: 0 64px;">
+  <div style="display: flex; justify-content: space-between; align-items: center; height: 64px; max-width: 1400px; margin: 0 auto;">
+    <div style="display: flex; align-items: center;">
+      <h1 style="font-size: 24px; font-weight: bold; color: #2563eb; margin: 0;">FloorMap</h1>
+    </div>
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <span style="font-size: 14px; color: #475569;"><%= current_user.email %></span>
+      <form action="<%= destroy_user_session_path %>" method="POST" style="display: inline;">
+        <input type="hidden" name="_method" value="DELETE">
+        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+        <button type="submit" style="background: none; border: none; color: #475569; text-decoration: none; font-weight: 500; cursor: pointer;">ログアウト</button>
+      </form>
+    </div>
+  </div>
+</nav>
+
 <style>
   .rooms-index {
     background-color: #f8fafc;
-    min-height: 100vh;
+    min-height: calc(100vh - 64px);
     padding: 32px 64px;
   }
   .rooms-header {
@@ -220,7 +236,7 @@
 
           <div class="room-card-footer">
             <div class="avatar-row">
-              <% active_users = room.seats.joins(:sessions).where(sessions: { status: :active }).map { |s| s.sessions.where(status: :active).last&.user }.compact.uniq %>
+              <% active_users = room.active_users %>
               <% active_users.first(3).each do |user| %>
                 <% if user.present? %>
                   <div class="avatar" style="background-color: #e2e8f0;"></div>

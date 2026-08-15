@@ -52,6 +52,17 @@ class Room < ApplicationRecord
     seats.joins(sessions: :visitor).where(sessions: { status: :active }).select("DISTINCT seats.*")
   end
 
+  def active_users
+    Session
+      .where(status: :active)
+      .where(seat_id: seats.ids)
+      .joins(:user)
+      .select("DISTINCT users.*")
+      .map(&:user)
+      .compact
+      .uniq
+  end
+
   def occupancy_rate
     return 0 if seat_count.zero?
 
