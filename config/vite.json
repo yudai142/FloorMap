@@ -3,9 +3,14 @@
   "publicOutputDir": "vite-dist",
   "publicDir": "public",
   "assetsDir": "app/assets",
-  "entrypoints": [],
+  "entrypoints": [
+    "app/frontend/entrypoints/application.jsx"
+  ],
   "codegenDir": "app/components",
   "aliasesToOptimize": [],
+  "development": {
+    "autoBuild": false
+  },
   "test": {
     "autoBuild": false,
     "skipManifestRead": true

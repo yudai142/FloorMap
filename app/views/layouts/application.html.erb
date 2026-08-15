@@ -21,10 +21,12 @@
     <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
 
-    <%# Vite entrypoint %>
+    <%# Vite entrypoint - Skip HMR server in development, use production manifest %>
     <% unless Rails.env.test? %>
-      <%= vite_javascript_tag "application", "data-turbo-track": "reload" %>
-      <%= vite_stylesheet_tag "application", "data-turbo-track": "reload" %>
+      <% if File.exist?(Rails.root.join("public/vite/.vite/manifest.json")) %>
+        <%= vite_javascript_tag "application.jsx", "data-turbo-track": "reload" %>
+        <%= vite_stylesheet_tag "application.jsx", "data-turbo-track": "reload" %>
+      <% end %>
     <% end %>
   </head>
 
