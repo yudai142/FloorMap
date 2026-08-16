@@ -2,7 +2,7 @@
 
 ## 0. デモアプリリンク
 完成イメージを把握しやすくなるよう作成しましたので合わせてご確認ください。
-https://floormap-seating-manager.onrender.com
+https://floormap-seating-manager.onrender.com/rooms/vNx9WWHZdCHynuJVMp3bdGdb
 
 
 ## 1. サービス概要
