@@ -1,7 +1,8 @@
 # FloorMap
 
-## 0. デモアプリリンク
-完成イメージを把握しやすくなるよう作成しましたので合わせてご確認ください。
+## 0. テストルームリンク
+ログイン無しで完成イメージを把握しやすくなるよう作成しましたので合わせてご確認ください。
+座りたい座席をクリックすると着席、もう一度クリックで離席ができます。
 https://floormap-seating-manager.onrender.com/rooms/vNx9WWHZdCHynuJVMp3bdGdb
 
 
