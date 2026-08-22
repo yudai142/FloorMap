@@ -28,8 +28,12 @@ RUN npm install --legacy-peer-deps
 RUN bundle exec vite install --force 2>/dev/null || true
 RUN npm run build 2>/dev/null || true
 
+# エントリーポイントスクリプトをコピー
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+
 # ポート 3000 を公開
 EXPOSE 3000
 
-# デフォルトコマンド
-CMD ["bash", "-c", "bundle exec rails db:prepare && bundle exec rails server -b 0.0.0.0"]
+# エントリーポイント設定
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
