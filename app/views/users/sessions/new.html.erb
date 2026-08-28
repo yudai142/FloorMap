@@ -1,26 +1,77 @@
-<h2>Log in</h2>
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+  <div class="w-full max-w-md space-y-8">
+    <!-- Header -->
+    <div class="text-center">
+      <h1 class="text-3xl font-bold text-slate-900">FloorMap</h1>
+      <h2 class="mt-6 text-2xl font-semibold text-slate-800">ようこそ</h2>
+      <p class="mt-2 text-slate-600">アカウントにサインインして始めましょう</p>
+    </div>
 
-<form action="<%= user_session_path %>" method="POST">
-  <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+    <!-- Form -->
+    <form action="<%= user_session_path %>" method="POST" class="mt-8 space-y-6">
+      <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
 
-  <div class="field">
-    <p><label for="user_email">Email</label></p>
-    <p><input type="email" name="user[email]" id="user_email" autofocus autocomplete="email"></p>
+      <!-- Email Field -->
+      <div>
+        <label for="user_email" class="block text-sm font-medium text-slate-700">メールアドレス</label>
+        <input
+          type="email"
+          name="user[email]"
+          id="user_email"
+          autofocus
+          autocomplete="email"
+          class="mt-1 block w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors"
+          placeholder="your@example.com"
+          required
+        >
+      </div>
+
+      <!-- Password Field -->
+      <div>
+        <label for="user_password" class="block text-sm font-medium text-slate-700">パスワード</label>
+        <input
+          type="password"
+          name="user[password]"
+          id="user_password"
+          autocomplete="current-password"
+          class="mt-1 block w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors"
+          placeholder="••••••••"
+          required
+        >
+      </div>
+
+      <!-- Remember Me -->
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <input
+            type="checkbox"
+            name="user[remember_me]"
+            id="user_remember_me"
+            value="1"
+            class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+          >
+          <label for="user_remember_me" class="ml-2 block text-sm text-slate-600">ログイン状態を保持する</label>
+        </div>
+        <a href="<%= new_password_path(:user) %>" class="text-sm font-medium text-blue-600 hover:text-blue-700">パスワードをお忘れですか？</a>
+      </div>
+
+      <!-- Submit Button -->
+      <button
+        type="submit"
+        name="commit"
+        value="サインイン"
+        class="w-full rounded-lg bg-blue-600 py-2.5 px-4 font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+      >
+        サインイン
+      </button>
+    </form>
+
+    <!-- Links -->
+    <div class="mt-6 text-center text-sm">
+      <p class="text-slate-600">
+        アカウントをお持ちでない場合
+        <a href="<%= new_registration_path(:user) %>" class="font-semibold text-blue-600 hover:text-blue-700">登録する</a>
+      </p>
+    </div>
   </div>
-
-  <div class="field">
-    <p><label for="user_password">Password</label></p>
-    <p><input type="password" name="user[password]" id="user_password" autocomplete="current-password"></p>
-  </div>
-
-  <div class="field">
-    <p><input type="checkbox" name="user[remember_me]" id="user_remember_me" value="1"></p>
-    <p><label for="user_remember_me">Remember me</label></p>
-  </div>
-
-  <div class="actions">
-    <button type="submit" name="commit" value="Log in">Log in</button>
-  </div>
-</form>
-
-<%= render "users/shared/links" %>
+</div>
