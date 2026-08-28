@@ -1,29 +1,106 @@
-<h2>Sign up</h2>
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+  <div class="w-full max-w-md space-y-8">
+    <!-- Header -->
+    <div class="text-center">
+      <h1 class="text-3xl font-bold text-slate-900">FloorMap</h1>
+      <h2 class="mt-6 text-2xl font-semibold text-slate-800">アカウントを作成</h2>
+      <p class="mt-2 text-slate-600">オフィスの座席管理をはじめましょう</p>
+    </div>
 
-<%= form_for(resource, as: resource_name, url: registration_path(resource_name)) do |f| %>
-  <%= render "users/shared/error_messages", resource: resource %>
-
-  <div class="field">
-    <p><%= f.label :email %></p>
-    <p><%= f.email_field :email, autofocus: true, autocomplete: "email" %></p>
-  </div>
-
-  <div class="field">
-    <p><%= f.label :password %></p>
-    <% if @minimum_password_length %>
-      <p><em>(<%= @minimum_password_length %> characters minimum)</em></p>
+    <!-- Error Messages -->
+    <% if resource.errors.any? %>
+      <div class="rounded-lg bg-red-50 border border-red-200 p-4" data-turbo-temporary>
+        <div class="flex gap-3">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-sm font-medium text-red-800">
+              <%= I18n.t("errors.messages.not_saved",
+                         count: resource.errors.count,
+                         resource: resource.class.model_name.human.downcase) %>
+            </h3>
+            <ul class="mt-2 list-inside space-y-1 text-sm text-red-700">
+              <% resource.errors.full_messages.each do |message| %>
+                <li class="flex gap-2">
+                  <span class="text-red-400">•</span>
+                  <span><%= message %></span>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+        </div>
+      </div>
     <% end %>
-    <p><%= f.password_field :password, autocomplete: "new-password" %></p>
-  </div>
 
-  <div class="field">
-    <p><%= f.label :password_confirmation %></p>
-    <p><%= f.password_field :password_confirmation, autocomplete: "new-password" %></p>
-  </div>
+    <!-- Form -->
+    <form action="<%= registration_path(resource_name) %>" method="POST" class="mt-8 space-y-6">
+      <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
 
-  <div class="actions">
-    <%= f.submit "Sign up" %>
-  </div>
-<% end %>
+      <!-- Email Field -->
+      <div>
+        <label for="user_email" class="block text-sm font-medium text-slate-700">メールアドレス</label>
+        <input
+          type="email"
+          name="user[email]"
+          id="user_email"
+          autofocus
+          autocomplete="email"
+          value="<%= resource.email %>"
+          class="mt-1 block w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors"
+          placeholder="your@example.com"
+          required
+        >
+      </div>
 
-<%= render "users/shared/links" %>
+      <!-- Password Field -->
+      <div>
+        <label for="user_password" class="block text-sm font-medium text-slate-700">パスワード</label>
+        <% if @minimum_password_length %>
+          <p class="mt-1 text-xs text-slate-500">最低 <%= @minimum_password_length %> 文字</p>
+        <% end %>
+        <input
+          type="password"
+          name="user[password]"
+          id="user_password"
+          autocomplete="new-password"
+          class="mt-1 block w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors"
+          placeholder="••••••••"
+          required
+        >
+      </div>
+
+      <!-- Password Confirmation Field -->
+      <div>
+        <label for="user_password_confirmation" class="block text-sm font-medium text-slate-700">パスワード確認</label>
+        <input
+          type="password"
+          name="user[password_confirmation]"
+          id="user_password_confirmation"
+          autocomplete="new-password"
+          class="mt-1 block w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors"
+          placeholder="••••••••"
+          required
+        >
+      </div>
+
+      <!-- Submit Button -->
+      <button
+        type="submit"
+        class="w-full rounded-lg bg-blue-600 py-2.5 px-4 font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+      >
+        アカウントを作成
+      </button>
+    </form>
+
+    <!-- Links -->
+    <div class="mt-6 text-center text-sm">
+      <p class="text-slate-600">
+        すでにアカウントをお持ちですか？
+        <a href="<%= new_session_path(:user) %>" class="font-semibold text-blue-600 hover:text-blue-700">サインイン</a>
+      </p>
+    </div>
+  </div>
+</div>
