@@ -7,6 +7,10 @@ class RoomPolicy < ApplicationPolicy
     true
   end
 
+  def new?
+    user.manager? || user.admin?
+  end
+
   def create?
     user.manager? || user.admin?
   end
