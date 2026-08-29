@@ -8,11 +8,11 @@ class RoomPolicy < ApplicationPolicy
   end
 
   def new?
-    user.manager? || user.admin?
+    true
   end
 
   def create?
-    user.manager? || user.admin?
+    true
   end
 
   def update?
