@@ -50,6 +50,10 @@ class RoomsController < ApplicationController
     redirect_to rooms_url, notice: "ルームを削除しました"
   end
 
+  def canvas_editor
+    authorize @room
+  end
+
   def canvas_data
     authorize @room, :show?
 

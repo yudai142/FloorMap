@@ -31,7 +31,10 @@ Rails.application.routes.draw do
         get :export
       end
     end
-    get :canvas_data
+    member do
+      get :canvas_editor
+      get :canvas_data
+    end
     collection do
       get :export
     end

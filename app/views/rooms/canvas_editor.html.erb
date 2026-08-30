@@ -385,7 +385,6 @@
     </div>
     <div class="detail-header-actions">
       <% if user_signed_in? && current_user.owner_of?(@room) %>
-        <%= link_to "エディタを開く", canvas_editor_room_path(@room), class: "action-button" %>
         <%= link_to "設定", edit_room_path(@room), class: "action-button" %>
       <% end %>
     </div>
@@ -394,7 +393,7 @@
   <div class="main-split">
     <div class="map-container">
       <div class="map-header">
-        <div class="map-title">座席配置図</div>
+        <div class="map-title">座席配置図エディタ</div>
         <div class="legend">
           <div class="legend-item">
             <div class="legend-dot occupied"></div>
