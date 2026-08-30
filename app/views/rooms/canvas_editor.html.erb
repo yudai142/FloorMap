@@ -496,43 +496,20 @@
         </div>
       </div>
 
-      <canvas data-controller="seat-canvas" data-seat-canvas-target="canvas" data-seat-canvas-room-id-value="<%= @room.id %>" style="width: 100%; height: 100%; display: block; border-radius: 12px; background-color: #ffffff; border: 1px solid #e2e8f0;"></canvas>
+      <canvas data-controller="seat-canvas" data-seat-canvas-target="canvas" data-seat-canvas-room-id-value="<%= @room.id %>" style="flex: 1; width: 100%; height: 100%; display: block; border-radius: 12px; background-color: #ffffff; border: 1px solid #e2e8f0; min-height: 500px;"></canvas>
     </div>
   </div>
 </div>
 
 <script>
   window.currentEditMode = 'select';
-  let seatCanvasController = null;
 
   // ページ読み込み時に初期化
   document.addEventListener('DOMContentLoaded', () => {
-    console.log("DOMContentLoaded - initializing canvas editor");
-
-    const canvasElement = document.querySelector('[data-controller="seat-canvas"]');
-    console.log("Canvas element:", canvasElement);
-
-    if (canvasElement) {
-      console.log("Canvas element found");
-      console.log("Canvas offsetWidth:", canvasElement.offsetWidth);
-      console.log("Canvas offsetHeight:", canvasElement.offsetHeight);
-
-      // Stimulus コントローラの参照を取得（少し遅延させる）
-      setTimeout(() => {
-        if (canvasElement.__stimulus__?.controller) {
-          seatCanvasController = canvasElement.__stimulus__.controller;
-          console.log("Stimulus controller found:", seatCanvasController);
-        } else {
-          console.log("Stimulus controller not found on element");
-        }
-      }, 500);
-    } else {
-      console.log("Canvas element NOT found");
-    }
+    // Stimulus コントローラは自動的に初期化される
   });
 
   function setEditMode(mode) {
-    console.log(`setEditMode called with: ${mode}`);
     window.currentEditMode = mode;
 
     // ボタンの状態を更新
@@ -540,9 +517,6 @@
       btn.classList.remove('active');
     });
     document.getElementById(`mode-${mode}`)?.classList.add('active');
-
-    console.log(`Edit mode changed to: ${mode}`);
-    console.log(`window.currentEditMode is now: ${window.currentEditMode}`);
 
     // canvas のカーソルを変更
     const canvas = document.querySelector('canvas');
@@ -558,9 +532,6 @@
           canvas.style.cursor = 'not-allowed';
           break;
       }
-      console.log(`Canvas cursor changed to: ${canvas.style.cursor}`);
-    } else {
-      console.log("Canvas element not found in setEditMode");
     }
   }
 
