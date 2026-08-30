@@ -1,5 +1,5 @@
 class RoomsController < ApplicationController
-  before_action :set_room, only: [ :show, :edit, :update, :destroy, :canvas_data ]
+  before_action :set_room, only: [ :show, :edit, :update, :destroy, :canvas_data, :canvas_editor ]
 
   def index
     authorize Room
