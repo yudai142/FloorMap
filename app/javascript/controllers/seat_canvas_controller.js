@@ -60,7 +60,7 @@ export default class extends Controller {
   }
 
   draw() {
-    this.ctx.fillStyle = "#1e293b"
+    this.ctx.fillStyle = "#ffffff"
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
 
     this.drawGrid()
@@ -70,7 +70,7 @@ export default class extends Controller {
 
   drawGrid() {
     const gridSize = this.gridSizeValue
-    this.ctx.strokeStyle = "rgba(255, 255, 255, 0.1)"
+    this.ctx.strokeStyle = "rgba(0, 0, 0, 0.1)"
     this.ctx.lineWidth = 1
 
     for (let x = 0; x < this.canvas.width; x += gridSize) {
