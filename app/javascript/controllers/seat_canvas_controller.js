@@ -37,9 +37,9 @@ export default class extends Controller {
   }
 
   setupEventListeners() {
-    this.canvas.addEventListener("mousedown", e => this.handleMouseDown(e))
+    this.canvas.addEventListener("mousedown", e => this.handleCanvasMouseDown(e))
     this.canvas.addEventListener("mousemove", e => this.handleMouseMove(e))
-    this.canvas.addEventListener("mouseup", e => this.handleMouseUp(e))
+    this.canvas.addEventListener("mouseup", e => this.handleCanvasMouseUp(e))
     this.canvas.addEventListener("mouseleave", e => this.handleMouseLeave(e))
   }
 
@@ -186,11 +186,27 @@ export default class extends Controller {
     seat._screenPos = { x, y, width, height }
   }
 
-  handleMouseDown(e) {
+  handleCanvasMouseDown(e) {
     const rect = this.canvas.getBoundingClientRect()
     const mouseX = e.clientX - rect.left
     const mouseY = e.clientY - rect.top
 
+    const editMode = window.currentEditMode || 'select'
+
+    switch (editMode) {
+      case 'select':
+        this.handleSeatDragStart(mouseX, mouseY)
+        break
+      case 'draw':
+        this.startDrawing(mouseX, mouseY)
+        break
+      case 'delete':
+        this.deleteAtPoint(mouseX, mouseY)
+        break
+    }
+  }
+
+  handleSeatDragStart(mouseX, mouseY) {
     const seat = this.getSeatAtPoint(mouseX, mouseY)
     if (seat) {
       this.draggingSeat = seat
@@ -202,20 +218,87 @@ export default class extends Controller {
     }
   }
 
+  startDrawing(x, y) {
+    this.isDrawing = true
+    this.drawingStart = { x, y }
+    this.canvas.style.cursor = "crosshair"
+  }
+
+  deleteAtPoint(x, y) {
+    const seat = this.getSeatAtPoint(x, y)
+    if (seat && confirm(`座席 ${seat.seat_identifier} を削除しますか？`)) {
+      this.deleteSeat(seat)
+      return
+    }
+
+    const shape = this.shapes.find(s => this.isPointInShape(x, y, s))
+    if (shape) {
+      this.shapes = this.shapes.filter(s => s !== shape)
+      this.draw()
+    }
+  }
+
+  isPointInShape(x, y, shape) {
+    switch (shape.type) {
+      case "rectangle":
+        return x >= shape.x && x <= shape.x + shape.width && y >= shape.y && y <= shape.y + shape.height
+      case "circle":
+        const dist = Math.sqrt(Math.pow(x - (shape.x + shape.radius / 2), 2) + Math.pow(y - (shape.y + shape.radius / 2), 2))
+        return dist <= shape.radius + 5
+      default:
+        return false
+    }
+  }
+
+  deleteSeat(seat) {
+    const roomId = this.roomIdValue
+    const seatId = seat.id
+
+    fetch(`/rooms/${roomId}/seats/${seatId}`, {
+      method: "DELETE",
+      headers: {
+        "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content
+      }
+    })
+      .then(() => {
+        this.seats = this.seats.filter(s => s.id !== seatId)
+        this.draw()
+        console.log("Seat deleted:", seatId)
+      })
+      .catch(error => console.error("Seat deletion failed:", error))
+  }
+
   handleMouseMove(e) {
     const rect = this.canvas.getBoundingClientRect()
     const mouseX = e.clientX - rect.left
     const mouseY = e.clientY - rect.top
 
-    const seat = this.getSeatAtPoint(mouseX, mouseY)
-    this.canvas.style.cursor = seat ? "grab" : "default"
+    const editMode = window.currentEditMode || 'select'
 
-    if (this.draggingSeat) {
+    if (editMode === 'select') {
+      const seat = this.getSeatAtPoint(mouseX, mouseY)
+      this.canvas.style.cursor = seat ? "grab" : "default"
+
+      if (this.draggingSeat) {
+        this.draw()
+      }
+    } else if (editMode === 'draw' && this.isDrawing) {
       this.draw()
+      // 描画プレビュー
+      this.ctx.strokeStyle = "#fbbf24"
+      this.ctx.lineWidth = 2
+      this.ctx.setLineDash([5, 5])
+      this.ctx.strokeRect(
+        this.drawingStart.x,
+        this.drawingStart.y,
+        mouseX - this.drawingStart.x,
+        mouseY - this.drawingStart.y
+      )
+      this.ctx.setLineDash([])
     }
   }
 
-  handleMouseUp(e) {
+  handleCanvasMouseUp(e) {
     if (this.draggingSeat) {
       const rect = this.canvas.getBoundingClientRect()
       const mouseX = e.clientX - rect.left
@@ -231,6 +314,21 @@ export default class extends Controller {
 
       this.updateSeatPosition(this.draggingSeat, finalX, finalY)
       this.draggingSeat = null
+      this.canvas.style.cursor = "default"
+    } else if (this.isDrawing) {
+      const rect = this.canvas.getBoundingClientRect()
+      const mouseX = e.clientX - rect.left
+      const mouseY = e.clientY - rect.top
+
+      const width = mouseX - this.drawingStart.x
+      const height = mouseY - this.drawingStart.y
+
+      if (Math.abs(width) > 5 && Math.abs(height) > 5) {
+        this.addRectangle(this.drawingStart.x, this.drawingStart.y, width, height, "#ef4444", 2)
+      }
+
+      this.isDrawing = false
+      this.drawingStart = null
       this.canvas.style.cursor = "default"
     }
   }

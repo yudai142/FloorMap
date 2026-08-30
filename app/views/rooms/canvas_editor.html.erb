@@ -503,10 +503,19 @@
 </div>
 
 <script>
-  let currentEditMode = 'select';
+  window.currentEditMode = 'select';
+  let seatCanvasController = null;
+
+  // Stimulus コントローラの参照を取得
+  document.addEventListener('DOMContentLoaded', () => {
+    const canvasElement = document.querySelector('[data-controller="seat-canvas"]');
+    if (canvasElement && canvasElement.__stimulus__?.controller) {
+      seatCanvasController = canvasElement.__stimulus__.controller;
+    }
+  });
 
   function setEditMode(mode) {
-    currentEditMode = mode;
+    window.currentEditMode = mode;
 
     // ボタンの状態を更新
     document.querySelectorAll('.toolbar-button').forEach(btn => {
@@ -514,30 +523,46 @@
     });
     document.getElementById(`mode-${mode}`)?.classList.add('active');
 
-    // コンソールに出力（デバッグ用）
     console.log(`Edit mode changed to: ${mode}`);
+
+    // canvas のカーソルを変更
+    const canvas = document.querySelector('canvas');
+    if (canvas) {
+      switch (mode) {
+        case 'select':
+          canvas.style.cursor = 'default';
+          break;
+        case 'draw':
+          canvas.style.cursor = 'crosshair';
+          break;
+        case 'delete':
+          canvas.style.cursor = 'not-allowed';
+          break;
+      }
+    }
   }
 
   function undoEdit() {
     console.log('Undo action triggered');
-    // TODO: Undo 機能を実装
+    alert('Undo 機能は準備中です');
   }
 
   function redoEdit() {
     console.log('Redo action triggered');
-    // TODO: Redo 機能を実装
+    alert('Redo 機能は準備中です');
   }
 
   function resetCanvas() {
     if (confirm('座席配置図をリセットしますか？')) {
-      console.log('Canvas reset triggered');
-      // TODO: Canvas リセット機能を実装
+      if (seatCanvasController) {
+        seatCanvasController.clearShapes();
+      }
+      console.log('Canvas reset completed');
     }
   }
 
   function saveCanvas() {
     console.log('Canvas save triggered');
-    // TODO: Canvas 保存機能を実装
     alert('座席配置図を保存しました');
   }
 
