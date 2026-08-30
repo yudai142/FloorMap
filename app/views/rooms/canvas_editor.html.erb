@@ -57,6 +57,55 @@
     gap: 12px;
   }
 
+  .editor-toolbar {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .toolbar-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .toolbar-divider {
+    width: 1px;
+    height: 24px;
+    background-color: #e2e8f0;
+  }
+
+  .toolbar-button {
+    background: white;
+    border: 1px solid #e2e8f0;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 13px;
+    color: #475569;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    transition: all 0.2s;
+  }
+
+  .toolbar-button:hover {
+    background-color: #f8fafc;
+    border-color: #cbd5e1;
+  }
+
+  .toolbar-button.active {
+    background-color: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+  }
+
   .action-button {
     background: white;
     border: 1px solid #e2e8f0;
@@ -390,6 +439,43 @@
     </div>
   </div>
 
+  <!-- Editor Toolbar -->
+  <div class="editor-toolbar">
+    <div class="toolbar-group">
+      <span style="font-size: 12px; color: #64748b; font-weight: 600;">編集モード:</span>
+      <button class="toolbar-button active" onclick="setEditMode('select')" id="mode-select" title="選択ツール (S)">
+        ✓ 選択
+      </button>
+      <button class="toolbar-button" onclick="setEditMode('draw')" id="mode-draw" title="描画ツール (D)">
+        ✏️ 描画
+      </button>
+      <button class="toolbar-button" onclick="setEditMode('delete')" id="mode-delete" title="削除ツール (Del)">
+        🗑️ 削除
+      </button>
+    </div>
+    <div class="toolbar-divider"></div>
+    <div class="toolbar-group">
+      <button class="toolbar-button" onclick="undoEdit()" title="やり直す (Ctrl+Z)">
+        ↶ やり直す
+      </button>
+      <button class="toolbar-button" onclick="redoEdit()" title="再実行 (Ctrl+Y)">
+        ↷ 再実行
+      </button>
+    </div>
+    <div class="toolbar-divider"></div>
+    <div class="toolbar-group">
+      <button class="toolbar-button" onclick="resetCanvas()" title="リセット">
+        🔄 リセット
+      </button>
+    </div>
+    <div style="flex: 1;"></div>
+    <div class="toolbar-group">
+      <button class="toolbar-button" onclick="saveCanvas()" style="background-color: #10b981; color: white; border-color: #10b981;">
+        💾 保存
+      </button>
+    </div>
+  </div>
+
   <div class="main-split">
     <div class="map-container">
       <div class="map-header">
@@ -472,3 +558,52 @@
     </div>
   </div>
 </div>
+
+<script>
+  let currentEditMode = 'select';
+
+  function setEditMode(mode) {
+    currentEditMode = mode;
+
+    // ボタンの状態を更新
+    document.querySelectorAll('.toolbar-button').forEach(btn => {
+      btn.classList.remove('active');
+    });
+    document.getElementById(`mode-${mode}`)?.classList.add('active');
+
+    // コンソールに出力（デバッグ用）
+    console.log(`Edit mode changed to: ${mode}`);
+  }
+
+  function undoEdit() {
+    console.log('Undo action triggered');
+    // TODO: Undo 機能を実装
+  }
+
+  function redoEdit() {
+    console.log('Redo action triggered');
+    // TODO: Redo 機能を実装
+  }
+
+  function resetCanvas() {
+    if (confirm('座席配置図をリセットしますか？')) {
+      console.log('Canvas reset triggered');
+      // TODO: Canvas リセット機能を実装
+    }
+  }
+
+  function saveCanvas() {
+    console.log('Canvas save triggered');
+    // TODO: Canvas 保存機能を実装
+    alert('座席配置図を保存しました');
+  }
+
+  // キーボードショートカット
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 's' || e.key === 'S') setEditMode('select');
+    if (e.key === 'd' || e.key === 'D') setEditMode('draw');
+    if (e.key === 'Delete') setEditMode('delete');
+    if (e.ctrlKey && e.key === 'z') undoEdit();
+    if (e.ctrlKey && e.key === 'y') redoEdit();
+  });
+</script>
