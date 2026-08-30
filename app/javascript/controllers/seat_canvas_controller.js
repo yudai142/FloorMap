@@ -10,14 +10,19 @@ export default class extends Controller {
   }
 
   connect() {
+    console.log("SeatCanvasController connected")
     this.canvas = this.canvasTarget
     this.ctx = this.canvas.getContext("2d")
     this.draggingSeat = null
     this.dragOffset = { x: 0, y: 0 }
     this.shapes = [] // 図形（壁・パーティション等）
+    this.isDrawing = false
+    this.drawingStart = null
 
+    // Canvas のサイズを設定
     this.canvas.width = this.canvas.offsetWidth
     this.canvas.height = this.canvas.offsetHeight
+    console.log(`Canvas size: ${this.canvas.width} x ${this.canvas.height}`)
 
     this.loadCanvasData()
     this.setupEventListeners()
@@ -192,6 +197,7 @@ export default class extends Controller {
     const mouseY = e.clientY - rect.top
 
     const editMode = window.currentEditMode || 'select'
+    console.log(`Mouse down - Mode: ${editMode}, Position: ${mouseX}, ${mouseY}`)
 
     switch (editMode) {
       case 'select':
@@ -219,6 +225,7 @@ export default class extends Controller {
   }
 
   startDrawing(x, y) {
+    console.log(`Start drawing at ${x}, ${y}`)
     this.isDrawing = true
     this.drawingStart = { x, y }
     this.canvas.style.cursor = "crosshair"
