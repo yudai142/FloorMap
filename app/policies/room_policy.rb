@@ -15,6 +15,10 @@ class RoomPolicy < ApplicationPolicy
     true
   end
 
+  def canvas_editor?
+    user.owner_of?(@record)
+  end
+
   def update?
     user.owner_of?(@record)
   end
