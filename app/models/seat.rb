@@ -12,8 +12,14 @@ class Seat < ApplicationRecord
 
   enum :seat_type, { regular: "regular", accessible: "accessible", vip: "vip" }
 
+  GRID_SIZE = 40
+
+  after_create_commit :clear_caches
+  after_create_commit :broadcast_seat_updated
   after_update_commit :clear_caches
+  after_update_commit :broadcast_seat_updated
   after_destroy_commit :clear_caches
+  after_destroy_commit :broadcast_seat_removed
 
   def clear_caches
     Rails.cache.delete("seat:#{id}:identifier")
@@ -37,6 +43,13 @@ class Seat < ApplicationRecord
 
   def grid_position
     { row: row_number, column: column_number }
+  end
+
+  def self.grid_position_for(position_x:, position_y:)
+    {
+      row_number: [(position_y.to_f / GRID_SIZE).round, 0].max,
+      column_number: [(position_x.to_f / GRID_SIZE).round, 0].max + 1
+    }
   end
 
   def canvas_data
@@ -64,5 +77,15 @@ class Seat < ApplicationRecord
         session: session_data
       }
     end
+  end
+
+  private
+
+  def broadcast_seat_updated
+    RoomsChannel.broadcast_to(room, type: "seat_updated", seat: canvas_data)
+  end
+
+  def broadcast_seat_removed
+    RoomsChannel.broadcast_to(room, type: "seat_removed", seat_id: id)
   end
 end

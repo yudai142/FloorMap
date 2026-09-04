@@ -18,12 +18,29 @@ class Session < ApplicationRecord
   scope :by_date, ->(date) { where(created_at: date.beginning_of_day..date.end_of_day) }
   scope :recent, -> { order(created_at: :desc) }
 
+  after_create_commit :clear_seat_caches
+  after_create_commit :broadcast_seat_updated
+  after_update_commit :clear_seat_caches, if: :saved_change_to_status?
+  after_update_commit :broadcast_seat_updated, if: :saved_change_to_status?
+
   def duration
     end_time = check_out_time || Time.current
     (end_time - check_in_time).to_i
   end
 
+  def check_out!
+    update(status: "checked_out", check_out_time: Time.current)
+  end
+
   private
+
+  def clear_seat_caches
+    seat.clear_caches
+  end
+
+  def broadcast_seat_updated
+    RoomsChannel.broadcast_to(room, type: "seat_updated", seat: seat.canvas_data)
+  end
 
   def user_or_visitor_present
     return if user_id.present? || visitor_id.present?
