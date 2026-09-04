@@ -4,7 +4,10 @@ export default class extends Controller {
   static targets = ["canvas"]
   static values = {
     roomId: String,
-    gridSize: { type: Number, default: 40 }
+    gridSize: { type: Number, default: 40 },
+    context: { type: String, default: "view" },
+    currentUserId: { type: Number, default: 0 },
+    canManage: { type: Boolean, default: false }
   }
 
   connect() {
@@ -12,12 +15,14 @@ export default class extends Controller {
     this.ctx = this.canvas.getContext("2d")
     this.seats = []
     this.room = {}
-    this.drawings = [] // ユーザーが描画した図形を保存
+    this.drawings = []
+    this.seatRects = []
 
-    // マウスイベント
     this.isDrawing = false
     this.drawingStart = null
     this.selectedSeat = null
+    this.draggedSeat = null
+    this.dragOffset = null
 
     this.resizeCanvas()
     window.addEventListener("resize", () => this.resizeCanvas())
@@ -38,30 +43,64 @@ export default class extends Controller {
     const rect = this.canvas.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
-
     const mode = window.currentEditMode || 'select'
 
-    if (mode === 'draw') {
-      this.isDrawing = true
-      this.drawingStart = { x, y }
-    } else if (mode === 'delete') {
-      this.deleteAtPoint(x, y)
+    if (this.contextValue === "editor") {
+      if (mode === 'seat') {
+        const seat = this.getSeatAtPoint(x, y)
+        if (!seat) {
+          this.createSeat(x, y)
+        }
+      } else if (mode === 'select') {
+        const seat = this.getSeatAtPoint(x, y)
+        if (seat) {
+          this.draggedSeat = seat
+          this.dragOffset = { x: x - (seat.position_x || x), y: y - (seat.position_y || y) }
+        }
+      } else if (mode === 'draw') {
+        this.isDrawing = true
+        this.drawingStart = { x, y }
+      } else if (mode === 'delete') {
+        const seat = this.getSeatAtPoint(x, y)
+        if (seat) {
+          this.deleteSeat(seat)
+        } else {
+          this.deleteDrawingAtPoint(x, y)
+        }
+      }
+    } else if (this.contextValue === "view") {
+      const seat = this.getSeatAtPoint(x, y)
+      if (seat) {
+        this.handleSeatClick(seat)
+      }
     }
   }
 
   handleMouseMove(e) {
-    if (!this.isDrawing) return
-
     const rect = this.canvas.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
+    const mode = window.currentEditMode || 'select'
+
+    if (this.contextValue === "editor" && this.draggedSeat && mode === 'select') {
+      this.draw()
+      const draftX = x - this.dragOffset.x
+      const draftY = y - this.dragOffset.y
+      this.ctx.strokeStyle = "#fbbf24"
+      this.ctx.lineWidth = 2
+      this.ctx.setLineDash([5, 5])
+      const seatWidth = 60
+      const seatHeight = 60
+      this.ctx.strokeRect(draftX, draftY, seatWidth, seatHeight)
+      this.ctx.setLineDash([])
+      return
+    }
+
+    if (!this.isDrawing || mode !== 'draw') return
 
     this.draw()
-
-    // 描画プレビューを表示
     const width = x - this.drawingStart.x
     const height = y - this.drawingStart.y
-
     this.ctx.strokeStyle = "#fbbf24"
     this.ctx.lineWidth = 2
     this.ctx.setLineDash([5, 5])
@@ -70,11 +109,20 @@ export default class extends Controller {
   }
 
   handleMouseUp(e) {
-    if (!this.isDrawing) return
-
     const rect = this.canvas.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
+
+    if (this.draggedSeat) {
+      const newX = x - this.dragOffset.x
+      const newY = y - this.dragOffset.y
+      this.moveSeat(this.draggedSeat, newX, newY)
+      this.draggedSeat = null
+      this.dragOffset = null
+      return
+    }
+
+    if (!this.isDrawing) return
 
     const width = x - this.drawingStart.x
     const height = y - this.drawingStart.y
@@ -99,16 +147,161 @@ export default class extends Controller {
   handleMouseLeave() {
     this.isDrawing = false
     this.drawingStart = null
+    this.draggedSeat = null
   }
 
-  deleteAtPoint(x, y) {
-    // 図形の削除
+  handleSeatClick(seat) {
+    if (!seat.session) {
+      this.checkIn(seat)
+    } else if (seat.session.user_id === this.currentUserIdValue || this.canManageValue) {
+      this.checkOut(seat)
+    }
+  }
+
+  getSeatAtPoint(x, y) {
+    for (const rect of this.seatRects) {
+      if (x >= rect.x && x <= rect.x + rect.width &&
+          y >= rect.y && y <= rect.y + rect.height) {
+        return rect.seat
+      }
+    }
+    return null
+  }
+
+  mergeSeat(seat) {
+    const index = this.seats.findIndex(s => s.id === seat.id)
+    if (index !== -1) {
+      this.seats[index] = seat
+    } else {
+      this.seats.push(seat)
+    }
+    this.draw()
+  }
+
+  removeSeatById(seatId) {
+    this.seats = this.seats.filter(s => s.id !== seatId)
+    this.draw()
+  }
+
+  createSeat(x, y) {
+    const formData = new FormData()
+    formData.append("seat[position_x]", x)
+    formData.append("seat[position_y]", y)
+    formData.append("seat[seat_type]", "regular")
+
+    fetch(`/rooms/${this.roomIdValue}/seats.json`, {
+      method: "POST",
+      headers: { "X-CSRF-Token": this.csrfToken() },
+      body: formData
+    })
+      .then(res => res.json())
+      .then(seat => {
+        if (seat.id) {
+          this.mergeSeat(seat)
+        } else if (seat.errors) {
+          alert(`座席作成失敗: ${Object.values(seat.errors).join(", ")}`)
+        }
+      })
+      .catch(err => console.error("Seat creation failed:", err))
+  }
+
+  moveSeat(seat, x, y) {
+    fetch(`/rooms/${this.roomIdValue}/seats/${seat.id}/position.json`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": this.csrfToken()
+      },
+      body: JSON.stringify({ seat: { position_x: x, position_y: y } })
+    })
+      .then(res => res.json())
+      .then(updatedSeat => {
+        if (updatedSeat.id) {
+          this.mergeSeat(updatedSeat)
+        }
+      })
+      .catch(err => console.error("Seat move failed:", err))
+  }
+
+  deleteSeat(seat) {
+    if (!confirm(`座席 ${seat.seat_identifier} を削除しますか?`)) return
+
+    fetch(`/rooms/${this.roomIdValue}/seats/${seat.id}.json`, {
+      method: "DELETE",
+      headers: { "X-CSRF-Token": this.csrfToken() }
+    })
+      .then(res => {
+        if (res.ok) {
+          this.removeSeatById(seat.id)
+        }
+      })
+      .catch(err => console.error("Seat deletion failed:", err))
+  }
+
+  deleteDrawingAtPoint(x, y) {
     this.drawings = this.drawings.filter(drawing => {
       if (!this.isPointInShape(x, y, drawing)) return true
       return false
     })
-
     this.draw()
+  }
+
+  checkIn(seat) {
+    const formData = new FormData()
+    formData.append("seat_id", seat.id)
+
+    fetch("/sessions/check_in.json", {
+      method: "POST",
+      headers: { "X-CSRF-Token": this.csrfToken() },
+      body: formData
+    })
+      .then(res => res.json())
+      .then(updatedSeat => {
+        if (updatedSeat.id) {
+          this.mergeSeat(updatedSeat)
+        }
+      })
+      .catch(err => console.error("Check-in failed:", err))
+  }
+
+  checkOut(seat) {
+    const session = seat.session
+    if (!session) return
+
+    const params = new URLSearchParams()
+    params.append("session_id", session.id)
+
+    fetch(`/sessions/check_out.json?${params}`, {
+      method: "DELETE",
+      headers: { "X-CSRF-Token": this.csrfToken() }
+    })
+      .then(res => res.json())
+      .then(updatedSeat => {
+        if (updatedSeat.id) {
+          this.mergeSeat(updatedSeat)
+        }
+      })
+      .catch(err => console.error("Check-out failed:", err))
+  }
+
+  save() {
+    if (this.contextValue !== "editor") return
+
+    fetch(`/rooms/${this.roomIdValue}/floor_plan.json`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": this.csrfToken()
+      },
+      body: JSON.stringify({ room: { floor_plan_data: this.drawings } })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.floor_plan_data !== undefined) {
+          alert("床面図を保存しました")
+        }
+      })
+      .catch(err => console.error("Floor plan save failed:", err))
   }
 
   isPointInShape(x, y, shape) {
@@ -120,6 +313,10 @@ export default class extends Controller {
       return x >= minX && x <= maxX && y >= minY && y <= maxY
     }
     return false
+  }
+
+  csrfToken() {
+    return document.querySelector('meta[name="csrf-token"]').content
   }
 
   resizeCanvas() {
@@ -135,6 +332,7 @@ export default class extends Controller {
       .then(data => {
         this.seats = data.seats || []
         this.room = data.room || {}
+        this.drawings = data.floor_plan_data || []
         this.draw()
       })
       .catch(error => console.error("Canvas data loading failed:", error))
@@ -142,32 +340,22 @@ export default class extends Controller {
 
   setupActionCable() {
     import("channels/rooms_channel").then(module => {
-      module.subscribeToRoom(this.roomIdValue, (updatedSeat) => {
-        this.updateSeatFromBroadcast(updatedSeat)
+      module.subscribeToRoom(this.roomIdValue, (data) => {
+        if (data.type === "seat_updated") {
+          this.mergeSeat(data.seat)
+        } else if (data.type === "seat_removed") {
+          this.removeSeatById(data.seat_id)
+        }
       })
     })
   }
 
-  updateSeatFromBroadcast(updatedSeat) {
-    const seatIndex = this.seats.findIndex(s => s.id === updatedSeat.id)
-    if (seatIndex !== -1) {
-      this.seats[seatIndex] = updatedSeat
-      this.draw()
-    }
-  }
-
   draw() {
-    // 背景を白で塗りつぶし
     this.ctx.fillStyle = "#ffffff"
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
 
-    // グリッドを描画
     this.drawGrid()
-
-    // ユーザーが描画した図形を描画
     this.drawShapes()
-
-    // 座席を描画
     this.drawSeats()
   }
 
@@ -202,34 +390,43 @@ export default class extends Controller {
   }
 
   drawSeats() {
-    if (!this.seats || this.seats.length === 0) return
+    if (!this.seats || this.seats.length === 0) {
+      this.seatRects = []
+      return
+    }
 
-    const padding = 40
-    const gridWidth = this.canvas.width - padding * 2
-    const gridHeight = this.canvas.height - padding * 2
-
-    const rowCount = Math.max(...this.seats.map(s => s.row_number || 0)) + 1
-    const colCount = Math.max(...this.seats.map(s => s.column_number || 0)) + 1
-
-    const seatWidth = Math.min(80, gridWidth / colCount)
-    const seatHeight = Math.min(80, gridHeight / rowCount)
-    const spacing = 16
+    this.seatRects = []
+    const seatWidth = 60
+    const seatHeight = 60
 
     this.seats.forEach(seat => {
-      const row = seat.row_number || 0
-      const col = seat.column_number || 0
+      let x, y
 
-      const x = padding + col * (seatWidth + spacing)
-      const y = padding + row * (seatHeight + spacing)
+      if (seat.position_x !== null && seat.position_y !== null) {
+        x = seat.position_x
+        y = seat.position_y
+      } else {
+        const padding = 40
+        const gridWidth = this.canvas.width - padding * 2
+        const gridHeight = this.canvas.height - padding * 2
+        const rowCount = Math.max(...this.seats.map(s => s.row_number || 0)) + 1
+        const colCount = Math.max(...this.seats.map(s => s.column_number || 0)) + 1
+        const computedWidth = Math.min(80, gridWidth / colCount)
+        const computedHeight = Math.min(80, gridHeight / rowCount)
+        const spacing = 16
+        x = padding + (seat.column_number || 0) * (computedWidth + spacing)
+        y = padding + (seat.row_number || 0) * (computedHeight + spacing)
+      }
 
       this.drawSeat(x, y, seatWidth, seatHeight, seat)
+
+      this.seatRects.push({ x, y, width: seatWidth, height: seatHeight, seat })
     })
   }
 
   drawSeat(x, y, width, height, seat) {
-    const isOccupied = seat.session !== null
+    const isOccupied = seat.session !== null && seat.session !== undefined
 
-    // 座席を描画
     this.ctx.strokeStyle = isOccupied ? "#3b82f6" : "#10b981"
     this.ctx.fillStyle = isOccupied ? "rgba(59, 130, 246, 0.2)" : "rgba(16, 185, 129, 0.1)"
     this.ctx.lineWidth = 2
@@ -237,14 +434,12 @@ export default class extends Controller {
     this.ctx.fillRect(x, y, width, height)
     this.ctx.strokeRect(x, y, width, height)
 
-    // 座席番号を描画
     this.ctx.fillStyle = "rgba(0, 0, 0, 0.7)"
     this.ctx.font = "12px bold sans-serif"
     this.ctx.textAlign = "center"
     this.ctx.textBaseline = "middle"
-    this.ctx.fillText(seat.seat_identifier || `${String.fromCharCode(65 + seat.row_number)}${seat.column_number}`, x + width / 2, y + height / 2 - 10)
+    this.ctx.fillText(seat.seat_identifier || `${String.fromCharCode(65 + (seat.row_number || 0))}${seat.column_number || 0}`, x + width / 2, y + height / 2 - 10)
 
-    // ステータスドットを描画
     const dotColor = isOccupied ? "#3b82f6" : "#94a3b8"
     this.ctx.fillStyle = dotColor
     this.ctx.beginPath()
