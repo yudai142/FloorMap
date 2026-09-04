@@ -18,6 +18,9 @@ Rails.application.routes.draw do
   mount Rswag::Ui::Engine => "/api-docs"
   mount Rswag::Api::Engine => "/api-docs"
 
+  # ActionCable WebSocket
+  mount ActionCable.server => "/cable"
+
   get "/" => "pages#home", as: :root
 
   resources :rooms do
@@ -34,6 +37,7 @@ Rails.application.routes.draw do
     member do
       get :canvas_editor
       get :canvas_data
+      patch :floor_plan
     end
     collection do
       get :export
