@@ -23,6 +23,15 @@ RSpec.describe RoomsChannel, type: :channel do
       expect(subscription).to have_stream_for(room)
     end
 
+    it "subscribes to room stream for user with room_permission" do
+      room_permission = create(:room_permission, room: room, user: regular_user)
+      stub_connection(current_user: regular_user)
+      subscribe(room_id: room.id)
+
+      expect(subscription).to be_confirmed
+      expect(subscription).to have_stream_for(room)
+    end
+
     it "rejects subscription for unauthorized user" do
       stub_connection(current_user: regular_user)
       subscribe(room_id: room.id)
@@ -32,7 +41,7 @@ RSpec.describe RoomsChannel, type: :channel do
   end
 
   describe "broadcasting" do
-    skip "broadcasts seat update when seat changes" do
+    it "broadcasts seat update when seat changes" do
       stub_connection(current_user: manager)
       subscribe(room_id: room.id)
 
