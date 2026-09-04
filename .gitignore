@@ -48,3 +48,6 @@ yarn.lock
 dist/
 .vite-cache/
 /public/vite/
+
+# Ignore test coverage reports
+/coverage/
