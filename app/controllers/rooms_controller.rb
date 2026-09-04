@@ -1,5 +1,5 @@
 class RoomsController < ApplicationController
-  before_action :set_room, only: [ :show, :edit, :update, :destroy, :canvas_data, :canvas_editor ]
+  before_action :set_room, only: [ :show, :edit, :update, :destroy, :canvas_data, :canvas_editor, :floor_plan ]
 
   def index
     authorize Room
@@ -57,15 +57,21 @@ class RoomsController < ApplicationController
   def canvas_data
     authorize @room, :show?
 
-    seats_with_sessions = @room.seats.map do |seat|
-      session = Session.where(seat_id: seat.id, status: :active).last
-      seat.canvas_data.merge(session: session&.as_json(only: [ :id, :user_id, :check_in_time ]))
-    end
-
     render json: {
       room: @room.as_json(only: [ :id, :name, :description ]),
-      seats: seats_with_sessions
+      seats: @room.seats.map(&:canvas_data),
+      floor_plan_data: @room.floor_plan_data
     }
+  end
+
+  def floor_plan
+    authorize @room, :update?
+
+    if @room.update(floor_plan_params)
+      render json: { floor_plan_data: @room.floor_plan_data }, status: :ok
+    else
+      render json: { errors: @room.errors }, status: :unprocessable_entity
+    end
   end
 
   def export
@@ -81,5 +87,9 @@ class RoomsController < ApplicationController
 
   def room_params
     params.require(:room).permit(:name, :description)
+  end
+
+  def floor_plan_params
+    params.require(:room).permit(floor_plan_data: [:type, :x, :y, :width, :height, :color, :lineWidth])
   end
 end
