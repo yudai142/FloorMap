@@ -7,7 +7,7 @@ RSpec.describe Session, type: :model do
   let(:seat) { create(:seat, room: room) }
 
   describe 'broadcasting' do
-    it 'broadcasts seat_updated when session is created' do
+    it 'broadcasts seat_updated when session is created', truncation: true do
       expect {
         create(:session, user: user, seat: seat)
       }.to have_broadcasted_to(room).from_channel(RoomsChannel).with(hash_including(
@@ -15,7 +15,7 @@ RSpec.describe Session, type: :model do
       ))
     end
 
-    it 'broadcasts seat_updated when session status changes' do
+    it 'broadcasts seat_updated when session status changes', truncation: true do
       session = create(:session, user: user, seat: seat)
 
       expect {

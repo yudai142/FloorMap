@@ -41,7 +41,7 @@ RSpec.describe RoomsChannel, type: :channel do
   end
 
   describe "broadcasting" do
-    it "broadcasts seat update when seat changes" do
+    it "broadcasts seat update when seat changes", truncation: true do
       stub_connection(current_user: manager)
       subscribe(room_id: room.id)
 
@@ -50,7 +50,7 @@ RSpec.describe RoomsChannel, type: :channel do
       session = create(:session, seat: seat, user: user)
 
       expect {
-        session.update(status: :checked_out)
+        session.check_out!
       }.to have_broadcasted_to(room).with(hash_including(type: "seat_updated"))
     end
   end

@@ -39,7 +39,7 @@ RSpec.describe 'Seat Positions API', type: :request do
     end
 
     it 'returns room with seat positions' do
-      get room_canvas_data_path(room)
+      get canvas_data_room_path(room)
 
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body)
