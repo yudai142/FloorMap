@@ -152,11 +152,6 @@
     }
   }
 
-  function saveCanvas() {
-    console.log('Canvas save triggered');
-    alert('座席配置図を保存しました');
-  }
-
   // キーボードショートカット
   document.addEventListener('keydown', (e) => {
     if (e.key === 's' || e.key === 'S') setEditMode('select');
@@ -186,6 +181,9 @@
       <button class="toolbar-button" onclick="setEditMode('delete')" id="mode-delete" title="削除モード (Del)">
         🗑️ 削除
       </button>
+      <button class="toolbar-button" onclick="setEditMode('seat')" id="mode-seat" title="座席配置モード (C)">
+        🪑 座席
+      </button>
     </div>
     <div class="toolbar-divider"></div>
     <div class="toolbar-group">
@@ -204,13 +202,13 @@
     </div>
     <div style="flex: 1;"></div>
     <div class="toolbar-group">
-      <button class="toolbar-button" onclick="saveCanvas()" style="background-color: #10b981; color: white; border-color: #10b981;">
+      <button class="toolbar-button" data-action="click->seat-canvas#save" style="background-color: #10b981; color: white; border-color: #10b981;">
         💾 保存
       </button>
     </div>
   </div>
 
   <div class="canvas-wrapper">
-    <canvas id="floor-canvas" data-controller="seat-canvas" data-seat-canvas-target="canvas" data-seat-canvas-room-id-value="<%= @room.id %>" style="border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;"></canvas>
+    <canvas id="floor-canvas" data-controller="seat-canvas" data-seat-canvas-target="canvas" data-seat-canvas-room-id-value="<%= @room.id %>" data-seat-canvas-context-value="editor" data-seat-canvas-current-user-id-value="<%= current_user.id %>" data-seat-canvas-can-manage-value="true" style="border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;"></canvas>
   </div>
 </div>
