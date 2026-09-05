@@ -59,10 +59,12 @@ class Seat < ApplicationRecord
       if active_session
         if active_session.user_id
           user = active_session.user
-          username = (user&.email&.to_s&.split('@')&.first || user&.email&.to_s)&.force_encoding('UTF-8')
+          username = (user&.email&.to_s&.split('@')&.first || user&.email&.to_s)
+          username = username.encode('UTF-8', 'UTF-8', invalid: :replace, undef: :replace, replace: '') if username
           session_data = { id: active_session.id, user_id: active_session.user_id, type: "user", name: username }
         elsif active_session.visitor_id
-          display_name = active_session.visitor&.display_name&.to_s&.force_encoding('UTF-8')
+          display_name = active_session.visitor&.display_name&.to_s
+          display_name = display_name.encode('UTF-8', 'UTF-8', invalid: :replace, undef: :replace, replace: '') if display_name
           session_data = { id: active_session.id, visitor_id: active_session.visitor_id, type: "visitor", name: display_name }
         end
       end
