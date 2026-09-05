@@ -16,6 +16,11 @@ class RoomsController < ApplicationController
   def new
     @room = Room.new
     authorize @room
+
+    respond_to do |format|
+      format.html { render :new }
+      format.json { render json: { room: @room } }
+    end
   end
 
   def create
@@ -23,9 +28,15 @@ class RoomsController < ApplicationController
     authorize @room
 
     if @room.save
-      redirect_to @room, notice: "ルームを作成しました"
+      respond_to do |format|
+        format.html { redirect_to @room, notice: "ルームを作成しました" }
+        format.json { render json: @room, status: :created }
+      end
     else
-      render :new, status: :unprocessable_entity
+      respond_to do |format|
+        format.html { render :new, status: :unprocessable_entity }
+        format.json { render json: { errors: @room.errors.messages }, status: :unprocessable_entity }
+      end
     end
   end
 

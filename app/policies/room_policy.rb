@@ -8,11 +8,11 @@ class RoomPolicy < ApplicationPolicy
   end
 
   def new?
-    true
+    user.manager? || user.admin?
   end
 
   def create?
-    true
+    user.manager? || user.admin?
   end
 
   def canvas_editor?
