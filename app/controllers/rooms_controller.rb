@@ -11,10 +11,7 @@ class RoomsController < ApplicationController
     render inertia: 'Rooms/Index', props: {
       rooms: @rooms.map { |r| room_index_json(r) },
       current_user: current_user.as_json(only: [:id, :email, :role]),
-      auth: {
-        user: current_user&.slice(:id, :email),
-        is_authenticated: user_signed_in?
-      }
+      auth: auth_props
     }
   end
 
@@ -42,13 +39,7 @@ class RoomsController < ApplicationController
           email: current_user.email.to_s,
           role: current_user.role
         },
-        auth: {
-          user: {
-            id: current_user.id,
-            email: current_user.email.to_s
-          },
-          is_authenticated: user_signed_in?
-        }
+        auth: auth_props
       }
     rescue Encoding::UndefinedConversionError, JSON::GeneratorError => e
       redirect_to rooms_path, alert: "ルームデータの読み込みに失敗しました"
@@ -65,10 +56,7 @@ class RoomsController < ApplicationController
         name: '',
         description: ''
       },
-      auth: {
-        user: current_user&.slice(:id, :email),
-        is_authenticated: user_signed_in?
-      }
+      auth: auth_props
     }
   end
 
@@ -124,10 +112,7 @@ class RoomsController < ApplicationController
       shapes_data: @room.floor_plan_data || [],
       seats: @room.seats.map { |s| seat_canvas_json(s) },
       current_user: current_user.as_json(only: [:id, :email]),
-      auth: {
-        user: current_user&.slice(:id, :email),
-        is_authenticated: user_signed_in?
-      }
+      auth: auth_props
     }
   end
 
@@ -215,6 +200,17 @@ class RoomsController < ApplicationController
   end
 
   private
+
+  def auth_props
+    {
+      user: current_user ? {
+        id: current_user.id,
+        email: current_user.email,
+        username: current_user.username
+      } : nil,
+      is_authenticated: user_signed_in?
+    }
+  end
 
   def set_room
     @room = Room.find(params[:id] || params[:room_id])
