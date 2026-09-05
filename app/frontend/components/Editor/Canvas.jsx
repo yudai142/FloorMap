@@ -79,6 +79,33 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
     }
   }, [initialShapes, initialSeats, setShapes, setSeats, saveToHistory])
 
+  // 座席データの定期更新（3秒ごと）
+  useEffect(() => {
+    const fetchUpdatedSeats = async () => {
+      try {
+        const response = await fetch(`/rooms/${room.id}/canvas_data.json`)
+        const data = await response.json()
+        if (data.seats) {
+          const updatedSeats = data.seats.map(seat => ({
+            id: seat.id,
+            label: seat.seat_identifier,
+            x: seat.position_x || 0,
+            y: seat.position_y || 0,
+            occupied: !!seat.session,
+            occupant_name: seat.session?.name || seat.session?.user_id?.toString() || '不明',
+            seat_type: seat.seat_type
+          }))
+          setSeats(updatedSeats)
+        }
+      } catch (error) {
+        console.error('座席データの更新に失敗:', error)
+      }
+    }
+
+    const interval = setInterval(fetchUpdatedSeats, 3000)
+    return () => clearInterval(interval)
+  }, [room.id, setSeats])
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {

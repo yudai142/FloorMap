@@ -4,18 +4,23 @@ import { usePage } from '@inertiajs/react'
 export default function RoomShow() {
   const { room, seats, current_user, auth } = usePage().props
   const [sessions, setSessions] = useState([])
-  const [canvas, setCanvas] = useState(null)
 
-  // ActionCable 購読
-  useEffect(() => {
-    // WebSocket 接続設定
-    const establishConnection = async () => {
+  // データロード
+  const fetchSessions = async () => {
+    try {
       const response = await fetch(`/rooms/${room.id}/canvas_data.json`)
       const data = await response.json()
       setSessions(data.sessions || [])
+    } catch (error) {
+      console.error('セッション情報の取得に失敗:', error)
     }
+  }
 
-    establishConnection()
+  useEffect(() => {
+    fetchSessions()
+    // 3秒ごとにセッション情報を更新
+    const interval = setInterval(fetchSessions, 3000)
+    return () => clearInterval(interval)
   }, [room.id])
 
   const handleCheckIn = async (seatId) => {
@@ -31,12 +36,14 @@ export default function RoomShow() {
       })
 
       if (response.ok) {
-        alert('チェックインしました')
-        // ページリロード（本来は ActionCable で自動更新）
-        window.location.reload()
+        await fetchSessions()
+      } else {
+        const error = await response.json()
+        alert(error.message || 'チェックインに失敗しました')
       }
     } catch (error) {
       console.error('チェックインエラー:', error)
+      alert('チェックインに失敗しました')
     }
   }
 
@@ -51,11 +58,13 @@ export default function RoomShow() {
       })
 
       if (response.ok) {
-        alert('チェックアウトしました')
-        window.location.reload()
+        await fetchSessions()
+      } else {
+        alert('チェックアウトに失敗しました')
       }
     } catch (error) {
       console.error('チェックアウトエラー:', error)
+      alert('チェックアウトに失敗しました')
     }
   }
 
@@ -92,12 +101,104 @@ export default function RoomShow() {
             </div>
           </div>
 
-          <canvas
+          <svg
             id="room-canvas"
             className="room-canvas"
             width={room.width || 1000}
             height={room.height || 700}
-          ></canvas>
+            style={{ border: '1px solid #e2e8f0', backgroundColor: 'white' }}
+          >
+            {/* グリッド背景 */}
+            <defs>
+              <pattern id="smallGrid" width="10" height="10" patternUnits="userSpaceOnUse">
+                <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#e2e8f0" strokeWidth="0.5" />
+              </pattern>
+            </defs>
+            <rect width={room.width || 1000} height={room.height || 700} fill="url(#smallGrid)" />
+
+            {/* 上面図（図形） */}
+            {room.floor_plan_data && room.floor_plan_data.map((shape, idx) => {
+              if (shape.type === 'rectangle') {
+                return (
+                  <rect
+                    key={`shape-${idx}`}
+                    x={shape.x}
+                    y={shape.y}
+                    width={shape.width}
+                    height={shape.height}
+                    fill={shape.color || '#e2e8f0'}
+                    stroke="#64748b"
+                    strokeWidth={shape.lineWidth || 2}
+                  />
+                )
+              } else if (shape.type === 'line') {
+                return (
+                  <line
+                    key={`shape-${idx}`}
+                    x1={shape.x1}
+                    y1={shape.y1}
+                    x2={shape.x2}
+                    y2={shape.y2}
+                    stroke={shape.color || '#64748b'}
+                    strokeWidth={shape.lineWidth || 2}
+                  />
+                )
+              } else if (shape.type === 'circle') {
+                return (
+                  <circle
+                    key={`shape-${idx}`}
+                    cx={shape.cx}
+                    cy={shape.cy}
+                    r={shape.r}
+                    fill={shape.color || '#e2e8f0'}
+                    stroke="#64748b"
+                    strokeWidth={shape.lineWidth || 2}
+                  />
+                )
+              } else if (shape.type === 'arrow') {
+                return (
+                  <g key={`shape-${idx}`}>
+                    <line
+                      x1={shape.x1}
+                      y1={shape.y1}
+                      x2={shape.x2}
+                      y2={shape.y2}
+                      stroke={shape.color || '#64748b'}
+                      strokeWidth={shape.lineWidth || 2}
+                    />
+                  </g>
+                )
+              }
+              return null
+            })}
+
+            {/* 座席 */}
+            {seats && seats.map((seat) => {
+              const session = sessions.find(s => s.seat_id === seat.id && s.status === 'active')
+              return (
+                <g key={`seat-${seat.id}`} transform={`translate(${seat.x}, ${seat.y})`}>
+                  <circle
+                    r="12"
+                    fill={session ? '#f87171' : '#4ade80'}
+                    stroke="#065f46"
+                    strokeWidth="2"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => session ? handleCheckOut(session.id) : handleCheckIn(seat.id)}
+                  />
+                  <text
+                    x="16"
+                    y="4"
+                    fontSize="12"
+                    fill="#000"
+                    fontWeight="bold"
+                    style={{ pointerEvents: 'none' }}
+                  >
+                    {seat.label}
+                  </text>
+                </g>
+              )
+            })}
+          </svg>
         </div>
 
         {/* 右パネル：座席一覧 */}
@@ -118,7 +219,9 @@ export default function RoomShow() {
                           {seat.seat_identifier}
                         </span>
                         {session && (
-                          <span className="occupant-name">{session.user?.email || '不明'}</span>
+                          <span className="occupant-name">
+                            {session.user?.username || session.visitor?.display_name || '不明'}
+                          </span>
                         )}
                       </div>
 
