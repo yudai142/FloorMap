@@ -85,17 +85,6 @@ export default function RoomsIndex() {
 
   return (
     <div className="rooms-page">
-      {/* ナビゲーションバー */}
-      <nav className="navbar">
-        <div className="navbar-content">
-          <h1 className="navbar-logo">🗺️ FloorMap</h1>
-          <div className="navbar-right">
-            <span className="user-email">{current_user?.email}</span>
-            <button onClick={handleLogout} className="btn-logout">ログアウト</button>
-          </div>
-        </div>
-      </nav>
-
       {/* メインコンテンツ */}
       <div className="rooms-container">
         {/* ヘッダー */}
