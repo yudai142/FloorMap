@@ -4,12 +4,16 @@ import { ZoomIn, ZoomOut, RotateCcw, LayoutGrid, Save, Undo2, Redo2 } from 'luci
 import EditorToolbar from './EditorToolbar'
 import './Canvas.css'
 
-export default function Canvas({ room, initialShapes = [], initialSeats = [], onSave }) {
+export default function Canvas({ room = {}, initialShapes = [], initialSeats = [], onSave }) {
   const svgRef = useRef(null)
   const svgContainerRef = useRef(null)
   const scrollContainerRef = useRef(null)
   const [isSaving, setIsSaving] = useState(false)
   const [alert, setAlert] = useState(null)
+
+  // Default canvas dimensions if not provided
+  const canvasWidth = room?.width || 1000
+  const canvasHeight = room?.height || 700
 
   // Zustand store
   const {
@@ -158,8 +162,8 @@ export default function Canvas({ room, initialShapes = [], initialSeats = [], on
         >
           <div
             style={{
-              width: `${room?.width || 800}px`,
-              height: `${room?.height || 600}px`,
+              width: `${canvasWidth}px`,
+              height: `${canvasHeight}px`,
               transform: `scale(${zoom})`,
               transformOrigin: 'top left',
               transition: 'transform 0.1s ease-out',
@@ -167,8 +171,8 @@ export default function Canvas({ room, initialShapes = [], initialSeats = [], on
           >
             <svg
               ref={svgRef}
-              width={room?.width || 800}
-              height={room?.height || 600}
+              width={canvasWidth}
+              height={canvasHeight}
               className="canvas-svg border border-slate-300 rounded-lg bg-white block select-none cursor-crosshair"
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
@@ -189,8 +193,8 @@ export default function Canvas({ room, initialShapes = [], initialSeats = [], on
               )}
               {showGrid && (
                 <rect
-                  width={room?.width || 800}
-                  height={room?.height || 600}
+                  width={canvasWidth}
+                  height={canvasHeight}
                   fill="url(#grid)"
                 />
               )}

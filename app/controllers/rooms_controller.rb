@@ -54,7 +54,13 @@ class RoomsController < ApplicationController
     authorize @room, :update?
 
     render inertia: 'Rooms/CanvasEditor', props: {
-      room: @room.as_json(only: [:id, :name, :description, :width, :height]),
+      room: {
+        id: @room.id,
+        name: @room.name,
+        description: @room.description,
+        width: 1000,  # Default width
+        height: 700   # Default height
+      },
       shapes_data: @room.floor_plan_data || [],
       seats: @room.seats.map { |s| seat_canvas_json(s) },
       current_user: current_user.as_json(only: [:id, :email])
