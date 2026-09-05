@@ -14,8 +14,8 @@ class RoomsController < ApplicationController
   end
 
   def new
+    authorize Room, :create?
     @room = Room.new
-    authorize Room
 
     respond_to do |format|
       format.html { render :new }
