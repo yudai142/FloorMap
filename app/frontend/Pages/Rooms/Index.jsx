@@ -54,6 +54,31 @@ export default function RoomsIndex() {
     }
   }
 
+  const handleLogout = (e) => {
+    e.preventDefault()
+    const form = document.createElement('form')
+    form.method = 'POST'
+    form.action = '/users/sign_out'
+
+    const methodInput = document.createElement('input')
+    methodInput.type = 'hidden'
+    methodInput.name = '_method'
+    methodInput.value = 'DELETE'
+    form.appendChild(methodInput)
+
+    const token = document.querySelector('meta[name="csrf-token"]')?.content
+    if (token) {
+      const tokenInput = document.createElement('input')
+      tokenInput.type = 'hidden'
+      tokenInput.name = 'authenticity_token'
+      tokenInput.value = token
+      form.appendChild(tokenInput)
+    }
+
+    document.body.appendChild(form)
+    form.submit()
+  }
+
   return (
     <div className="rooms-page">
       {/* ナビゲーションバー */}
@@ -62,11 +87,7 @@ export default function RoomsIndex() {
           <h1 className="navbar-logo">🗺️ FloorMap</h1>
           <div className="navbar-right">
             <span className="user-email">{current_user?.email}</span>
-            <form action="/users/sign_out" method="POST" style={{ display: 'inline' }}>
-              <input type="hidden" name="_method" value="DELETE" />
-              <input type="hidden" name="authenticity_token" value={csrfToken} />
-              <button type="submit" className="btn-logout">ログアウト</button>
-            </form>
+            <button onClick={handleLogout} className="btn-logout">ログアウト</button>
           </div>
         </div>
       </nav>
