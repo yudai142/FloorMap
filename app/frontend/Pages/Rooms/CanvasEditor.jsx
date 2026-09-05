@@ -17,7 +17,7 @@ export default function CanvasEditor({ room, shapes_data, seats, current_user })
       <div className="bg-white border-b border-base-300 shadow-sm">
         <div className="max-w-full px-4 py-3">
           <div className="flex items-center gap-4">
-            <a href="/rooms" className="text-sm font-medium text-blue-600 hover:text-blue-800">
+            <a href={`/rooms/${room.id}`} className="text-sm font-medium text-blue-600 hover:text-blue-800">
               ← 戻る
             </a>
             <h1 className="text-2xl font-bold text-slate-900">{room.name}</h1>
