@@ -73,9 +73,6 @@ export default function RoomsIndex() {
         tokenInput.name = 'authenticity_token'
         tokenInput.value = token
         form.appendChild(tokenInput)
-        console.log('CSRF Token:', token)
-      } else {
-        console.error('CSRF Token not found!')
       }
 
       document.body.appendChild(form)
