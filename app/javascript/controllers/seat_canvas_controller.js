@@ -446,4 +446,9 @@ export default class extends Controller {
     this.ctx.arc(x + width / 2, y + height / 2 + 15, 6, 0, Math.PI * 2)
     this.ctx.fill()
   }
+
+  csrfToken() {
+    const token = document.querySelector('meta[name="csrf-token"]')?.content
+    return token || ""
+  }
 }
