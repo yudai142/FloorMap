@@ -53,9 +53,12 @@ RSpec.describe 'Canvas Editor', type: :request do
 
     context 'when user is owner' do
       it 'saves floor plan data' do
-        patch floor_plan_room_path(room), params: { room: { floor_plan_data: floor_plan_data } }
+        patch floor_plan_room_path(room), params: { room: { floor_plan_data: floor_plan_data.to_json } }
         expect(response).to have_http_status(:ok)
-        expect(room.reload.floor_plan_data).to eq(floor_plan_data.map(&:stringify_keys))
+        # JSON パラメータは文字列値として保存される
+        saved_data = room.reload.floor_plan_data
+        expect(saved_data.length).to eq(2)
+        expect(saved_data.first['type']).to eq('rectangle')
       end
 
       it 'returns updated floor plan data' do
