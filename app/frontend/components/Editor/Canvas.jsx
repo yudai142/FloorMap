@@ -211,7 +211,8 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
 
     setIsSaving(true)
     try {
-      const response = await fetch(`/rooms/${room.id}/floor_plan.json`, {
+      // Save shapes (floor plan)
+      const floorPlanResponse = await fetch(`/rooms/${room.id}/floor_plan.json`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -220,11 +221,68 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
         body: JSON.stringify({ room: { floor_plan_data: shapes } }),
       })
 
-      if (!response.ok) {
-        throw new Error('保存に失敗しました')
+      if (!floorPlanResponse.ok) {
+        throw new Error('上面図の保存に失敗しました')
       }
 
-      setAlert({ type: 'success', message: '上面図を保存しました' })
+      // Save seats (create, update, delete)
+      // Send current seats state to server
+      for (const seat of seats) {
+        if (seat.id < 0) {
+          // New seat - create it
+          const createResponse = await fetch(`/rooms/${room.id}/seats.json`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': getCsrfToken(),
+            },
+            body: JSON.stringify({
+              seat: {
+                position_x: seat.x,
+                position_y: seat.y,
+                seat_type: seat.seat_type || 'regular',
+              },
+            }),
+          })
+
+          if (!createResponse.ok) {
+            throw new Error('座席の保存に失敗しました')
+          }
+
+          // Update local seat with server-assigned ID
+          const savedSeat = await createResponse.json()
+          mergeSeat({
+            id: savedSeat.id,
+            label: savedSeat.seat_identifier,
+            x: savedSeat.position_x,
+            y: savedSeat.position_y,
+            occupied: seat.occupied,
+            occupant_name: seat.occupant_name,
+            seat_type: savedSeat.seat_type
+          })
+        } else {
+          // Existing seat - update position
+          const updateResponse = await fetch(`/rooms/${room.id}/seats/${seat.id}/position.json`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': getCsrfToken(),
+            },
+            body: JSON.stringify({
+              seat: {
+                position_x: seat.x,
+                position_y: seat.y,
+              },
+            }),
+          })
+
+          if (!updateResponse.ok) {
+            throw new Error('座席の保存に失敗しました')
+          }
+        }
+      }
+
+      setAlert({ type: 'success', message: '座席配置図を保存しました' })
       setTimeout(() => setAlert(null), 2000)
 
       if (onSave) {
@@ -235,7 +293,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
     } finally {
       setIsSaving(false)
     }
-  }, [room, shapes, getCsrfToken, onSave])
+  }, [room, shapes, seats, getCsrfToken, onSave, mergeSeat])
 
   const handleMouseDown = useCallback((e) => {
     const { x, y } = getMousePosition(e)
