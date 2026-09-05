@@ -31,8 +31,7 @@ class Seat < ApplicationRecord
 
   def seat_identifier
     Rails.cache.fetch("seat:#{id}:identifier", expires_in: 1.hour) do
-      row_letter = (row_number + 65).chr
-      "#{row_letter}#{column_number}"
+      "S#{id}"
     end
   end
 
@@ -69,9 +68,15 @@ class Seat < ApplicationRecord
         end
       end
 
+      identifier = begin
+        seat_identifier.encode('UTF-8', 'UTF-8', invalid: :replace, undef: :replace, replace: '')
+      rescue => e
+        "S#{id}"
+      end
+
       {
         id: id,
-        seat_identifier: seat_identifier,
+        seat_identifier: identifier,
         position_x: position_x,
         position_y: position_y,
         row_number: row_number,
