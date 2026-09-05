@@ -10,8 +10,5 @@ rm -rf /app/public/vite /app/.vite /app/node_modules/.vite
 # Prepare database
 bundle exec rails db:prepare
 
-# Start Vite dev server in background
-npm run dev &
-
 # Start Rails server
 exec bundle exec rails server -b 0.0.0.0
