@@ -5,8 +5,19 @@ class Room < ApplicationRecord
   has_many :share_links, dependent: :destroy
 
   validates :name, presence: true
+  validates :share_token, presence: true, uniqueness: true
 
+  before_create :generate_share_token
   after_update_commit :broadcast_floor_plan_updated, if: :saved_change_to_floor_plan_data?
+
+  private
+
+  def generate_share_token
+    self.share_token = loop do
+      token = SecureRandom.hex(6)
+      break token unless Room.exists?(share_token: token)
+    end
+  end
 
   scope :search, ->(query) {
     return all if query.blank?

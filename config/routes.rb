@@ -23,7 +23,7 @@ Rails.application.routes.draw do
 
   get "/" => "pages#home", as: :root
 
-  resources :rooms do
+  resources :rooms, param: :share_token do
     resources :room_permissions, only: [ :create, :destroy ]
     resources :seats do
       member do
