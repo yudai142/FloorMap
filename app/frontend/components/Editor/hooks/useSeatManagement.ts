@@ -39,7 +39,6 @@ export const useSeatManagement = (roomId: number) => {
         saveToHistory(seats, [])
         return newSeat
       } catch (err) {
-        console.error('Seat creation error:', err)
         throw err
       }
     },
@@ -63,7 +62,6 @@ export const useSeatManagement = (roomId: number) => {
         removeSeat(seatId)
         saveToHistory(seats, [])
       } catch (err) {
-        console.error('Seat deletion error:', err)
         throw err
       }
     },
@@ -94,7 +92,6 @@ export const useSeatManagement = (roomId: number) => {
         const updatedSeat = await response.json()
         mergeSeat(updatedSeat)
       } catch (err) {
-        console.error('Seat move error:', err)
         throw err
       }
     },
