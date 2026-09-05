@@ -62,7 +62,7 @@ class RoomsController < ApplicationController
   end
 
   def canvas_editor
-    authorize @room, :update?
+    authorize @room, :canvas_editor?
 
     render inertia: 'Rooms/CanvasEditor', props: {
       room: {

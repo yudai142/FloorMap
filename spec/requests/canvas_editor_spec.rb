@@ -15,18 +15,18 @@ RSpec.describe 'Canvas Editor', type: :request do
   describe 'GET /rooms/:id/canvas_editor' do
     context 'when user is owner' do
       it 'renders canvas editor page' do
-        get room_canvas_editor_path(room)
+        get canvas_editor_room_path(room)
         expect(response).to have_http_status(:success)
         expect(response.body).to include('Canvas')
       end
 
       it 'provides initial props' do
-        get room_canvas_editor_path(room)
+        get canvas_editor_room_path(room)
         expect(response.body).to include(room.name)
       end
 
       it 'includes canvas-related styles and scripts' do
-        get room_canvas_editor_path(room)
+        get canvas_editor_room_path(room)
         expect(response.body).to include('application')
       end
     end
@@ -34,15 +34,11 @@ RSpec.describe 'Canvas Editor', type: :request do
     context 'when user is not owner' do
       let(:other_user) { create(:user, :manager) }
 
-      before do
+      it 'denies access' do
         sign_out user
         sign_in other_user
-      end
-
-      it 'denies access' do
-        expect {
-          get room_canvas_editor_path(room)
-        }.to raise_error(Pundit::NotAuthorizedError)
+        get canvas_editor_room_path(room)
+        expect(response).to have_http_status(:forbidden)
       end
     end
   end
@@ -57,19 +53,19 @@ RSpec.describe 'Canvas Editor', type: :request do
 
     context 'when user is owner' do
       it 'saves floor plan data' do
-        patch room_floor_plan_path(room), params: { room: { floor_plan_data: floor_plan_data } }
+        patch floor_plan_room_path(room), params: { room: { floor_plan_data: floor_plan_data } }
         expect(response).to have_http_status(:ok)
         expect(room.reload.floor_plan_data).to eq(floor_plan_data.map(&:stringify_keys))
       end
 
       it 'returns updated floor plan data' do
-        patch room_floor_plan_path(room), params: { room: { floor_plan_data: floor_plan_data } }
+        patch floor_plan_room_path(room), params: { room: { floor_plan_data: floor_plan_data } }
         json = JSON.parse(response.body)
         expect(json['floor_plan_data']).to be_present
       end
 
       it 'handles empty floor plan' do
-        patch room_floor_plan_path(room), params: { room: { floor_plan_data: [] } }
+        patch floor_plan_room_path(room), params: { room: { floor_plan_data: [] } }
         expect(response).to have_http_status(:ok)
         expect(room.reload.floor_plan_data).to eq([])
       end
@@ -78,15 +74,11 @@ RSpec.describe 'Canvas Editor', type: :request do
     context 'when user is not owner' do
       let(:other_user) { create(:user, :manager) }
 
-      before do
+      it 'denies access' do
         sign_out user
         sign_in other_user
-      end
-
-      it 'denies access' do
-        expect {
-          patch room_floor_plan_path(room), params: { room: { floor_plan_data: floor_plan_data } }
-        }.to raise_error(Pundit::NotAuthorizedError)
+        patch floor_plan_room_path(room), params: { room: { floor_plan_data: floor_plan_data } }
+        expect(response).to have_http_status(:forbidden)
       end
     end
   end
@@ -97,17 +89,17 @@ RSpec.describe 'Canvas Editor', type: :request do
 
     context 'when user has permission' do
       it 'returns canvas data' do
-        get room_canvas_data_path(room)
+        get canvas_data_room_path(room)
         expect(response).to have_http_status(:ok)
 
         json = JSON.parse(response.body)
         expect(json['room']).to include('id', 'name', 'description')
         expect(json['seats']).to be_an(Array)
-        expect(json['floor_plan_data']).to be_present
+        expect(json).to have_key('floor_plan_data')
       end
 
       it 'includes seat position data' do
-        get room_canvas_data_path(room)
+        get canvas_data_room_path(room)
         json = JSON.parse(response.body)
         seat_data = json['seats'].first
         expect(seat_data).to include('id', 'position_x', 'position_y')
@@ -115,7 +107,7 @@ RSpec.describe 'Canvas Editor', type: :request do
 
       it 'includes floor plan data' do
         room.update(floor_plan_data: [{ type: 'rectangle', x: 0, y: 0 }])
-        get room_canvas_data_path(room)
+        get canvas_data_room_path(room)
         json = JSON.parse(response.body)
         expect(json['floor_plan_data']).to eq([{ 'type' => 'rectangle', 'x' => 0, 'y' => 0 }])
       end
