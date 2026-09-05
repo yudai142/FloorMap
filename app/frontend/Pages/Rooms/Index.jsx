@@ -93,9 +93,9 @@ export default function RoomsIndex() {
             <h2 className="rooms-title">ルーム一覧</h2>
             <p className="rooms-subtitle">座席配置図を管理するルームを選択または作成します</p>
           </div>
-          <a href="/rooms/new" className="btn-primary">
+          <Link href="/rooms/new" className="btn-primary">
             + 新しいルーム
-          </a>
+          </Link>
         </div>
 
         {/* 検索 & フィルタ */}
