@@ -51,7 +51,14 @@ class RoomsController < ApplicationController
   end
 
   def canvas_editor
-    authorize @room
+    authorize @room, :update?
+
+    render inertia: 'Rooms/CanvasEditor', props: {
+      room: @room.as_json(only: [:id, :name, :description, :width, :height]),
+      shapes_data: @room.floor_plan_data || [],
+      seats: @room.seats.map { |s| seat_canvas_json(s) },
+      current_user: current_user.as_json(only: [:id, :email])
+    }
   end
 
   def canvas_data
@@ -87,6 +94,19 @@ class RoomsController < ApplicationController
 
   def room_params
     params.require(:room).permit(:name, :description)
+  end
+
+  def seat_canvas_json(seat)
+    data = seat.canvas_data
+    {
+      id: data[:id],
+      label: data[:seat_identifier],
+      x: data[:position_x] || 0,
+      y: data[:position_y] || 0,
+      occupied: data[:session].present?,
+      occupant_name: data[:session]&.dig(:name) || data[:session]&.dig(:user_id).to_s || "不明",
+      seat_type: data[:seat_type]
+    }
   end
 
   def floor_plan_params
