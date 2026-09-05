@@ -16,6 +16,23 @@ class RoomsController < ApplicationController
 
   def show
     authorize @room
+
+    render inertia: 'Rooms/Show', props: {
+      room: {
+        id: @room.id,
+        name: @room.name,
+        description: @room.description,
+        width: @room.width || 1000,
+        height: @room.height || 700,
+        user_id: @room.user_id,
+        seats_count: @room.seats.count,
+        occupied_count: @room.occupied_seat_count,
+        occupancy_rate: @room.occupancy_rate,
+        created_at: @room.created_at
+      },
+      seats: @room.seats.map { |s| seat_show_json(s) },
+      current_user: current_user.as_json(only: [:id, :email, :role])
+    }
   end
 
   def new
@@ -123,6 +140,19 @@ class RoomsController < ApplicationController
       occupied_seat_count: room.occupied_seat_count,
       occupancy_rate: room.occupancy_rate,
       created_at: room.created_at
+    }
+  end
+
+  def seat_show_json(seat)
+    {
+      id: seat.id,
+      seat_identifier: seat.seat_identifier,
+      position_x: seat.position_x,
+      position_y: seat.position_y,
+      seat_type: seat.seat_type,
+      row_number: seat.row_number,
+      column_number: seat.column_number,
+      room_id: seat.room_id
     }
   end
 
