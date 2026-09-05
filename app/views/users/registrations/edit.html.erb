@@ -41,6 +41,24 @@
         <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
         <input type="hidden" name="_method" value="put">
 
+        <!-- Username Section -->
+        <div class="p-6 space-y-4">
+          <h3 class="text-lg font-semibold text-slate-900">ユーザー名</h3>
+          <div>
+            <label for="user_username" class="block text-sm font-medium text-slate-700">ユーザー名</label>
+            <input
+              type="text"
+              name="user[username]"
+              id="user_username"
+              autocomplete="username"
+              value="<%= resource.username %>"
+              class="mt-1 block w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors"
+              placeholder="ユーザー名"
+              required
+            >
+          </div>
+        </div>
+
         <!-- Email Section -->
         <div class="p-6 space-y-4">
           <h3 class="text-lg font-semibold text-slate-900">メールアドレス</h3>
