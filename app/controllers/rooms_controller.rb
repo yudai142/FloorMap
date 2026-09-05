@@ -47,10 +47,17 @@ class RoomsController < ApplicationController
     authorize Room, :create?
     @room = Room.new
 
-    respond_to do |format|
-      format.html { render :new }
-      format.json { render json: { room: @room } }
-    end
+    render inertia: 'Rooms/New', props: {
+      room: {
+        id: nil,
+        name: '',
+        description: ''
+      },
+      auth: {
+        user: current_user&.slice(:id, :email),
+        is_authenticated: user_signed_in?
+      }
+    }
   end
 
   def create
