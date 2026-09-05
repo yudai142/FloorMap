@@ -136,25 +136,66 @@ class RoomsController < ApplicationController
 
     sessions = Session.active.joins(:seat).where(seats: { room_id: @room.id })
 
+    seats_data = []
+    @room.seats.each do |seat|
+      seat_data = {
+        id: seat.id,
+        seat_identifier: (seat.seat_identifier || "").to_s.encode('UTF-8', 'UTF-8', invalid: :replace, undef: :replace, replace: ''),
+        position_x: seat.position_x,
+        position_y: seat.position_y,
+        row_number: seat.row_number,
+        column_number: seat.column_number,
+        seat_type: seat.seat_type
+      }
+      seats_data << seat_data
+    end
+
+    sessions_data = []
+    sessions.each do |s|
+      user_data = nil
+      if s.user_id
+        user = s.user
+        if user
+          username = safe_encode(user.username || user.email.to_s.split('@').first)
+          user_data = {
+            id: user.id,
+            email: safe_encode(user.email),
+            username: username
+          }
+        end
+      end
+
+      visitor_data = nil
+      if s.visitor_id
+        visitor = s.visitor
+        if visitor
+          visitor_data = {
+            id: visitor.id,
+            display_name: safe_encode(visitor.display_name || '不明')
+          }
+        end
+      end
+
+      session_item = {
+        id: s.id,
+        seat_id: s.seat_id,
+        status: s.status,
+        user_id: s.user_id,
+        user: user_data,
+        visitor_id: s.visitor_id,
+        visitor: visitor_data
+      }
+      sessions_data << session_item
+    end
+
     render json: {
-      room: @room.as_json(only: [ :id, :name, :description ]),
-      seats: @room.seats.map(&:canvas_data),
-      sessions: sessions.map do |s|
-        {
-          id: s.id,
-          seat_id: s.seat_id,
-          status: s.status,
-          user_id: s.user_id,
-          user: s.user ? {
-            id: s.user.id,
-            email: s.user.email.to_s.force_encoding('UTF-8'),
-            username: s.user.email.to_s.split('@').first.force_encoding('UTF-8')
-          } : nil,
-          visitor_id: s.visitor_id,
-          visitor: s.visitor ? { id: s.visitor.id, display_name: s.visitor.display_name.to_s.force_encoding('UTF-8') } : nil
-        }
-      end,
-      floor_plan_data: @room.floor_plan_data
+      room: {
+        id: @room.id,
+        name: safe_encode(@room.name),
+        description: safe_encode(@room.description)
+      },
+      seats: seats_data,
+      sessions: sessions_data
     }
   end
 
@@ -212,13 +253,15 @@ class RoomsController < ApplicationController
     data = seat.canvas_data
     {
       id: data[:id],
-      label: data[:seat_identifier],
+      label: (data[:seat_identifier] || "").to_s.encode('UTF-8', 'UTF-8', invalid: :replace, undef: :replace, replace: ''),
       x: data[:position_x] || 0,
       y: data[:position_y] || 0,
       occupied: data[:session].present?,
-      occupant_name: data[:session]&.dig(:name) || data[:session]&.dig(:user_id).to_s || "不明",
+      occupant_name: ((data[:session]&.dig(:name) || data[:session]&.dig(:user_id).to_s) || "不明").to_s.encode('UTF-8', 'UTF-8', invalid: :replace, undef: :replace, replace: ''),
       seat_type: data[:seat_type]
     }
+  rescue => e
+    {}
   end
 
   def floor_plan_params
