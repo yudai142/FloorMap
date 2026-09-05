@@ -304,14 +304,14 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
           height: Math.abs(y - selectionStart.y),
         })
       }
-    } else if (drawingStart && currentTool === 'line' && drawMode === 'drag') {
+    } else if (drawingStart && currentTool === 'line') {
       updateLinePreview(drawingStart.x, drawingStart.y, x, y)
-    } else if (drawingStart && currentTool === 'rectangle' && drawMode === 'drag') {
+    } else if (drawingStart && currentTool === 'rectangle') {
       updateRectanglePreview(drawingStart.x, drawingStart.y, x - drawingStart.x, y - drawingStart.y)
-    } else if (drawingStart && currentTool === 'circle' && drawMode === 'drag') {
+    } else if (drawingStart && currentTool === 'circle') {
       const radius = Math.sqrt(Math.pow(x - drawingStart.x, 2) + Math.pow(y - drawingStart.y, 2))
       updateCirclePreview(drawingStart.x, drawingStart.y, radius)
-    } else if (drawingStart && currentTool === 'arrow' && drawMode === 'drag') {
+    } else if (drawingStart && currentTool === 'arrow') {
       updateArrowPreview(drawingStart.x, drawingStart.y, x, y)
     }
   }, [getMousePosition, dragging, currentTool, drawingStart, drawMode, canvasWidth, canvasHeight, seats,
