@@ -321,8 +321,8 @@ export default class extends Controller {
 
   resizeCanvas() {
     const rect = this.canvas.parentElement.getBoundingClientRect()
-    this.canvas.width = Math.max(800, rect.width - 64)
-    this.canvas.height = Math.max(600, window.innerHeight - 300)
+    this.canvas.width = Math.max(1000, rect.width - 64)
+    this.canvas.height = Math.max(700, window.innerHeight - 200)
     this.draw()
   }
 
