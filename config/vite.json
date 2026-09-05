@@ -1,6 +1,6 @@
 {
   "autoBuild": true,
-  "publicOutputDir": "vite-dist",
+  "publicOutputDir": "vite",
   "publicDir": "public",
   "assetsDir": "app/assets",
   "entrypoints": [
