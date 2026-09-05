@@ -15,7 +15,7 @@ class RoomsController < ApplicationController
 
   def new
     @room = Room.new
-    authorize @room
+    authorize Room
 
     respond_to do |format|
       format.html { render :new }
