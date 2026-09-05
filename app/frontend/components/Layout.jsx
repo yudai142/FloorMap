@@ -14,9 +14,23 @@ export default function Layout({ children, auth }) {
               {auth?.is_authenticated ? (
                 <div className="flex items-center space-x-4">
                   <span className="text-sm text-gray-700">{auth.user?.email}</span>
-                  <a href="/users/sign_out" className="text-gray-700 hover:text-gray-900">
+                  <button
+                    onClick={() => {
+                      const form = document.createElement('form')
+                      form.method = 'POST'
+                      form.action = '/users/sign_out'
+                      const input = document.createElement('input')
+                      input.type = 'hidden'
+                      input.name = '_method'
+                      input.value = 'DELETE'
+                      form.appendChild(input)
+                      document.body.appendChild(form)
+                      form.submit()
+                    }}
+                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                  >
                     ログアウト
-                  </a>
+                  </button>
                 </div>
               ) : (
                 <div className="flex items-center space-x-4">
