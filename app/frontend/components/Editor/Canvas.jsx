@@ -98,7 +98,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
           setSeats(updatedSeats)
         }
       } catch (error) {
-        console.error('座席データの更新に失敗:', error)
+        // Silent fail
       }
     }
 
@@ -231,7 +231,6 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       }
     } catch (err) {
       setAlert({ type: 'error', message: err.message })
-      console.error('Save error:', err)
     } finally {
       setIsSaving(false)
     }
