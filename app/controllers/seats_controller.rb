@@ -38,7 +38,7 @@ class SeatsController < ApplicationController
     if @seat.save
       respond_to do |format|
         format.html { redirect_to room_seats_path(@room), notice: "座席を作成しました" }
-        format.json { render json: seat_canvas_json(@seat), status: :created }
+        format.json { render json: @seat.canvas_data, status: :created }
       end
     else
       respond_to do |format|
