@@ -58,6 +58,7 @@ export default function RoomsIndex() {
             <span className="user-email">{current_user?.email}</span>
             <form action="/users/sign_out" method="POST" style={{ display: 'inline' }}>
               <input type="hidden" name="_method" value="DELETE" />
+              <input type="hidden" name="authenticity_token" value={document.querySelector('meta[name="csrf-token"]')?.content || ''} />
               <button type="submit" className="btn-logout">ログアウト</button>
             </form>
           </div>
