@@ -1,7 +1,13 @@
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useRef, useEffect, useState, useCallback } from 'react'
 import { useEditorStore } from '../../store/editorStore'
-import { ZoomIn, ZoomOut, RotateCcw, LayoutGrid, Save, Undo2, Redo2 } from 'lucide-react'
 import EditorToolbar from './EditorToolbar'
+import ShapeRenderer from './ShapeRenderer'
+import SeatRenderer from './SeatRenderer'
+import PreviewRenderer from './PreviewRenderer'
+import { useSeatManagement } from './hooks/useSeatManagement'
+import { useShapeDrawing } from './hooks/useShapeDrawing'
+import { useShapePreview } from './hooks/useShapePreview'
+import { snapToGrid, distanceToLine, isPointInPolygon } from './utils/snapToGrid'
 import './Canvas.css'
 
 export default function Canvas({ room = {}, initialShapes = [], initialSeats = [], onSave }) {
@@ -27,6 +33,15 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
     history,
     historyIndex,
     hasUnsavedChanges,
+    isDrawing,
+    drawingStart,
+    preview,
+    dragging,
+    selectionBox,
+    polygonPoints,
+    textInput,
+    selectedElements,
+    // Actions
     setShapes,
     setSeats,
     setZoom,
@@ -34,38 +49,100 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
     undo,
     redo,
     saveToHistory,
+    addShape,
+    deleteShape,
+    updateShape,
+    mergeSeat,
+    removeSeat,
+    setDrawingStart,
+    setPreview,
+    setDragging,
+    setSelectionBox,
+    setPolygonPoints,
+    setTextInput,
+    setSelectedElements,
+    clearSelection,
   } = useEditorStore()
+
+  // Custom hooks
+  const { createSeat, deleteSeat, moveSeat } = useSeatManagement(room.id)
+  const { addLine, addRectangle, addCircle, addArrow, addText, addPolygon } = useShapeDrawing()
+  const { updateLinePreview, updateRectanglePreview, updateCirclePreview, updateArrowPreview, clearPreview } =
+    useShapePreview()
 
   // Initialize canvas data
   useEffect(() => {
-    if (initialShapes.length > 0) {
+    if (initialShapes.length > 0 || initialSeats.length > 0) {
       setShapes(initialShapes)
-    }
-    if (initialSeats.length > 0) {
       setSeats(initialSeats)
-    }
-    if (initialShapes.length > 0 && initialSeats.length >= 0) {
       saveToHistory(initialSeats, initialShapes)
     }
   }, [initialShapes, initialSeats, setShapes, setSeats, saveToHistory])
 
-  const getCsrfToken = () => {
+  const getCsrfToken = useCallback(() => {
     return document.querySelector('meta[name="csrf-token"]')?.content || ''
-  }
+  }, [])
 
-  const handleZoomIn = () => {
+  const getMousePosition = useCallback((e) => {
+    if (!svgRef.current) return { x: 0, y: 0 }
+    const rect = svgRef.current.getBoundingClientRect()
+    return {
+      x: Math.round((e.clientX - rect.left) / zoom),
+      y: Math.round((e.clientY - rect.top) / zoom),
+    }
+  }, [zoom])
+
+  // Find seat at click position
+  const getSeatAtPoint = useCallback((x, y) => {
+    return seats.find((seat) => {
+      const dx = x - seat.x
+      const dy = y - seat.y
+      return Math.sqrt(dx * dx + dy * dy) <= 15
+    })
+  }, [seats])
+
+  // Find shape at click position
+  const getShapeAtPoint = useCallback((x, y) => {
+    for (let i = shapes.length - 1; i >= 0; i--) {
+      const shape = shapes[i]
+      const tolerance = 10
+
+      if (shape.type === 'line' || shape.type === 'arrow') {
+        const distance = distanceToLine(x, y, shape.x1, shape.y1, shape.x2, shape.y2)
+        if (distance < tolerance) return shape
+      } else if (shape.type === 'rectangle') {
+        if (x >= shape.x && x <= shape.x + shape.width && y >= shape.y && y <= shape.y + shape.height) {
+          return shape
+        }
+      } else if (shape.type === 'circle') {
+        const distance = Math.sqrt(Math.pow(x - shape.cx, 2) + Math.pow(y - shape.cy, 2))
+        if (distance <= shape.r + tolerance) return shape
+      } else if (shape.type === 'text') {
+        const textWidth = shape.text.length * 8
+        const textHeight = 16
+        if (x >= shape.x && x <= shape.x + textWidth && y >= shape.y - textHeight && y <= shape.y) {
+          return shape
+        }
+      } else if (shape.type === 'polygon') {
+        if (isPointInPolygon(x, y, shape.pointsArray)) return shape
+      }
+    }
+    return null
+  }, [shapes])
+
+  const handleZoomIn = useCallback(() => {
     setZoom(Math.min(zoom + 0.1, 3))
-  }
+  }, [zoom, setZoom])
 
-  const handleZoomOut = () => {
+  const handleZoomOut = useCallback(() => {
     setZoom(Math.max(zoom - 0.1, 0.1))
-  }
+  }, [zoom, setZoom])
 
-  const handleZoomReset = () => {
+  const handleZoomReset = useCallback(() => {
     setZoom(1)
-  }
+  }, [setZoom])
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     if (!room || !room.id) {
       setAlert({ type: 'error', message: 'ルームが選択されていません' })
       return
@@ -98,26 +175,103 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
     } finally {
       setIsSaving(false)
     }
-  }
+  }, [room, shapes, getCsrfToken, onSave])
 
-  const handleMouseDown = (e) => {
-    if (!svgRef.current) return
+  const handleMouseDown = useCallback((e) => {
+    const { x, y } = getMousePosition(e)
 
-    const rect = svgRef.current.getBoundingClientRect()
-    const x = Math.round(e.clientX - rect.left)
-    const y = Math.round(e.clientY - rect.top)
+    if (currentTool === 'seat') {
+      const existingSeat = getSeatAtPoint(x, y)
+      if (!existingSeat) {
+        createSeat(x, y).catch((err) => {
+          setAlert({ type: 'error', message: err.message })
+        })
+      }
+    } else if (currentTool === 'select') {
+      const clickedSeat = getSeatAtPoint(x, y)
+      if (clickedSeat) {
+        setDragging({ id: clickedSeat.id, offsetX: x - clickedSeat.x, offsetY: y - clickedSeat.y })
+      } else {
+        clearSelection()
+      }
+    } else if (currentTool === 'delete') {
+      const clickedSeat = getSeatAtPoint(x, y)
+      if (clickedSeat) {
+        if (confirm(`座席 ${clickedSeat.label} を削除しますか?`)) {
+          deleteSeat(clickedSeat.id).catch((err) => {
+            setAlert({ type: 'error', message: err.message })
+          })
+        }
+      } else {
+        const clickedShape = getShapeAtPoint(x, y)
+        if (clickedShape) {
+          deleteShape(clickedShape.id)
+        }
+      }
+    } else if (['line', 'rectangle', 'circle', 'arrow', 'polygon'].includes(currentTool)) {
+      setDrawingStart({ x, y })
+    } else if (currentTool === 'text') {
+      setTextInput({ x, y, text: '' })
+    }
+  }, [getMousePosition, currentTool, getSeatAtPoint, getShapeAtPoint, createSeat, deleteSeat, deleteShape,
+      setDragging, clearSelection, setDrawingStart, setTextInput])
 
-    console.log(`Tool: ${currentTool}, Position: (${x}, ${y})`)
-    // 各ツール別の処理は フェーズ2 以降で実装
-  }
+  const handleMouseMove = useCallback((e) => {
+    const { x, y } = getMousePosition(e)
 
-  const handleMouseMove = (e) => {
-    // フェーズ2 で実装
-  }
+    if (dragging && currentTool === 'select') {
+      const newX = Math.max(0, Math.min(x - dragging.offsetX, canvasWidth))
+      const newY = Math.max(0, Math.min(y - dragging.offsetY, canvasHeight))
+      const seat = seats.find((s) => s.id === dragging.id)
+      if (seat) {
+        mergeSeat({ ...seat, x: snapToGrid(newX), y: snapToGrid(newY) })
+      }
+    } else if (drawingStart && currentTool === 'line' && drawMode === 'drag') {
+      updateLinePreview(drawingStart.x, drawingStart.y, x, y)
+    } else if (drawingStart && currentTool === 'rectangle' && drawMode === 'drag') {
+      updateRectanglePreview(drawingStart.x, drawingStart.y, x - drawingStart.x, y - drawingStart.y)
+    } else if (drawingStart && currentTool === 'circle' && drawMode === 'drag') {
+      const radius = Math.sqrt(Math.pow(x - drawingStart.x, 2) + Math.pow(y - drawingStart.y, 2))
+      updateCirclePreview(drawingStart.x, drawingStart.y, radius)
+    } else if (drawingStart && currentTool === 'arrow' && drawMode === 'drag') {
+      updateArrowPreview(drawingStart.x, drawingStart.y, x, y)
+    }
+  }, [getMousePosition, dragging, currentTool, drawingStart, drawMode, canvasWidth, canvasHeight, seats,
+      mergeSeat, updateLinePreview, updateRectanglePreview, updateCirclePreview, updateArrowPreview])
 
-  const handleMouseUp = (e) => {
-    // フェーズ2 で実装
-  }
+  const handleMouseUp = useCallback((e) => {
+    const { x, y } = getMousePosition(e)
+
+    if (dragging && currentTool === 'select') {
+      const newX = Math.max(0, Math.min(x - dragging.offsetX, canvasWidth))
+      const newY = Math.max(0, Math.min(y - dragging.offsetY, canvasHeight))
+      const seat = seats.find((s) => s.id === dragging.id)
+      if (seat) {
+        moveSeat(seat.id, snapToGrid(newX), snapToGrid(newY)).catch((err) => {
+          setAlert({ type: 'error', message: err.message })
+        })
+      }
+      setDragging(null)
+    } else if (drawingStart && currentTool === 'line' && drawMode === 'drag') {
+      addLine(drawingStart.x, drawingStart.y, x, y)
+      setDrawingStart(null)
+      clearPreview()
+    } else if (drawingStart && currentTool === 'rectangle' && drawMode === 'drag') {
+      addRectangle(drawingStart.x, drawingStart.y, x - drawingStart.x, y - drawingStart.y)
+      setDrawingStart(null)
+      clearPreview()
+    } else if (drawingStart && currentTool === 'circle' && drawMode === 'drag') {
+      const radius = Math.sqrt(Math.pow(x - drawingStart.x, 2) + Math.pow(y - drawingStart.y, 2))
+      addCircle(drawingStart.x, drawingStart.y, radius)
+      setDrawingStart(null)
+      clearPreview()
+    } else if (drawingStart && currentTool === 'arrow' && drawMode === 'drag') {
+      addArrow(drawingStart.x, drawingStart.y, x, y)
+      setDrawingStart(null)
+      clearPreview()
+    }
+  }, [getMousePosition, dragging, currentTool, drawingStart, drawMode, canvasWidth, canvasHeight, seats,
+      moveSeat, setDragging, setDrawingStart, clearPreview, addLine, addRectangle, addCircle, addArrow])
 
   return (
     <div className="canvas-editor-container flex flex-col h-screen bg-base-100">
@@ -125,7 +279,9 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       {alert && (
         <div className={`alert alert-${alert.type === 'error' ? 'error' : 'success'} mx-4 mt-4`}>
           <div>{alert.message}</div>
-          <button onClick={() => setAlert(null)} className="btn btn-sm btn-ghost">✕</button>
+          <button onClick={() => setAlert(null)} className="btn btn-sm btn-ghost">
+            ✕
+          </button>
         </div>
       )}
 
@@ -148,10 +304,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       />
 
       {/* Canvas Area */}
-      <div
-        ref={scrollContainerRef}
-        className="canvas-scroll-container flex-1 overflow-auto bg-slate-100"
-      >
+      <div ref={scrollContainerRef} className="canvas-scroll-container flex-1 overflow-auto bg-slate-100">
         <div
           ref={svgContainerRef}
           className="canvas-container inline-block p-6"
@@ -191,40 +344,23 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
                   </pattern>
                 </defs>
               )}
-              {showGrid && (
-                <rect
-                  width={canvasWidth}
-                  height={canvasHeight}
-                  fill="url(#grid)"
-                />
-              )}
+              {showGrid && <rect width={canvasWidth} height={canvasHeight} fill="url(#grid)" />}
 
-              {/* Shapes - フェーズ2 で実装 */}
+              {/* Shapes */}
               {shapes.map((shape) => (
-                <g key={shape.id}>
-                  {/* Shape rendering logic */}
-                </g>
+                <ShapeRenderer
+                  key={shape.id}
+                  shape={shape}
+                  isSelected={selectedElements.some((el) => el.type === 'shape' && el.id === shape.id)}
+                />
               ))}
+
+              {/* Preview */}
+              {preview && <PreviewRenderer preview={preview} />}
 
               {/* Seats */}
               {seats.map((seat) => (
-                <g key={seat.id} transform={`translate(${seat.x}, ${seat.y})`}>
-                  <circle
-                    r="12"
-                    fill={seat.occupied ? '#f87171' : '#4ade80'}
-                    stroke="#065f46"
-                    strokeWidth="2"
-                  />
-                  <text
-                    x="16"
-                    y="4"
-                    fontSize="12"
-                    fill="#000"
-                    className="pointer-events-none"
-                  >
-                    {seat.label}
-                  </text>
-                </g>
+                <SeatRenderer key={seat.id} seat={seat} onDelete={deleteSeat} />
               ))}
             </svg>
           </div>
@@ -233,7 +369,9 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
 
       {/* Status Bar */}
       <div className="canvas-status-bar bg-slate-50 border-t border-slate-200 px-4 py-2 text-sm text-slate-600">
-        <span>{seats.length} 個の座席 • {shapes.length} 個の図形</span>
+        <span>
+          {seats.length} 個の座席 • {shapes.length} 個の図形
+        </span>
         {hasUnsavedChanges && <span className="ml-4 text-orange-600">● 未保存の変更</span>}
       </div>
     </div>
