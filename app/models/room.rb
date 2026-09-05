@@ -5,6 +5,19 @@ class Room < ApplicationRecord
   has_many :share_links, dependent: :destroy
 
   validates :name, presence: true
+  validates :share_token, presence: true, uniqueness: true
+
+  before_create :generate_share_token
+  after_update_commit :broadcast_floor_plan_updated, if: :saved_change_to_floor_plan_data?
+
+  private
+
+  def generate_share_token
+    self.share_token = loop do
+      token = SecureRandom.hex(6)
+      break token unless Room.exists?(share_token: token)
+    end
+  end
 
   scope :search, ->(query) {
     return all if query.blank?
@@ -52,6 +65,17 @@ class Room < ApplicationRecord
     seats.joins(sessions: :visitor).where(sessions: { status: :active }).select("DISTINCT seats.*")
   end
 
+  def active_users
+    Session
+      .where(status: :active)
+      .where(seat_id: seats.ids)
+      .joins(:user)
+      .select("DISTINCT users.*")
+      .map(&:user)
+      .compact
+      .uniq
+  end
+
   def occupancy_rate
     return 0 if seat_count.zero?
 
@@ -69,5 +93,9 @@ end
   def seat_with_session(seat)
     session = Session.where(seat_id: seat.id, status: :active).last
     { seat: seat, session: session, user: session&.user }
+  end
+
+  def broadcast_floor_plan_updated
+    RoomsChannel.broadcast_to(self, type: "floor_plan_updated", floor_plan_data: floor_plan_data, timestamp: Time.current)
   end
 end

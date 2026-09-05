@@ -8,8 +8,8 @@ class Session < ApplicationRecord
 
   validates :seat_id, :check_in_time, presence: true
   validates :status, presence: true
-  validates :user_id, uniqueness: { scope: :seat_id, conditions: -> { where(status: :active) } }, allow_nil: true
   validate :user_or_visitor_present
+  validate :user_not_already_checked_in
 
   scope :active, -> { where(status: :active) }
   scope :completed, -> { where(status: [ :checked_out, :timed_out ]) }
@@ -18,16 +18,42 @@ class Session < ApplicationRecord
   scope :by_date, ->(date) { where(created_at: date.beginning_of_day..date.end_of_day) }
   scope :recent, -> { order(created_at: :desc) }
 
+  after_create_commit :clear_seat_caches
+  after_create_commit :broadcast_seat_updated
+  after_update_commit :clear_seat_caches, if: :saved_change_to_status?
+  after_update_commit :broadcast_seat_updated, if: :saved_change_to_status?
+
   def duration
     end_time = check_out_time || Time.current
     (end_time - check_in_time).to_i
   end
 
+  def check_out!
+    update(status: "checked_out", check_out_time: Time.current)
+  end
+
   private
+
+  def clear_seat_caches
+    seat.clear_caches
+  end
+
+  def broadcast_seat_updated
+    RoomsChannel.broadcast_to(room, type: "seat_updated", seat: seat.canvas_data)
+  end
 
   def user_or_visitor_present
     return if user_id.present? || visitor_id.present?
 
     errors.add(:base, "ユーザーまたは訪問者のいずれかが必要です")
+  end
+
+  def user_not_already_checked_in
+    return unless user_id.present? && status == "active"
+
+    existing = Session.active.where(user_id: user_id).first
+    if existing
+      errors.add(:base, "既に別の座席にチェックインしています。先にチェックアウトしてください")
+    end
   end
 end

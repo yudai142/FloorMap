@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_13_101444) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_05_000003) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -149,9 +149,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_13_101444) do
   create_table "rooms", force: :cascade do |t|
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.text "description"
+    t.jsonb "floor_plan_data", default: [], null: false
+    t.integer "height", default: 700
     t.string "name", null: false
     t.datetime "updated_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.bigint "user_id", null: false
+    t.integer "width", default: 1000
     t.index ["user_id"], name: "index_rooms_on_user_id"
   end
 
@@ -164,6 +167,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_13_101444) do
     t.integer "row_number", null: false
     t.string "seat_type", default: "regular", null: false
     t.datetime "updated_at", null: false
+    t.index ["position_x", "position_y", "room_id"], name: "index_seats_on_position_x_and_position_y_and_room_id", unique: true
     t.index ["room_id", "row_number", "column_number"], name: "index_seats_on_room_id_and_row_number_and_column_number", unique: true
     t.index ["room_id"], name: "index_seats_on_room_id"
   end
@@ -208,8 +212,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_13_101444) do
     t.string "reset_password_token"
     t.integer "role", default: 0, null: false
     t.datetime "updated_at", null: false
+    t.string "username"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+    t.index ["username"], name: "index_users_on_username", unique: true
   end
 
   create_table "visitors", force: :cascade do |t|

@@ -1,16 +1,72 @@
-<h2>Forgot your password?</h2>
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+  <div class="w-full max-w-md space-y-8">
+    <!-- Header -->
+    <div class="text-center">
+      <h1 class="text-3xl font-bold text-slate-900">FloorMap</h1>
+      <h2 class="mt-6 text-2xl font-semibold text-slate-800">パスワードをお忘れですか？</h2>
+      <p class="mt-2 text-slate-600">登録したメールアドレスを入力してください</p>
+    </div>
 
-<%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post }) do |f| %>
-  <%= render "users/shared/error_messages", resource: resource %>
+    <!-- Error Messages -->
+    <% if resource.errors.any? %>
+      <div class="rounded-lg bg-red-50 border border-red-200 p-4" data-turbo-temporary>
+        <div class="flex gap-3">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-sm font-medium text-red-800">
+              <%= I18n.t("errors.messages.not_saved",
+                         count: resource.errors.count,
+                         resource: resource.class.model_name.human.downcase) %>
+            </h3>
+            <ul class="mt-2 list-inside space-y-1 text-sm text-red-700">
+              <% resource.errors.full_messages.each do |message| %>
+                <li class="flex gap-2">
+                  <span class="text-red-400">•</span>
+                  <span><%= message %></span>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+        </div>
+      </div>
+    <% end %>
 
-  <div class="field">
-    <p><%= f.label :email %></p>
-    <p><%= f.email_field :email, autofocus: true, autocomplete: "email" %></p>
+    <!-- Form -->
+    <form action="<%= password_path(resource_name) %>" method="POST" class="mt-8 space-y-6">
+      <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+
+      <!-- Email Field -->
+      <div>
+        <label for="user_email" class="block text-sm font-medium text-slate-700">メールアドレス</label>
+        <input
+          type="email"
+          name="user[email]"
+          id="user_email"
+          autofocus
+          autocomplete="email"
+          value="<%= resource.email %>"
+          class="mt-1 block w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors"
+          placeholder="your@example.com"
+          required
+        >
+      </div>
+
+      <!-- Submit Button -->
+      <button
+        type="submit"
+        class="w-full rounded-lg bg-blue-600 py-2.5 px-4 font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+      >
+        パスワード再設定メールを送信
+      </button>
+    </form>
+
+    <!-- Links -->
+    <div class="mt-6">
+      <%= render "users/shared/links" %>
+    </div>
   </div>
-
-  <div class="actions">
-    <%= f.submit "Send me password reset instructions" %>
-  </div>
-<% end %>
-
-<%= render "users/shared/links" %>
+</div>

@@ -7,8 +7,16 @@ class RoomPolicy < ApplicationPolicy
     true
   end
 
+  def new?
+    true
+  end
+
   def create?
-    user.manager? || user.admin?
+    true
+  end
+
+  def canvas_editor?
+    user.owner_of?(@record)
   end
 
   def update?

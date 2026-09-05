@@ -1,0 +1,45 @@
+<h2>ユーザー新規登録</h2>
+
+<% if resource.errors.any? %>
+  <div id="error_explanation">
+    <h2><%= pluralize(resource.errors.count, "件") %>のエラーが発生しました</h2>
+    <ul>
+      <% resource.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
+<form action="<%= user_registration_path %>" method="POST">
+  <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+
+  <div class="field">
+    <label for="user_username">ユーザー名</label>
+    <input type="text" name="user[username]" id="user_username" value="<%= resource.username %>" required>
+  </div>
+
+  <div class="field">
+    <label for="user_email">メールアドレス</label>
+    <input type="email" name="user[email]" id="user_email" value="<%= resource.email %>" required autocomplete="email">
+  </div>
+
+  <div class="field">
+    <label for="user_password">パスワード</label>
+    <% if @minimum_password_length %>
+      <em>(<%= @minimum_password_length %>文字以上)</em>
+    <% end %>
+    <input type="password" name="user[password]" id="user_password" required autocomplete="new-password">
+  </div>
+
+  <div class="field">
+    <label for="user_password_confirmation">パスワード（確認）</label>
+    <input type="password" name="user[password_confirmation]" id="user_password_confirmation" required autocomplete="new-password">
+  </div>
+
+  <div class="actions">
+    <button type="submit">登録</button>
+  </div>
+</form>
+
+<%= render "devise/shared/links" %>

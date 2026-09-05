@@ -1,5 +1,5 @@
 class SessionsController < ApplicationController
-  before_action :authenticate_user!, except: [ :check_in_form, :check_in ]
+  before_action :authenticate_user!, except: [ :check_in_form ]
 
   def check_in_form
     @rooms = current_user ? current_user.rooms : []
@@ -13,36 +13,59 @@ class SessionsController < ApplicationController
 
   def check_in
     seat = Seat.find_by(id: params[:seat_id])
-    return render json: { error: "座席が見つかりません" }, status: :not_found unless seat
+    unless seat
+      return respond_to do |format|
+        format.html { redirect_to sessions_path, alert: "座席が見つかりません" }
+        format.json { render json: { error: "座席が見つかりません" }, status: :not_found }
+      end
+    end
 
     session = Session.create(
-      user_id: current_user&.id,
+      user_id: current_user.id,
       seat_id: seat.id,
       check_in_time: Time.current,
       status: "active"
     )
 
     if session.persisted?
-      broadcast_check_in(session, seat.room)
-      redirect_to sessions_path, notice: "チェックインしました"
+      respond_to do |format|
+        format.html { redirect_to sessions_path, notice: "チェックインしました" }
+        format.json { render json: { id: session.id, seat_id: session.seat_id, status: session.status }, status: :created }
+      end
     else
-      render :check_in_form, alert: "チェックインに失敗しました"
+      respond_to do |format|
+        format.html { render :check_in_form, alert: "チェックインに失敗しました" }
+        format.json { render json: { message: session.errors.full_messages.join(", ") }, status: :unprocessable_entity }
+      end
     end
   end
 
   def check_out
     @session = Session.find_by(id: params[:session_id])
-    return render json: { error: "セッションが見つかりません" }, status: :not_found unless @session
-
-    unless @session.user_id == current_user.id || current_user.admin?
-      return render json: { error: "権限がありません" }, status: :forbidden
+    unless @session
+      return respond_to do |format|
+        format.html { redirect_to sessions_path, alert: "セッションが見つかりません" }
+        format.json { render json: { error: "セッションが見つかりません" }, status: :not_found }
+      end
     end
 
-    if @session.update(check_out_time: Time.current, status: "checked_out")
-      broadcast_check_out(@session, @session.room)
-      redirect_to sessions_path, notice: "チェックアウトしました"
+    unless @session.user_id == current_user.id || current_user.admin?
+      return respond_to do |format|
+        format.html { redirect_to sessions_path, alert: "権限がありません" }
+        format.json { render json: { error: "権限がありません" }, status: :forbidden }
+      end
+    end
+
+    if @session.check_out!
+      respond_to do |format|
+        format.html { redirect_to sessions_path, notice: "チェックアウトしました" }
+        format.json { render json: @session.seat.canvas_data, status: :ok }
+      end
     else
-      render json: { error: "チェックアウトに失敗しました" }, status: :unprocessable_entity
+      respond_to do |format|
+        format.html { redirect_to sessions_path, alert: "チェックアウトに失敗しました" }
+        format.json { render json: { error: "チェックアウトに失敗しました" }, status: :unprocessable_entity }
+      end
     end
   end
 
@@ -54,19 +77,4 @@ class SessionsController < ApplicationController
     end
   end
 
-  private
-
-  def broadcast_check_in(session, room)
-    ActionCable.server.broadcast(
-      "room_#{room.id}",
-      { type: "check_in", session_id: session.id, seat_id: session.seat_id, user_id: session.user_id }
-    )
-  end
-
-  def broadcast_check_out(session, room)
-    ActionCable.server.broadcast(
-      "room_#{room.id}",
-      { type: "check_out", session_id: session.id, seat_id: session.seat_id, user_id: session.user_id }
-    )
-  end
 end

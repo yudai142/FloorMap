@@ -3,7 +3,7 @@ services:
     name: floormap-web
     runtime: ruby
     runtimeVersion: "3.3.0"
-    buildCommand: bundle install && bundle exec rails assets:precompile && bundle exec rails db:migrate
+    buildCommand: bundle install && npm ci && bundle exec rails db:migrate
     startCommand: bundle exec puma -t 5:5 -p 3000
     envVars:
       - key: DATABASE_URL
@@ -20,6 +20,8 @@ services:
         value: "true"
       - key: RAILS_SERVE_STATIC_FILES
         value: "true"
+      - key: RAILS_MASTER_KEY
+        sync: false
 
   - type: postgres
     name: floormap-db

@@ -1,0 +1,65 @@
+.editor-toolbar {
+  background-color: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.editor-toolbar .divider-horizontal {
+  margin: 0;
+  height: 24px;
+  width: 1px;
+}
+
+.editor-toolbar .btn {
+  font-size: 14px;
+}
+
+.editor-toolbar .btn-sm {
+  padding: 6px 12px;
+  min-height: auto;
+  height: auto;
+}
+
+.editor-toolbar .btn-xs {
+  padding: 4px 8px;
+  min-height: auto;
+  height: auto;
+  font-size: 12px;
+}
+
+/* Color button styling */
+.editor-toolbar .color-btn {
+  width: 24px;
+  height: 24px;
+  padding: 2px;
+  border-radius: 6px;
+  border: 2px solid #cbd5e1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.editor-toolbar .color-btn:hover {
+  border-color: #64748b;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
+}
+
+.editor-toolbar .color-btn.active {
+  border-color: #0f172a;
+  ring: 2px;
+  ring-color: #cbd5e1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .editor-toolbar {
+    flex-direction: column;
+  }
+
+  .editor-toolbar .btn span:not(.emoji) {
+    display: none;
+  }
+
+  .editor-toolbar .btn-sm {
+    padding: 6px 8px;
+  }
+}
