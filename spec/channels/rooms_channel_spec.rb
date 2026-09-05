@@ -40,18 +40,83 @@ RSpec.describe RoomsChannel, type: :channel do
     end
   end
 
-  describe "broadcasting" do
-    skip "broadcasts seat update when seat changes" do
+  describe "Seat broadcasting" do
+    before do
       stub_connection(current_user: manager)
       subscribe(room_id: room.id)
+    end
 
+    it "broadcasts seat_updated on seat creation" do
+      expect {
+        create(:seat, room: room)
+      }.to have_broadcasted_to(room).with(
+        hash_including(type: "seat_updated")
+      )
+    end
+
+    it "broadcasts seat_updated on seat position change" do
       seat = create(:seat, room: room)
-      user = create(:user)
-      session = create(:session, seat: seat, user: user)
+
+      expect {
+        seat.update(position_x: 200, position_y: 200)
+      }.to have_broadcasted_to(room).with(
+        hash_including(type: "seat_updated")
+      )
+    end
+
+    it "broadcasts seat_removed on seat deletion" do
+      seat = create(:seat, room: room)
+
+      expect {
+        seat.destroy
+      }.to have_broadcasted_to(room).with(
+        hash_including(type: "seat_removed")
+      )
+    end
+  end
+
+  describe "Session broadcasting" do
+    before do
+      stub_connection(current_user: manager)
+      subscribe(room_id: room.id)
+    end
+
+    it "broadcasts seat_updated on check-in" do
+      seat = create(:seat, room: room)
+
+      expect {
+        create(:session, seat: seat, user: manager)
+      }.to have_broadcasted_to(room).with(
+        hash_including(type: "seat_updated")
+      )
+    end
+
+    it "broadcasts seat_updated on check-out" do
+      seat = create(:seat, room: room)
+      session = create(:session, seat: seat, user: manager)
 
       expect {
         session.check_out!
-      }.to have_broadcasted_to(room).with(hash_including(type: "seat_updated"))
+      }.to have_broadcasted_to(room).with(
+        hash_including(type: "seat_updated")
+      )
+    end
+  end
+
+  describe "Floor plan broadcasting" do
+    before do
+      stub_connection(current_user: manager)
+      subscribe(room_id: room.id)
+    end
+
+    it "broadcasts floor_plan_updated when floor plan changes" do
+      floor_plan = [{ type: 'rectangle', x: 0, y: 0, width: 100, height: 100 }]
+
+      expect {
+        room.update(floor_plan_data: floor_plan)
+      }.to have_broadcasted_to(room).with(
+        hash_including(type: "floor_plan_updated")
+      )
     end
   end
 end
