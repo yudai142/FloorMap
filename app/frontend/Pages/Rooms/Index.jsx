@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { usePage } from '@inertiajs/react'
 import { Link } from '@inertiajs/react'
 
@@ -7,6 +7,12 @@ export default function RoomsIndex() {
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState('created_at')
   const [sortDirection, setSortDirection] = useState('desc')
+  const [csrfToken, setCsrfToken] = useState('')
+
+  useEffect(() => {
+    const token = document.querySelector('meta[name="csrf-token"]')?.content || ''
+    setCsrfToken(token)
+  }, [])
 
   // フィルタリング & ソート
   const filteredRooms = useMemo(() => {
@@ -58,7 +64,7 @@ export default function RoomsIndex() {
             <span className="user-email">{current_user?.email}</span>
             <form action="/users/sign_out" method="POST" style={{ display: 'inline' }}>
               <input type="hidden" name="_method" value="DELETE" />
-              <input type="hidden" name="authenticity_token" value={document.querySelector('meta[name="csrf-token"]')?.content || ''} />
+              <input type="hidden" name="authenticity_token" value={csrfToken} />
               <button type="submit" className="btn-logout">ログアウト</button>
             </form>
           </div>
