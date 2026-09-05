@@ -189,16 +189,15 @@ export default function EditorToolbar({
         <div className="flex-1"></div>
 
         {/* Save Button Group */}
-        <div className="border-2 border-red-300 rounded-lg p-3 bg-red-50 shadow-sm">
-          <button
-            onClick={onSave}
-            disabled={isSaving}
-            className={`btn btn-lg gap-2 font-bold transition-all text-slate-900 border-2 ${
-              hasUnsavedChanges
-                ? 'btn-error shadow-lg hover:shadow-xl border-slate-900'
-                : 'btn-outline hover:border-red-400 hover:bg-red-100 border-slate-300'
-            }`}
-          >
+        <button
+          onClick={onSave}
+          disabled={isSaving}
+          className={`btn btn-lg gap-2 font-bold transition-all text-slate-900 bg-lime-400 border-2 border-lime-500 rounded-lg ${
+            hasUnsavedChanges
+              ? 'shadow-lg hover:shadow-xl'
+              : 'hover:bg-lime-300'
+          }`}
+        >
             {isSaving ? (
               <>
                 <span className="loading loading-spinner loading-sm"></span>
@@ -210,8 +209,8 @@ export default function EditorToolbar({
                 <span className="hidden sm:inline">保存</span>
               </>
             )}
-          </button>
-        </div>
+        </button>
+
       </div>
     </div>
   )
