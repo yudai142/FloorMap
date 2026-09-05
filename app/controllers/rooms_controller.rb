@@ -10,7 +10,11 @@ class RoomsController < ApplicationController
 
     render inertia: 'Rooms/Index', props: {
       rooms: @rooms.map { |r| room_index_json(r) },
-      current_user: current_user.as_json(only: [:id, :email, :role])
+      current_user: current_user.as_json(only: [:id, :email, :role]),
+      auth: {
+        user: current_user&.slice(:id, :email, :name),
+        is_authenticated: user_signed_in?
+      }
     }
   end
 
@@ -31,7 +35,11 @@ class RoomsController < ApplicationController
         created_at: @room.created_at
       },
       seats: @room.seats.map { |s| seat_show_json(s) },
-      current_user: current_user.as_json(only: [:id, :email, :role])
+      current_user: current_user.as_json(only: [:id, :email, :role]),
+      auth: {
+        user: current_user&.slice(:id, :email, :name),
+        is_authenticated: user_signed_in?
+      }
     }
   end
 
@@ -96,7 +104,11 @@ class RoomsController < ApplicationController
       },
       shapes_data: @room.floor_plan_data || [],
       seats: @room.seats.map { |s| seat_canvas_json(s) },
-      current_user: current_user.as_json(only: [:id, :email])
+      current_user: current_user.as_json(only: [:id, :email]),
+      auth: {
+        user: current_user&.slice(:id, :email, :name),
+        is_authenticated: user_signed_in?
+      }
     }
   end
 

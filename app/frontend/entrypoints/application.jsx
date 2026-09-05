@@ -39,10 +39,14 @@ createInertiaApp({
   setup({ el, App, props }) {
     console.log('Setup called')
     console.log('App component:', App?.name || App?.displayName || 'unknown')
+    console.log('Full props:', props)
+    console.log('Initialpage props:', props.initialPage?.props)
 
     try {
       const root = createRoot(el)
+      // Inertia shared props are in props.initialPage.props
       const auth = props.initialPage?.props?.auth || {}
+      console.log('Auth data:', auth)
 
       root.render(
         <Layout auth={auth}>
