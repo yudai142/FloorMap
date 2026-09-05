@@ -1,5 +1,4 @@
 import React from 'react'
-import { ZoomIn, ZoomOut, RotateCcw, LayoutGrid, Save, Undo2, Redo2 } from 'lucide-react'
 import { useEditorStore } from '../../store/editorStore'
 import './EditorToolbar.css'
 
@@ -78,7 +77,7 @@ export default function EditorToolbar({
             className="btn btn-sm btn-ghost gap-1"
             title="戻す (Ctrl+Z)"
           >
-            <Undo2 className="w-4 h-4" />
+            <span>↶</span>
             <span className="hidden sm:inline">戻す</span>
           </button>
           <button
@@ -87,7 +86,7 @@ export default function EditorToolbar({
             className="btn btn-sm btn-ghost gap-1"
             title="やり直す (Ctrl+Y)"
           >
-            <Redo2 className="w-4 h-4" />
+            <span>↷</span>
             <span className="hidden sm:inline">やり直す</span>
           </button>
         </div>
@@ -144,7 +143,7 @@ export default function EditorToolbar({
             onClick={onToggleGrid}
             className={`btn btn-sm gap-1 ${showGrid ? 'btn-secondary' : 'btn-ghost'}`}
           >
-            <LayoutGrid className="w-4 h-4" />
+            <span>⊞</span>
             <span className="hidden sm:inline">グリッド</span>
           </button>
         </div>
@@ -191,7 +190,7 @@ export default function EditorToolbar({
             </>
           ) : (
             <>
-              <Save className="w-5 h-5" />
+              <span>💾</span>
               <span className="hidden sm:inline">保存</span>
             </>
           )}

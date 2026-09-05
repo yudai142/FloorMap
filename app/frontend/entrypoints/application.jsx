@@ -3,10 +3,21 @@ import { createInertiaApp } from '@inertiajs/react'
 import { createRoot } from 'react-dom/client'
 import Layout from '../components/Layout'
 
+// Import pages directly
+import Home from '../Pages/Home'
+import RoomsNew from '../Pages/Rooms/New'
+import RoomsCanvasEditor from '../Pages/Rooms/CanvasEditor'
+
+const pages = {
+  'Home': { default: Home },
+  'Rooms/New': { default: RoomsNew },
+  'Rooms/CanvasEditor': { default: RoomsCanvasEditor },
+}
+
 createInertiaApp({
   resolve: name => {
-    const pages = import.meta.glob('../Pages/**/*.jsx', { eager: true })
-    return pages[`../Pages/${name}.jsx`]?.default
+    console.log('Inertia resolve:', { name, available: Object.keys(pages) })
+    return pages[name]?.default
   },
   setup({ el, App, props }) {
     const root = createRoot(el)

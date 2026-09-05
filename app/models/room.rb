@@ -6,6 +6,8 @@ class Room < ApplicationRecord
 
   validates :name, presence: true
 
+  after_update_commit :broadcast_floor_plan_updated, if: :saved_change_to_floor_plan_data?
+
   scope :search, ->(query) {
     return all if query.blank?
 
@@ -80,5 +82,9 @@ end
   def seat_with_session(seat)
     session = Session.where(seat_id: seat.id, status: :active).last
     { seat: seat, session: session, user: session&.user }
+  end
+
+  def broadcast_floor_plan_updated
+    RoomsChannel.broadcast_to(self, type: "floor_plan_updated", floor_plan_data: floor_plan_data, timestamp: Time.current)
   end
 end
