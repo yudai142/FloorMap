@@ -12,7 +12,7 @@ class RoomsController < ApplicationController
       rooms: @rooms.map { |r| room_index_json(r) },
       current_user: current_user.as_json(only: [:id, :email, :role]),
       auth: {
-        user: current_user&.slice(:id, :email, :name),
+        user: current_user&.slice(:id, :email),
         is_authenticated: user_signed_in?
       }
     }
@@ -37,7 +37,7 @@ class RoomsController < ApplicationController
       seats: @room.seats.map { |s| seat_show_json(s) },
       current_user: current_user.as_json(only: [:id, :email, :role]),
       auth: {
-        user: current_user&.slice(:id, :email, :name),
+        user: current_user&.slice(:id, :email),
         is_authenticated: user_signed_in?
       }
     }
@@ -106,7 +106,7 @@ class RoomsController < ApplicationController
       seats: @room.seats.map { |s| seat_canvas_json(s) },
       current_user: current_user.as_json(only: [:id, :email]),
       auth: {
-        user: current_user&.slice(:id, :email, :name),
+        user: current_user&.slice(:id, :email),
         is_authenticated: user_signed_in?
       }
     }
