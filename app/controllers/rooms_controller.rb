@@ -21,34 +21,38 @@ class RoomsController < ApplicationController
   def show
     authorize @room
 
-    render inertia: 'Rooms/Show', props: {
-      room: {
-        id: @room.id,
-        name: safe_encode(@room.name),
-        description: safe_encode(@room.description),
-        width: @room.width || 1000,
-        height: @room.height || 700,
-        user_id: @room.user_id,
-        seats_count: @room.seats.count,
-        occupied_count: @room.occupied_seat_count,
-        occupancy_rate: @room.occupancy_rate,
-        created_at: @room.created_at,
-        floor_plan_data: @room.floor_plan_data || []
-      },
-      seats: @room.seats.map { |s| seat_canvas_json(s) },
-      current_user: {
-        id: current_user.id,
-        email: safe_encode(current_user.email),
-        role: current_user.role
-      },
-      auth: {
-        user: {
-          id: current_user.id,
-          email: safe_encode(current_user.email)
+    begin
+      render inertia: 'Rooms/Show', props: {
+        room: {
+          id: @room.id,
+          name: @room.name.to_s,
+          description: @room.description.to_s,
+          width: @room.width || 1000,
+          height: @room.height || 700,
+          user_id: @room.user_id,
+          seats_count: @room.seats.count,
+          occupied_count: @room.occupied_seat_count,
+          occupancy_rate: @room.occupancy_rate,
+          created_at: @room.created_at,
+          floor_plan_data: @room.floor_plan_data || []
         },
-        is_authenticated: user_signed_in?
+        seats: @room.seats.map { |s| seat_canvas_json(s) },
+        current_user: {
+          id: current_user.id,
+          email: current_user.email.to_s,
+          role: current_user.role
+        },
+        auth: {
+          user: {
+            id: current_user.id,
+            email: current_user.email.to_s
+          },
+          is_authenticated: user_signed_in?
+        }
       }
-    }
+    rescue Encoding::UndefinedConversionError, JSON::GeneratorError => e
+      redirect_to rooms_path, alert: "ルームデータの読み込みに失敗しました"
+    end
   end
 
   def new
