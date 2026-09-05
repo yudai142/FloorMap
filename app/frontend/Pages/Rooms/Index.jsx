@@ -55,28 +55,32 @@ export default function RoomsIndex() {
   }
 
   const handleLogout = (e) => {
-    e.preventDefault()
-    const form = document.createElement('form')
-    form.method = 'POST'
-    form.action = '/users/sign_out'
+    if (confirm('ログアウトしてもよろしいですか？')) {
+      const form = document.createElement('form')
+      form.method = 'POST'
+      form.action = '/users/sign_out'
 
-    const methodInput = document.createElement('input')
-    methodInput.type = 'hidden'
-    methodInput.name = '_method'
-    methodInput.value = 'DELETE'
-    form.appendChild(methodInput)
+      const methodInput = document.createElement('input')
+      methodInput.type = 'hidden'
+      methodInput.name = '_method'
+      methodInput.value = 'DELETE'
+      form.appendChild(methodInput)
 
-    const token = document.querySelector('meta[name="csrf-token"]')?.content
-    if (token) {
-      const tokenInput = document.createElement('input')
-      tokenInput.type = 'hidden'
-      tokenInput.name = 'authenticity_token'
-      tokenInput.value = token
-      form.appendChild(tokenInput)
+      const token = document.querySelector('meta[name="csrf-token"]')?.content
+      if (token) {
+        const tokenInput = document.createElement('input')
+        tokenInput.type = 'hidden'
+        tokenInput.name = 'authenticity_token'
+        tokenInput.value = token
+        form.appendChild(tokenInput)
+        console.log('CSRF Token:', token)
+      } else {
+        console.error('CSRF Token not found!')
+      }
+
+      document.body.appendChild(form)
+      form.submit()
     }
-
-    document.body.appendChild(form)
-    form.submit()
   }
 
   return (
