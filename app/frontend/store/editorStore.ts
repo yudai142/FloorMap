@@ -16,6 +16,7 @@ const initialState: Omit<EditorState, keyof typeof editorStore> = {
   historyIndex: -1,
   isDrawing: false,
   polygonPoints: [],
+  selectionBox: undefined,
 }
 
 export const useEditorStore = create<EditorState>()(
