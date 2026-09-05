@@ -9,10 +9,13 @@ export default function RoomShow() {
   const fetchSessions = async () => {
     try {
       const response = await fetch(`/rooms/${room.id}/canvas_data.json`)
+      if (!response.ok) {
+        return
+      }
       const data = await response.json()
       setSessions(data.sessions || [])
     } catch (error) {
-      console.error('セッション情報の取得に失敗:', error)
+      // Silent fail
     }
   }
 
@@ -175,11 +178,12 @@ export default function RoomShow() {
             {/* 座席 */}
             {seats && seats.map((seat) => {
               const session = sessions.find(s => s.seat_id === seat.id && s.status === 'active')
+              const isOccupied = seat.occupied || !!session
               return (
                 <g key={`seat-${seat.id}`} transform={`translate(${seat.x}, ${seat.y})`}>
                   <circle
                     r="12"
-                    fill={session ? '#f87171' : '#4ade80'}
+                    fill={isOccupied ? '#f87171' : '#4ade80'}
                     stroke="#065f46"
                     strokeWidth="2"
                     style={{ cursor: 'pointer' }}
