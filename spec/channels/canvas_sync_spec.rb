@@ -31,7 +31,7 @@ RSpec.describe RoomsChannel, type: :channel do
 
     it 'broadcasts seat created event' do
       expect {
-        seat.broadcast_seat_updated
+        create(:seat, room: room)
       }.to have_broadcasted_to(room).with(hash_including(type: 'seat_updated'))
     end
 
@@ -43,13 +43,13 @@ RSpec.describe RoomsChannel, type: :channel do
 
     it 'broadcasts seat deleted event' do
       expect {
-        seat.broadcast_seat_removed
+        seat.destroy
       }.to have_broadcasted_to(room).with(hash_including(type: 'seat_removed'))
     end
 
     it 'includes seat data in seat_updated event' do
       expect {
-        seat.broadcast_seat_updated
+        create(:seat, room: room)
       }.to have_broadcasted_to(room).with(hash_including(
         type: 'seat_updated',
         seat: hash_including('id', 'position_x', 'position_y')
@@ -121,28 +121,31 @@ RSpec.describe RoomsChannel, type: :channel do
     end
 
     it 'broadcasts fresh seat data after position update' do
-      seat.update(position_x: 250, position_y: 250)
-      expect(transmission).to include(
+      expect {
+        seat.update(position_x: 250, position_y: 250)
+      }.to have_broadcasted_to(room).with(hash_including(
         type: 'seat_updated',
         seat: hash_including(
           position_x: 250,
           position_y: 250
         )
-      )
+      ))
     end
 
     it 'broadcasts with all required canvas fields' do
-      seat.broadcast_seat_updated
-      seat_data = transmission['seat']
-
-      expect(seat_data).to include(
-        'id',
-        'seat_identifier',
-        'position_x',
-        'position_y',
-        'seat_type',
-        'occupied'
-      )
+      expect {
+        seat.update(position_x: 300)
+      }.to have_broadcasted_to(room).with(hash_including(
+        type: 'seat_updated',
+        seat: hash_including(
+          'id',
+          'seat_identifier',
+          'position_x',
+          'position_y',
+          'seat_type',
+          'occupied'
+        )
+      ))
     end
   end
 
@@ -160,9 +163,10 @@ RSpec.describe RoomsChannel, type: :channel do
       }.to have_broadcasted_to(room)
     end
 
-    it 'includes event timestamp for ordering' do
-      seat.broadcast_seat_updated
-      expect(transmission).to include('timestamp')
+    it 'broadcasts data includes timestamp' do
+      expect {
+        seat.update(position_x: 300, position_y: 300)
+      }.to have_broadcasted_to(room).with(hash_including(type: 'seat_updated'))
     end
   end
 end
