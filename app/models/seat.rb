@@ -6,9 +6,8 @@ class Seat < ApplicationRecord
   validates :row_number, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :column_number, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :seat_type, presence: true
-  validates :row_number, uniqueness: { scope: [ :column_number, :room_id ] }
-  validates :position_x, numericality: { allow_nil: true }
-  validates :position_y, numericality: { allow_nil: true }
+  validates :position_x, :position_y, presence: true, numericality: true
+  validates :position_x, :position_y, uniqueness: { scope: [ :room_id ] }
 
   enum :seat_type, { regular: "regular", accessible: "accessible", vip: "vip" }
 
@@ -47,8 +46,8 @@ class Seat < ApplicationRecord
 
   def self.grid_position_for(position_x:, position_y:)
     {
-      row_number: [(position_y.to_f / GRID_SIZE).round, 0].max,
-      column_number: [(position_x.to_f / GRID_SIZE).round, 0].max + 1
+      row_number: [position_y.to_i, 0].max,
+      column_number: [position_x.to_i, 1].max
     }
   end
 
@@ -59,9 +58,12 @@ class Seat < ApplicationRecord
 
       if active_session
         if active_session.user_id
-          session_data = { id: active_session.id, user_id: active_session.user_id, type: "user" }
+          user = active_session.user
+          username = (user&.email&.to_s&.split('@')&.first || user&.email&.to_s)&.force_encoding('UTF-8')
+          session_data = { id: active_session.id, user_id: active_session.user_id, type: "user", name: username }
         elsif active_session.visitor_id
-          session_data = { id: active_session.id, visitor_id: active_session.visitor_id, type: "visitor", name: active_session.visitor&.display_name }
+          display_name = active_session.visitor&.display_name&.to_s&.force_encoding('UTF-8')
+          session_data = { id: active_session.id, visitor_id: active_session.visitor_id, type: "visitor", name: display_name }
         end
       end
 
