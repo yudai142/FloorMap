@@ -38,7 +38,7 @@ class SeatsController < ApplicationController
     if @seat.save
       respond_to do |format|
         format.html { redirect_to room_seats_path(@room), notice: "座席を作成しました" }
-        format.json { render json: @seat.canvas_data, status: :created }
+        format.json { render json: seat_canvas_json(@seat), status: :created }
       end
     else
       respond_to do |format|
@@ -72,7 +72,7 @@ class SeatsController < ApplicationController
     authorize @seat
 
     if @seat.update(position_params)
-      render json: @seat.canvas_data, status: :ok
+      render json: seat_canvas_json(@seat), status: :ok
     else
       render json: { errors: @seat.errors }, status: :unprocessable_entity
     end
@@ -88,7 +88,7 @@ class SeatsController < ApplicationController
       seat
     end
 
-    render json: updated_seats.map(&:canvas_data), status: :ok
+    render json: updated_seats.map { |s| seat_canvas_json(s) }, status: :ok
   end
 
   private

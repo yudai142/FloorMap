@@ -24,20 +24,28 @@ class RoomsController < ApplicationController
     render inertia: 'Rooms/Show', props: {
       room: {
         id: @room.id,
-        name: @room.name,
-        description: @room.description,
+        name: safe_encode(@room.name),
+        description: safe_encode(@room.description),
         width: @room.width || 1000,
         height: @room.height || 700,
         user_id: @room.user_id,
         seats_count: @room.seats.count,
         occupied_count: @room.occupied_seat_count,
         occupancy_rate: @room.occupancy_rate,
-        created_at: @room.created_at
+        created_at: @room.created_at,
+        floor_plan_data: @room.floor_plan_data || []
       },
-      seats: @room.seats.map { |s| seat_show_json(s) },
-      current_user: current_user.as_json(only: [:id, :email, :role]),
+      seats: @room.seats.map { |s| seat_canvas_json(s) },
+      current_user: {
+        id: current_user.id,
+        email: safe_encode(current_user.email),
+        role: current_user.role
+      },
       auth: {
-        user: current_user&.slice(:id, :email),
+        user: {
+          id: current_user.id,
+          email: safe_encode(current_user.email)
+        },
         is_authenticated: user_signed_in?
       }
     }
@@ -122,9 +130,26 @@ class RoomsController < ApplicationController
   def canvas_data
     authorize @room, :show?
 
+    sessions = Session.active.joins(:seat).where(seats: { room_id: @room.id })
+
     render json: {
       room: @room.as_json(only: [ :id, :name, :description ]),
       seats: @room.seats.map(&:canvas_data),
+      sessions: sessions.map do |s|
+        {
+          id: s.id,
+          seat_id: s.seat_id,
+          status: s.status,
+          user_id: s.user_id,
+          user: s.user ? {
+            id: s.user.id,
+            email: s.user.email.to_s.force_encoding('UTF-8'),
+            username: s.user.email.to_s.split('@').first.force_encoding('UTF-8')
+          } : nil,
+          visitor_id: s.visitor_id,
+          visitor: s.visitor ? { id: s.visitor.id, display_name: s.visitor.display_name.to_s.force_encoding('UTF-8') } : nil
+        }
+      end,
       floor_plan_data: @room.floor_plan_data
     }
   end
@@ -194,5 +219,14 @@ class RoomsController < ApplicationController
 
   def floor_plan_params
     params.require(:room).permit(floor_plan_data: [:type, :x, :y, :width, :height, :color, :lineWidth])
+  end
+
+  private
+
+  def safe_encode(str)
+    return nil if str.nil?
+    str.to_s.encode('UTF-8', 'UTF-8', invalid: :replace, undef: :replace, replace: '')
+  rescue => e
+    ""
   end
 end

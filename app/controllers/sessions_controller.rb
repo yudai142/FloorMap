@@ -1,5 +1,5 @@
 class SessionsController < ApplicationController
-  before_action :authenticate_user!, except: [ :check_in_form, :check_in ]
+  before_action :authenticate_user!, except: [ :check_in_form ]
 
   def check_in_form
     @rooms = current_user ? current_user.rooms : []
@@ -21,7 +21,7 @@ class SessionsController < ApplicationController
     end
 
     session = Session.create(
-      user_id: current_user&.id,
+      user_id: current_user.id,
       seat_id: seat.id,
       check_in_time: Time.current,
       status: "active"
@@ -30,12 +30,12 @@ class SessionsController < ApplicationController
     if session.persisted?
       respond_to do |format|
         format.html { redirect_to sessions_path, notice: "チェックインしました" }
-        format.json { render json: seat.canvas_data, status: :created }
+        format.json { render json: { id: session.id, seat_id: session.seat_id, status: session.status }, status: :created }
       end
     else
       respond_to do |format|
         format.html { render :check_in_form, alert: "チェックインに失敗しました" }
-        format.json { render json: { errors: session.errors }, status: :unprocessable_entity }
+        format.json { render json: { message: session.errors.full_messages.join(", ") }, status: :unprocessable_entity }
       end
     end
   end
