@@ -79,6 +79,39 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
     }
   }, [initialShapes, initialSeats, setShapes, setSeats, saveToHistory])
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ctrl+Z / Cmd+Z: Undo
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault()
+        undo()
+      }
+      // Ctrl+Shift+Z / Cmd+Shift+Z or Ctrl+Y / Cmd+Y: Redo
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'z' && e.shiftKey || e.key === 'y')) {
+        e.preventDefault()
+        redo()
+      }
+      // Delete: Delete selected elements
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault()
+        selectedElements.forEach((el) => {
+          if (el.type === 'seat') {
+            deleteSeat(el.id).catch((err) => {
+              setAlert({ type: 'error', message: err.message })
+            })
+          } else if (el.type === 'shape') {
+            deleteShape(el.id)
+          }
+        })
+        clearSelection()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [undo, redo, selectedElements, deleteSeat, deleteShape, clearSelection, setAlert])
+
   const getCsrfToken = useCallback(() => {
     return document.querySelector('meta[name="csrf-token"]')?.content || ''
   }, [])
@@ -190,9 +223,19 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
     } else if (currentTool === 'select') {
       const clickedSeat = getSeatAtPoint(x, y)
       if (clickedSeat) {
+        // Check if already selected
+        const alreadySelected = selectedElements.some((el) => el.type === 'seat' && el.id === clickedSeat.id)
+        if (!alreadySelected && !e.ctrlKey && !e.metaKey) {
+          clearSelection()
+        }
         setDragging({ id: clickedSeat.id, offsetX: x - clickedSeat.x, offsetY: y - clickedSeat.y })
       } else {
-        clearSelection()
+        // Start selection box drag if not clicking on a seat
+        if (!e.ctrlKey && !e.metaKey) {
+          clearSelection()
+        }
+        // Initialize selection start for drag selection
+        setSelectionStart({ x, y })
       }
     } else if (currentTool === 'delete') {
       const clickedSeat = getSeatAtPoint(x, y)
@@ -226,6 +269,14 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       if (seat) {
         mergeSeat({ ...seat, x: snapToGrid(newX), y: snapToGrid(newY) })
       }
+    } else if (selectionStart && currentTool === 'select' && !dragging) {
+      // Update selection box during drag
+      setSelectionBox({
+        x: Math.min(selectionStart.x, x),
+        y: Math.min(selectionStart.y, y),
+        width: Math.abs(x - selectionStart.x),
+        height: Math.abs(y - selectionStart.y),
+      })
     } else if (drawingStart && currentTool === 'line' && drawMode === 'drag') {
       updateLinePreview(drawingStart.x, drawingStart.y, x, y)
     } else if (drawingStart && currentTool === 'rectangle' && drawMode === 'drag') {
@@ -252,6 +303,63 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
         })
       }
       setDragging(null)
+    } else if (selectionStart && selectionBox && currentTool === 'select' && !dragging) {
+      // Select all elements in selection box
+      const newSelected = []
+
+      seats.forEach((seat) => {
+        if (
+          seat.x >= selectionBox.x &&
+          seat.x <= selectionBox.x + selectionBox.width &&
+          seat.y >= selectionBox.y &&
+          seat.y <= selectionBox.y + selectionBox.height
+        ) {
+          newSelected.push({ type: 'seat', id: seat.id })
+        }
+      })
+
+      shapes.forEach((shape) => {
+        let isSelected = false
+        if (shape.type === 'line' || shape.type === 'arrow') {
+          if (
+            shape.x1 >= selectionBox.x &&
+            shape.x1 <= selectionBox.x + selectionBox.width &&
+            shape.y1 >= selectionBox.y &&
+            shape.y1 <= selectionBox.y + selectionBox.height &&
+            shape.x2 >= selectionBox.x &&
+            shape.x2 <= selectionBox.x + selectionBox.width &&
+            shape.y2 >= selectionBox.y &&
+            shape.y2 <= selectionBox.y + selectionBox.height
+          ) {
+            isSelected = true
+          }
+        } else if (shape.type === 'rectangle') {
+          if (
+            shape.x >= selectionBox.x &&
+            shape.x + shape.width <= selectionBox.x + selectionBox.width &&
+            shape.y >= selectionBox.y &&
+            shape.y + shape.height <= selectionBox.y + selectionBox.height
+          ) {
+            isSelected = true
+          }
+        } else if (shape.type === 'circle') {
+          if (
+            shape.cx - shape.r >= selectionBox.x &&
+            shape.cx + shape.r <= selectionBox.x + selectionBox.width &&
+            shape.cy - shape.r >= selectionBox.y &&
+            shape.cy + shape.r <= selectionBox.y + selectionBox.height
+          ) {
+            isSelected = true
+          }
+        }
+        if (isSelected) {
+          newSelected.push({ type: 'shape', id: shape.id })
+        }
+      })
+
+      setSelectedElements(newSelected)
+      setSelectionStart(null)
+      setSelectionBox(null)
     } else if (drawingStart && currentTool === 'line' && drawMode === 'drag') {
       addLine(drawingStart.x, drawingStart.y, x, y)
       setDrawingStart(null)
@@ -357,6 +465,21 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
 
               {/* Preview */}
               {preview && <PreviewRenderer preview={preview} />}
+
+              {/* Selection Box */}
+              {selectionBox && currentTool === 'select' && (
+                <rect
+                  x={selectionBox.x}
+                  y={selectionBox.y}
+                  width={selectionBox.width}
+                  height={selectionBox.height}
+                  fill="rgba(6, 182, 212, 0.1)"
+                  stroke="#06b6d4"
+                  strokeWidth="2"
+                  strokeDasharray="5,5"
+                  pointerEvents="none"
+                />
+              )}
 
               {/* Seats */}
               {seats.map((seat) => (

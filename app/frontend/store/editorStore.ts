@@ -110,8 +110,16 @@ export const useEditorStore = create<EditorState>()(
       set((state) => {
         const newHistory = state.history.slice(0, state.historyIndex + 1)
         newHistory.push({ seats: JSON.parse(JSON.stringify(seats)), shapes: JSON.parse(JSON.stringify(shapes)) })
+        // Keep history size limited to 50 entries
+        if (newHistory.length > 50) {
+          newHistory.shift()
+        } else {
+          state.historyIndex = newHistory.length - 1
+        }
         state.history = newHistory
-        state.historyIndex = newHistory.length - 1
+        if (newHistory.length <= 50) {
+          state.historyIndex = newHistory.length - 1
+        }
       }),
     undo: () =>
       set((state) => {
