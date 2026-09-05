@@ -9,14 +9,6 @@ import RoomsNew from '../Pages/Rooms/New'
 import RoomsShow from '../Pages/Rooms/Show'
 import RoomsCanvasEditor from '../Pages/Rooms/CanvasEditor'
 
-console.log('=== Inertia.js Initialization ===')
-console.log('Home:', Home)
-console.log('RoomsIndex:', RoomsIndex)
-console.log('RoomsNew:', RoomsNew)
-console.log('RoomsShow:', RoomsShow)
-console.log('RoomsCanvasEditor:', RoomsCanvasEditor)
-console.log('Layout:', Layout)
-
 const pageMap = {
   'Home': Home,
   'Rooms/Index': RoomsIndex,
@@ -27,36 +19,20 @@ const pageMap = {
 
 createInertiaApp({
   resolve: async name => {
-    console.log('Resolving page:', name)
     const component = pageMap[name]
-    console.log('Component found:', !!component, 'Component:', component)
     if (!component) {
-      console.error('Page not found:', name, 'Available:', Object.keys(pageMap))
       throw new Error(`Page not found: ${name}`)
     }
     return { default: component }
   },
   setup({ el, App, props }) {
-    console.log('Setup called')
-    console.log('App component:', App?.name || App?.displayName || 'unknown')
-    console.log('Full props:', props)
-    console.log('Initialpage props:', props.initialPage?.props)
+    const root = createRoot(el)
+    const auth = props.initialPage?.props?.auth || {}
 
-    try {
-      const root = createRoot(el)
-      // Inertia shared props are in props.initialPage.props
-      const auth = props.initialPage?.props?.auth || {}
-      console.log('Auth data:', auth)
-
-      root.render(
-        <Layout auth={auth}>
-          <App {...props} />
-        </Layout>
-      )
-      console.log('Render successful')
-    } catch (error) {
-      console.error('Render error:', error)
-      throw error
-    }
+    root.render(
+      <Layout auth={auth}>
+        <App {...props} />
+      </Layout>
+    )
   },
 })
