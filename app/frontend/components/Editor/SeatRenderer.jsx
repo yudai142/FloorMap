@@ -4,11 +4,9 @@ export default function SeatRenderer({ seat, onDelete }) {
   const handleContextMenu = useCallback(
     (e) => {
       e.preventDefault()
-      if (confirm(`座席 ${seat.label} を削除しますか?`)) {
-        onDelete(seat.id)
-      }
+      onDelete(seat.id)
     },
-    [seat.id, seat.label, onDelete]
+    [seat.id, onDelete]
   )
 
   return (

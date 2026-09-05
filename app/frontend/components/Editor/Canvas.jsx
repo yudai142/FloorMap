@@ -16,6 +16,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
   const scrollContainerRef = useRef(null)
   const [isSaving, setIsSaving] = useState(false)
   const [alert, setAlert] = useState(null)
+  const [selectionStart, setSelectionStart] = useState(null)
 
   // Default canvas dimensions if not provided
   const canvasWidth = room?.width || 1000
@@ -266,11 +267,9 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
     } else if (currentTool === 'delete') {
       const clickedSeat = getSeatAtPoint(x, y)
       if (clickedSeat) {
-        if (confirm(`座席 ${clickedSeat.label} を削除しますか?`)) {
-          deleteSeat(clickedSeat.id).catch((err) => {
-            setAlert({ type: 'error', message: err.message })
-          })
-        }
+        deleteSeat(clickedSeat.id).catch((err) => {
+          setAlert({ type: 'error', message: err.message })
+        })
       } else {
         const clickedShape = getShapeAtPoint(x, y)
         if (clickedShape) {
@@ -297,12 +296,14 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       }
     } else if (selectionStart && currentTool === 'select' && !dragging) {
       // Update selection box during drag
-      setSelectionBox({
-        x: Math.min(selectionStart.x, x),
-        y: Math.min(selectionStart.y, y),
-        width: Math.abs(x - selectionStart.x),
-        height: Math.abs(y - selectionStart.y),
-      })
+      if (selectionStart.x !== undefined && selectionStart.y !== undefined) {
+        setSelectionBox({
+          x: Math.min(selectionStart.x, x),
+          y: Math.min(selectionStart.y, y),
+          width: Math.abs(x - selectionStart.x),
+          height: Math.abs(y - selectionStart.y),
+        })
+      }
     } else if (drawingStart && currentTool === 'line' && drawMode === 'drag') {
       updateLinePreview(drawingStart.x, drawingStart.y, x, y)
     } else if (drawingStart && currentTool === 'rectangle' && drawMode === 'drag') {
