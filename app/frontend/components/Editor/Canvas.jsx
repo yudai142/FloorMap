@@ -277,12 +277,35 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
         }
       }
     } else if (['line', 'rectangle', 'circle', 'arrow', 'polygon'].includes(currentTool)) {
-      setDrawingStart({ x, y })
+      // Handle two-point selection mode
+      if (drawMode === 'click') {
+        if (!drawingStart) {
+          // First click: set starting point
+          setDrawingStart({ x, y })
+        } else {
+          // Second click: complete the shape
+          if (currentTool === 'line') {
+            addLine(drawingStart.x, drawingStart.y, x, y)
+          } else if (currentTool === 'rectangle') {
+            addRectangle(drawingStart.x, drawingStart.y, x - drawingStart.x, y - drawingStart.y)
+          } else if (currentTool === 'circle') {
+            const radius = Math.sqrt(Math.pow(x - drawingStart.x, 2) + Math.pow(y - drawingStart.y, 2))
+            addCircle(drawingStart.x, drawingStart.y, radius)
+          } else if (currentTool === 'arrow') {
+            addArrow(drawingStart.x, drawingStart.y, x, y)
+          }
+          setDrawingStart(null)
+          clearPreview()
+        }
+      } else if (drawMode === 'drag') {
+        // Drag mode: just set starting point
+        setDrawingStart({ x, y })
+      }
     } else if (currentTool === 'text') {
       setTextInput({ x, y, text: '' })
     }
-  }, [getMousePosition, currentTool, getSeatAtPoint, getShapeAtPoint, createSeat, deleteSeat, deleteShape,
-      setDragging, clearSelection, setDrawingStart, setTextInput])
+  }, [getMousePosition, currentTool, drawMode, drawingStart, getSeatAtPoint, getShapeAtPoint, createSeat, deleteSeat, deleteShape,
+      setDragging, clearSelection, setDrawingStart, setTextInput, addLine, addRectangle, addCircle, addArrow, clearPreview])
 
   const handleMouseMove = useCallback((e) => {
     const { x, y } = getMousePosition(e)
@@ -304,15 +327,18 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
           height: Math.abs(y - selectionStart.y),
         })
       }
-    } else if (drawingStart && currentTool === 'line') {
-      updateLinePreview(drawingStart.x, drawingStart.y, x, y)
-    } else if (drawingStart && currentTool === 'rectangle') {
-      updateRectanglePreview(drawingStart.x, drawingStart.y, x - drawingStart.x, y - drawingStart.y)
-    } else if (drawingStart && currentTool === 'circle') {
-      const radius = Math.sqrt(Math.pow(x - drawingStart.x, 2) + Math.pow(y - drawingStart.y, 2))
-      updateCirclePreview(drawingStart.x, drawingStart.y, radius)
-    } else if (drawingStart && currentTool === 'arrow') {
-      updateArrowPreview(drawingStart.x, drawingStart.y, x, y)
+    } else if (drawingStart) {
+      // Show previews in both drag and click modes (for preview display)
+      if (currentTool === 'line') {
+        updateLinePreview(drawingStart.x, drawingStart.y, x, y)
+      } else if (currentTool === 'rectangle') {
+        updateRectanglePreview(drawingStart.x, drawingStart.y, x - drawingStart.x, y - drawingStart.y)
+      } else if (currentTool === 'circle') {
+        const radius = Math.sqrt(Math.pow(x - drawingStart.x, 2) + Math.pow(y - drawingStart.y, 2))
+        updateCirclePreview(drawingStart.x, drawingStart.y, radius)
+      } else if (currentTool === 'arrow') {
+        updateArrowPreview(drawingStart.x, drawingStart.y, x, y)
+      }
     }
   }, [getMousePosition, dragging, currentTool, drawingStart, drawMode, canvasWidth, canvasHeight, seats,
       mergeSeat, updateLinePreview, updateRectanglePreview, updateCirclePreview, updateArrowPreview])
@@ -405,8 +431,8 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       setDrawingStart(null)
       clearPreview()
     }
-  }, [getMousePosition, dragging, currentTool, drawingStart, drawMode, canvasWidth, canvasHeight, seats,
-      moveSeat, setDragging, setDrawingStart, clearPreview, addLine, addRectangle, addCircle, addArrow])
+  }, [getMousePosition, dragging, currentTool, drawingStart, drawMode, canvasWidth, canvasHeight, seats, shapes,
+      moveSeat, setDragging, setDrawingStart, clearPreview, addLine, addRectangle, addCircle, addArrow, setSelectedElements, setSelectionStart, setSelectionBox])
 
   return (
     <div className="canvas-editor-container flex flex-col h-screen bg-base-100">
