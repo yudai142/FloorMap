@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { usePage } from '@inertiajs/react'
 
-export default function Layout({ children }) {
-  const { auth } = usePage().props
+export default function Layout({ children, auth = {} }) {
   const [csrfToken, setCsrfToken] = useState('')
 
   useEffect(() => {
