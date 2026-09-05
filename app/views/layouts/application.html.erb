@@ -18,15 +18,10 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
-    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
-
-    <%# Vite entrypoint - Skip HMR server in development, use production manifest %>
+    <%# Vite entrypoint with CSS and JS %>
     <% unless Rails.env.test? %>
-      <% if File.exist?(Rails.root.join("public/vite/.vite/manifest.json")) %>
-        <%= vite_javascript_tag "application.jsx", "data-turbo-track": "reload" %>
-        <%= vite_stylesheet_tag "application.jsx", "data-turbo-track": "reload" %>
-      <% end %>
+      <%= vite_javascript_tag "application.jsx", "data-turbo-track": "reload" %>
+      <%= vite_stylesheet_tag "application.jsx", "data-turbo-track": "reload" %>
     <% end %>
   </head>
 
