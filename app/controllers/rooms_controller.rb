@@ -7,6 +7,11 @@ class RoomsController < ApplicationController
     @rooms = @rooms.search(params[:search]) if params[:search].present?
     @rooms = @rooms.by_owner(params[:owner_id]) if params[:owner_id].present?
     @rooms = @rooms.sorted(params[:sort], params[:direction]) if params[:sort].present?
+
+    render inertia: 'Rooms/Index', props: {
+      rooms: @rooms.map { |r| room_index_json(r) },
+      current_user: current_user.as_json(only: [:id, :email, :role])
+    }
   end
 
   def show
@@ -107,6 +112,18 @@ class RoomsController < ApplicationController
 
   def set_room
     @room = Room.find(params[:id] || params[:room_id])
+  end
+
+  def room_index_json(room)
+    {
+      id: room.id,
+      name: room.name,
+      description: room.description,
+      seats_count: room.seats.count,
+      occupied_seat_count: room.occupied_seat_count,
+      occupancy_rate: room.occupancy_rate,
+      created_at: room.created_at
+    }
   end
 
   def room_params
