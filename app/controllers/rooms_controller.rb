@@ -201,22 +201,25 @@ class RoomsController < ApplicationController
   def update_auto_checkout_settings
     return head :unauthorized unless user_signed_in?
 
-    settings = auto_checkout_settings_params
+    settings = auto_checkout_settings_params.to_h
 
     # datetime-local 形式の文字列を datetime に変換
     if settings[:auto_checkout_time].present?
       settings[:auto_checkout_time] = DateTime.parse(settings[:auto_checkout_time])
+    else
+      settings[:auto_checkout_time] = nil
     end
 
-    if current_user.update(settings)
+    begin
+      current_user.update_columns(settings)
       render json: {
         auto_checkout_enabled: current_user.auto_checkout_enabled,
         auto_checkout_time: current_user.auto_checkout_time
       }, status: :ok
-    else
+    rescue StandardError => e
       render json: {
         message: "設定の保存に失敗しました",
-        errors: current_user.errors.full_messages
+        errors: [e.message]
       }, status: :unprocessable_entity
     end
   end
