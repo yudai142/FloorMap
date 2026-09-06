@@ -21,7 +21,6 @@ export default function EditorToolbar({
   const { setCurrentTool, drawMode, setDrawMode, selectedColor, setSelectedColor } = useEditorStore()
 
   const tools = [
-    { id: 'select', label: '選択', emoji: '✓' },
     { id: 'seat', label: '座席', emoji: '🪑' },
     { id: 'line', label: '直線', emoji: '—' },
     { id: 'rectangle', label: '四角形', emoji: '▭' },
