@@ -567,32 +567,43 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
     setDragStart({ x: e.clientX, y: e.clientY })
   }
 
-  const handleResizeMouseMove = (e) => {
+  // リサイズイベントのグローバル監視
+  useEffect(() => {
     if (!isResizing || !onCanvasSizeChange) return
 
-    const deltaX = e.clientX - dragStart.x
-    const deltaY = e.clientY - dragStart.y
+    const handleMouseMove = (e) => {
+      const deltaX = e.clientX - dragStart.x
+      const deltaY = e.clientY - dragStart.y
 
-    if (isResizing === 'horizontal' || isResizing === 'both') {
-      onCanvasSizeChange((prev) => ({
-        ...prev,
-        width: Math.max(100, prev.width + deltaX)
-      }))
+      if (isResizing === 'horizontal' || isResizing === 'both') {
+        onCanvasSizeChange((prev) => ({
+          ...prev,
+          width: Math.max(100, prev.width + deltaX)
+        }))
+      }
+
+      if (isResizing === 'vertical' || isResizing === 'both') {
+        onCanvasSizeChange((prev) => ({
+          ...prev,
+          height: Math.max(100, prev.height + deltaY)
+        }))
+      }
+
+      setDragStart({ x: e.clientX, y: e.clientY })
     }
 
-    if (isResizing === 'vertical' || isResizing === 'both') {
-      onCanvasSizeChange((prev) => ({
-        ...prev,
-        height: Math.max(100, prev.height + deltaY)
-      }))
+    const handleMouseUp = () => {
+      setIsResizing(null)
     }
 
-    setDragStart({ x: e.clientX, y: e.clientY })
-  }
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
 
-  const handleResizeMouseUp = () => {
-    setIsResizing(null)
-  }
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isResizing, dragStart, onCanvasSizeChange])
 
   return (
     <div className="canvas-editor-container flex flex-col h-screen bg-base-100">
@@ -703,9 +714,6 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
               borderRight: '3px solid #3b82f6',
               borderBottom: '3px solid #3b82f6'
             }}
-            onMouseMove={handleResizeMouseMove}
-            onMouseUp={handleResizeMouseUp}
-            onMouseLeave={handleResizeMouseUp}
           >
             <div
               style={{
