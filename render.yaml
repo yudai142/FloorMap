@@ -21,11 +21,6 @@ services:
       - key: RAILS_MASTER_KEY
         sync: false
 
-  - type: postgres
-    name: floormap-db
-    ipAllowList: []
-    plan: starter
-
   - type: redis
     name: floormap-redis
     ipAllowList: []
