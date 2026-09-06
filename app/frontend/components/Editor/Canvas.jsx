@@ -861,7 +861,12 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
                 y2={canvasHeight}
                 stroke="#3b82f6"
                 strokeWidth="3"
-                pointerEvents="none"
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  setIsResizing('horizontal')
+                  setDragStart({ x: e.clientX, y: e.clientY })
+                }}
+                style={{ cursor: 'ew-resize' }}
               />
               {/* 下端 */}
               <line
@@ -871,7 +876,12 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
                 y2={canvasHeight - 1.5}
                 stroke="#3b82f6"
                 strokeWidth="3"
-                pointerEvents="none"
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  setIsResizing('vertical')
+                  setDragStart({ x: e.clientX, y: e.clientY })
+                }}
+                style={{ cursor: 'ns-resize' }}
               />
             </svg>
             </div>
