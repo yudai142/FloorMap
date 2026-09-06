@@ -206,6 +206,9 @@ export default function RoomShow() {
         requestBody.user_name = userName.trim()
       }
 
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 30000)
+
       const response = await fetch('/sessions/check_in.json', {
         method: 'POST',
         headers: {
@@ -213,8 +216,11 @@ export default function RoomShow() {
           'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
           'Accept': 'application/json'
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
       })
+
+      clearTimeout(timeoutId)
 
       if (response.ok) {
         // Update UI immediately - show auto checkout panel
@@ -236,13 +242,19 @@ export default function RoomShow() {
 
   const handleCheckOut = async (sessionId) => {
     try {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 30000)
+
       const response = await fetch(`/sessions/check_out.json?session_id=${sessionId}`, {
         method: 'DELETE',
         headers: {
           'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
           'Accept': 'application/json'
-        }
+        },
+        signal: controller.signal
       })
+
+      clearTimeout(timeoutId)
 
       if (response.ok) {
         await fetchSessions()
