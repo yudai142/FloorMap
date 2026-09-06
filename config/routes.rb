@@ -14,6 +14,9 @@ Rails.application.routes.draw do
 
   get "up" => "rails/health#show", as: :rails_health_check
 
+  # Handle Chrome DevTools optional endpoint
+  get "/.well-known/appspecific/com.chrome.devtools.json", to: proc { |env| [204, {}, []] }
+
   # Swagger UI for API documentation
   mount Rswag::Ui::Engine => "/api-docs"
   mount Rswag::Api::Engine => "/api-docs"
