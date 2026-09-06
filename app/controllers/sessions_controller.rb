@@ -1,5 +1,5 @@
 class SessionsController < ApplicationController
-  before_action :authenticate_user!, except: [ :check_in_form ]
+  before_action :authenticate_user!, except: [ :check_in_form, :check_in, :check_out ]
 
   def check_in_form
     @rooms = current_user ? current_user.rooms : []
@@ -20,14 +20,30 @@ class SessionsController < ApplicationController
       end
     end
 
-    session = Session.create(
-      user_id: current_user.id,
-      seat_id: seat.id,
-      check_in_time: Time.current,
-      status: "active"
-    )
+    if current_user
+      session = Session.create(
+        user_id: current_user.id,
+        seat_id: seat.id,
+        check_in_time: Time.current,
+        status: "active"
+      )
+    else
+      # Create visitor for unauthenticated users
+      visitor = Visitor.create(nickname: "Anonymous User #{SecureRandom.hex(4)}")
 
-    if session.persisted?
+      if visitor.persisted?
+        session = Session.create(
+          visitor_id: visitor.id,
+          seat_id: seat.id,
+          check_in_time: Time.current,
+          status: "active"
+        )
+      else
+        session = nil
+      end
+    end
+
+    if session&.persisted?
       respond_to do |format|
         format.html { redirect_to sessions_path, notice: "チェックインしました" }
         format.json { render json: { id: session.id, seat_id: session.seat_id, status: session.status }, status: :created }
@@ -35,7 +51,7 @@ class SessionsController < ApplicationController
     else
       respond_to do |format|
         format.html { render :check_in_form, alert: "チェックインに失敗しました" }
-        format.json { render json: { message: session.errors.full_messages.join(", ") }, status: :unprocessable_entity }
+        format.json { render json: { message: "チェックインに失敗しました" }, status: :unprocessable_entity }
       end
     end
   end
@@ -49,12 +65,16 @@ class SessionsController < ApplicationController
       end
     end
 
-    unless @session.user_id == current_user.id || current_user.admin?
-      return respond_to do |format|
-        format.html { redirect_to sessions_path, alert: "権限がありません" }
-        format.json { render json: { error: "権限がありません" }, status: :forbidden }
+    # Check authorization: allow if user owns the session or is admin
+    if current_user
+      unless @session.user_id == current_user.id || current_user.admin?
+        return respond_to do |format|
+          format.html { redirect_to sessions_path, alert: "権限がありません" }
+          format.json { render json: { error: "権限がありません" }, status: :forbidden }
+        end
       end
     end
+    # Allow unauthenticated users to check out (no authorization check)
 
     if @session.check_out!
       respond_to do |format|

@@ -72,7 +72,6 @@ export default function RoomShow() {
   }
 
   const canManage = current_user && (current_user.id === room.user_id || current_user.role === 'admin')
-  const canCheckInOut = !!current_user
 
   return (
     <div className="room-detail-page">
@@ -216,8 +215,8 @@ export default function RoomShow() {
                     fill={isOccupied ? '#f87171' : '#4ade80'}
                     stroke="#065f46"
                     strokeWidth="2"
-                    style={{ cursor: canCheckInOut ? 'pointer' : 'default' }}
-                    onClick={() => canCheckInOut && (session ? handleCheckOut(session.id) : handleCheckIn(seat.id))}
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => session ? handleCheckOut(session.id) : handleCheckIn(seat.id)}
                   />
                   <text
                     x="16"
@@ -264,9 +263,9 @@ export default function RoomShow() {
                           onClick={() => handleCheckOut(session.id)}
                           className="btn-checkout"
                           disabled={
-                            !canCheckInOut ||
-                            (current_user.id !== session.user_id &&
-                            current_user.role !== 'admin')
+                            current_user &&
+                            current_user.id !== session.user_id &&
+                            current_user.role !== 'admin'
                           }
                         >
                           解放
@@ -275,7 +274,6 @@ export default function RoomShow() {
                         <button
                           onClick={() => handleCheckIn(seat.id)}
                           className="btn-checkin"
-                          disabled={!canCheckInOut}
                         >
                           着席
                         </button>
