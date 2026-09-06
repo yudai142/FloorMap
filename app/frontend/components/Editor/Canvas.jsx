@@ -214,33 +214,20 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       // Filter out incomplete shapes before saving
       const validShapes = shapes.filter(shape => {
         if (shape.type === 'line' || shape.type === 'arrow') {
-          const isValid = shape.x1 !== undefined && shape.y1 !== undefined && shape.x2 !== undefined && shape.y2 !== undefined
-          console.log(`Shape ${shape.type}:`, shape, 'Valid:', isValid)
-          return isValid
+          return shape.x1 !== undefined && shape.y1 !== undefined && shape.x2 !== undefined && shape.y2 !== undefined
         } else if (shape.type === 'rectangle') {
-          const isValid = shape.x !== undefined && shape.y !== undefined && shape.width !== undefined && shape.height !== undefined
-          console.log(`Shape ${shape.type}:`, shape, 'Valid:', isValid)
-          return isValid
+          return shape.x !== undefined && shape.y !== undefined && shape.width !== undefined && shape.height !== undefined
         } else if (shape.type === 'circle') {
-          const isValid = shape.cx !== undefined && shape.cy !== undefined && shape.r !== undefined
-          console.log(`Shape ${shape.type}:`, shape, 'Valid:', isValid)
-          return isValid
+          return shape.cx !== undefined && shape.cy !== undefined && shape.r !== undefined
         } else if (shape.type === 'text') {
-          const isValid = shape.x !== undefined && shape.y !== undefined && shape.text !== undefined
-          console.log(`Shape ${shape.type}:`, shape, 'Valid:', isValid)
-          return isValid
+          return shape.x !== undefined && shape.y !== undefined && shape.text !== undefined
         } else if (shape.type === 'polygon') {
-          const isValid = shape.pointsArray !== undefined && shape.pointsArray.length > 0
-          console.log(`Shape ${shape.type}:`, shape, 'Valid:', isValid)
-          return isValid
+          return shape.pointsArray !== undefined && shape.pointsArray.length > 0
         }
-        console.log(`Unknown shape type: ${shape.type}`, shape)
         return true
       })
 
-      console.log('Filtered shapes count:', validShapes.length, 'Original:', shapes.length)
       // Save shapes (floor plan)
-      console.log('Saving floor plan:', validShapes)
       const floorPlanResponse = await fetch(`/rooms/${room.share_token}/floor_plan.json`, {
         method: 'PATCH',
         headers: {
@@ -249,8 +236,6 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
         },
         body: JSON.stringify({ room: { floor_plan_data: validShapes } }),
       })
-
-      console.log('Floor plan response status:', floorPlanResponse.status)
       if (!floorPlanResponse.ok) {
         const errorText = await floorPlanResponse.text()
         console.error('Floor plan error response:', errorText)
@@ -322,7 +307,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       setTimeout(() => setAlert(null), 2000)
 
       if (onSave) {
-        onSave(shapes)
+        onSave(validShapes)
       }
     } catch (err) {
       setAlert({ type: 'error', message: err.message })
