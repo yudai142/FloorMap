@@ -4,16 +4,12 @@ RSpec.describe 'Canvas Editor', type: :request do
   let(:user) { create(:user, :manager) }
   let(:room) { create(:room, user: user) }
 
-  before do
-    sign_in user
-  end
-
-  after do
-    sign_out user
-  end
-
   describe 'GET /rooms/:share_token/canvas_editor' do
     context 'when user is owner' do
+      before do
+        sign_in user
+      end
+
       it 'renders canvas editor page' do
         get "/rooms/#{room.share_token}/canvas_editor"
         expect(response).to have_http_status(:success)
@@ -40,7 +36,6 @@ RSpec.describe 'Canvas Editor', type: :request do
       it 'returns default dimensions when not set' do
         room.update(width: nil, height: nil)
         get "/rooms/#{room.share_token}/canvas_editor"
-        # デフォルト値 1000 と 700 を確認
         expect(response.body).to include('1000')
         expect(response.body).to include('700')
       end
@@ -50,7 +45,6 @@ RSpec.describe 'Canvas Editor', type: :request do
       let(:other_user) { create(:user, :manager) }
 
       before do
-        sign_out user
         sign_in other_user
       end
 
@@ -70,10 +64,13 @@ RSpec.describe 'Canvas Editor', type: :request do
     end
 
     context 'when user is owner' do
+      before do
+        sign_in user
+      end
+
       it 'saves floor plan data' do
-        patch "/rooms/#{room.share_token}/floor_plan", params: { room: { floor_plan_data: floor_plan_data.to_json } }
+        patch "/rooms/#{room.share_token}/floor_plan", params: { room: { floor_plan_data: floor_plan_data } }
         expect(response).to have_http_status(:ok)
-        # JSON パラメータは文字列値として保存される
         saved_data = room.reload.floor_plan_data
         expect(saved_data.length).to eq(2)
         expect(saved_data.first['type']).to eq('rectangle')
@@ -96,7 +93,6 @@ RSpec.describe 'Canvas Editor', type: :request do
       let(:other_user) { create(:user, :manager) }
 
       before do
-        sign_out user
         sign_in other_user
       end
 
@@ -111,30 +107,28 @@ RSpec.describe 'Canvas Editor', type: :request do
     let!(:seat1) { create(:seat, room: room, position_x: 100, position_y: 150) }
     let!(:seat2) { create(:seat, room: room, position_x: 250, position_y: 150) }
 
-    context 'when user has permission' do
-      it 'returns canvas data' do
-        get "/rooms/#{room.share_token}/canvas_data"
-        expect(response).to have_http_status(:ok)
+    it 'returns canvas data' do
+      get "/rooms/#{room.share_token}/canvas_data"
+      expect(response).to have_http_status(:ok)
 
-        json = JSON.parse(response.body)
-        expect(json['room']).to include('id', 'name', 'description')
-        expect(json['seats']).to be_an(Array)
-        expect(json).to have_key('floor_plan_data')
-      end
+      json = JSON.parse(response.body)
+      expect(json['room']).to include('id', 'name', 'description')
+      expect(json['seats']).to be_an(Array)
+      expect(json).to have_key('floor_plan_data')
+    end
 
-      it 'includes seat position data' do
-        get "/rooms/#{room.share_token}/canvas_data"
-        json = JSON.parse(response.body)
-        seat_data = json['seats'].first
-        expect(seat_data).to include('id', 'position_x', 'position_y')
-      end
+    it 'includes seat position data' do
+      get "/rooms/#{room.share_token}/canvas_data"
+      json = JSON.parse(response.body)
+      seat_data = json['seats'].first
+      expect(seat_data).to include('id', 'position_x', 'position_y')
+    end
 
-      it 'includes floor plan data' do
-        room.update(floor_plan_data: [ { type: 'rectangle', x: 0, y: 0 } ])
-        get "/rooms/#{room.share_token}/canvas_data"
-        json = JSON.parse(response.body)
-        expect(json['floor_plan_data']).to eq([ { 'type' => 'rectangle', 'x' => 0, 'y' => 0 } ])
-      end
+    it 'includes floor plan data' do
+      room.update(floor_plan_data: [ { type: 'rectangle', x: 0, y: 0 } ])
+      get "/rooms/#{room.share_token}/canvas_data"
+      json = JSON.parse(response.body)
+      expect(json['floor_plan_data']).to eq([ { 'type' => 'rectangle', 'x' => 0, 'y' => 0 } ])
     end
   end
 end
