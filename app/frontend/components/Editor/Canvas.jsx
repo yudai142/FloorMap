@@ -574,7 +574,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
 
     console.log('getResizeDirection - rect:', { width: rect.width, height: rect.height }, 'mouse:', { x, y })
 
-    const handleSize = 10 // ハンドル判定範囲
+    const handleSize = 50 // ハンドル判定範囲
     const isRightEdge = x > rect.width - handleSize
     const isBottomEdge = y > rect.height - handleSize
 
