@@ -88,6 +88,8 @@ class Room < ApplicationRecord
 
   def broadcast_floor_plan_updated
     RoomsChannel.broadcast_to(self, type: "floor_plan_updated", floor_plan_data: floor_plan_data, timestamp: Time.current)
+  rescue => e
+    Rails.logger.warn("Failed to broadcast floor plan update: #{e.class} - #{e.message}")
   end
 
   private
