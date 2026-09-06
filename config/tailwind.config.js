@@ -4,5 +4,5 @@ module.exports = {
     './app/components/**/*.{html,erb,haml}',
     './app/javascript/**/*.{js,jsx,ts,tsx}'
   ],
-  input: './app/assets/stylesheets/application.css'
+  input: './app/assets/tailwind/application.css'
 }
