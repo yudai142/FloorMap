@@ -8,10 +8,10 @@ local:
 
 amazon:
   service: S3
-  access_key_id: <%= ENV.fetch("AWS_ACCESS_KEY_ID") %>
-  secret_access_key: <%= ENV.fetch("AWS_SECRET_ACCESS_KEY") %>
+  access_key_id: <%= ENV.fetch("AWS_ACCESS_KEY_ID", "") %>
+  secret_access_key: <%= ENV.fetch("AWS_SECRET_ACCESS_KEY", "") %>
   region: ap-northeast-1
-  bucket: <%= ENV.fetch("AWS_S3_BUCKET") %>
+  bucket: <%= ENV.fetch("AWS_S3_BUCKET", "aws-and-infra-strage-image") %>
 
 # Remember not to checkin your GCS keyfile to a repository
 # google:
