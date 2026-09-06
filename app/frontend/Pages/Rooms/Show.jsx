@@ -270,6 +270,31 @@ export default function RoomShow() {
                 <span className="dot available"></span> 空き ({(room.seats_count || 0) - (room.occupied_count || 0)})
               </span>
               <span className="occupancy">稼働率: {room.occupancy_rate || 0}%</span>
+              <button
+                onClick={() => {
+                  const url = window.location.href
+                  navigator.clipboard.writeText(url).then(() => {
+                    alert('ルームのURLをコピーしました')
+                  }).catch(() => {
+                    alert('URLのコピーに失敗しました')
+                  })
+                }}
+                style={{
+                  marginLeft: '12px',
+                  padding: '4px 8px',
+                  fontSize: '12px',
+                  backgroundColor: '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#2563eb'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = '#3b82f6'}
+              >
+                🔗 URLをコピー
+              </button>
             </div>
           </div>
 
@@ -403,39 +428,6 @@ export default function RoomShow() {
               )
             })}
           </svg>
-
-          {/* URLコピーボタンレイヤー */}
-          {seats && seats.map((seat) => (
-            <button
-              key={`copy-btn-${seat.id}`}
-              onClick={() => {
-                const url = `${window.location.origin}/rooms/${room.share_token}?seat_id=${seat.id}`
-                navigator.clipboard.writeText(url).then(() => {
-                  alert('座席のURLをコピーしました')
-                }).catch(() => {
-                  alert('URLのコピーに失敗しました')
-                })
-              }}
-              style={{
-                position: 'absolute',
-                left: `${seat.position_x + 30}px`,
-                top: `${seat.position_y - 8}px`,
-                padding: '2px 6px',
-                fontSize: '10px',
-                backgroundColor: '#3b82f6',
-                color: 'white',
-                border: 'none',
-                borderRadius: '3px',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                zIndex: 10
-              }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = '#2563eb'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = '#3b82f6'}
-            >
-              🔗 コピー
-            </button>
-          ))}
           </div>
         </div>
 
