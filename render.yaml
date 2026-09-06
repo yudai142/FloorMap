@@ -6,8 +6,6 @@ services:
     buildCommand: bundle install && npm ci
     startCommand: bash bin/render-start
     envVars:
-      - key: DATABASE_URL
-        sync: false
       - key: REDIS_URL
         fromService:
           name: floormap-redis
@@ -18,8 +16,6 @@ services:
         value: "true"
       - key: RAILS_SERVE_STATIC_FILES
         value: "true"
-      - key: RAILS_MASTER_KEY
-        sync: false
 
   - type: redis
     name: floormap-redis
