@@ -5,7 +5,7 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [
-    RubyPlugin({ skipCompatibilityCheck: true }),
+    RubyPlugin({ skipCompatibilityCheck: true, port: 5173 }),
     react(),
   ],
   server: {
