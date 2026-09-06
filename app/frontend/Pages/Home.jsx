@@ -22,7 +22,7 @@ export default function Home({ auth }) {
           <div className="text-center">
             <p className="text-sm text-gray-600 mb-2">実際に試してみる</p>
             <a
-              href="https://floormap-seating-manager.onrender.com/rooms/vNx9WWHZdCHynuJVMp3bdGdb"
+              href="https://floormap.onrender.com/rooms/d80d848c8b6f"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-lg transition"
