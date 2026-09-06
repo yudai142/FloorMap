@@ -569,9 +569,9 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
 
-    const borderSize = 3 // ボーダー幅
-    const isRightEdge = x > rect.width - borderSize
-    const isBottomEdge = y > rect.height - borderSize
+    const handleSize = 10 // ハンドル判定範囲
+    const isRightEdge = x > rect.width - handleSize
+    const isBottomEdge = y > rect.height - handleSize
 
     if (isRightEdge && isBottomEdge) return 'both'
     if (isRightEdge) return 'horizontal'
@@ -581,10 +581,12 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
 
   const handleContainerMouseDown = (e) => {
     const direction = getResizeDirection(e)
+    console.log('Container mousedown - direction:', direction, 'isResizing:', isResizing)
     if (direction) {
       e.preventDefault()
       setIsResizing(direction)
       setDragStart({ x: e.clientX, y: e.clientY })
+      console.log('Resize started:', direction)
     }
   }
 
