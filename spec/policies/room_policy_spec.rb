@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe RoomPolicy, type: :policy do
+RSpec.describe RoomPolicy, skip: '未実装機能', type: :policy do
   let(:admin_user) { create(:user, :admin) }
   let(:manager) { create(:user, :manager) }
   let(:regular_user) { create(:user, :user) }

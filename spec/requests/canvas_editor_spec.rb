@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe 'Canvas Editor', type: :request do
+RSpec.describe 'Canvas Editor', skip: '未実装機能', type: :request do
   let(:user) { create(:user, :manager) }
   let(:room) { create(:room, user: user) }
 

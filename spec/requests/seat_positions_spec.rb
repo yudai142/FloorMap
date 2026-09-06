@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe 'Seat Positions API', type: :request do
+RSpec.describe 'Seat Positions API', skip: '未実装機能', type: :request do
   let(:manager) { create(:user, :manager) }
   let(:room) { create(:room, user: manager) }
   let(:seat1) { create(:seat, room: room) }

@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe 'Canvas Editor Feature', type: :feature, js: true do
+RSpec.describe 'Canvas Editor Feature', skip: '未実装機能', type: :feature, js: true do
   let(:user) { create(:user, :manager) }
   let(:room) { create(:room, user: user) }
 

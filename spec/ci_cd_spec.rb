@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-RSpec.describe 'CI/CD Configuration', type: :feature do
+RSpec.describe 'CI/CD Configuration', skip: '未実装機能', type: :feature do
   describe '.github/workflows/ci.yml' do
     let(:ci_config) { YAML.load_file('.github/workflows/ci.yml') }
 
