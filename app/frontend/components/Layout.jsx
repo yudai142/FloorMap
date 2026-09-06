@@ -43,7 +43,7 @@ export default function Layout({ children, auth = {} }) {
           <div className="flex items-center space-x-4">
             {auth?.is_authenticated ? (
               <>
-                <span className="text-gray-700 font-medium">{auth.user?.username || auth.user?.email}</span>
+                <span className="text-gray-700 font-medium">{auth.user?.username}</span>
                 <a
                   href="/users/edit"
                   className="px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition"
