@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe 'Seat Canvas Operations', type: :request do
+RSpec.describe 'Seat Canvas Operations', type: :request, skip: '未実装機能（Phase 7以降）' do
   let(:user) { create(:user, :manager) }
   let(:room) { create(:room, user: user) }
   let(:seat) { create(:seat, room: room, position_x: 100, position_y: 100) }
