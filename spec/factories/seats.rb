@@ -1,14 +1,10 @@
 FactoryBot.define do
   factory :seat do
-    transient do
-      seat_index { 0 }
-    end
-
     room { association :room }
     sequence(:row_number) { |n| n % 10 }
     sequence(:column_number) { |n| (n % 8) + 1 }
-    sequence(:position_x) { |n| ((n % 100) + 1) * 20 }
-    sequence(:position_y) { |n| ((n / 100) + 1) * 20 }
+    position_x { rand(50..1950) }
+    position_y { rand(50..1950) }
     seat_type { :regular }
 
     trait :accessible do
