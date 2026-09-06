@@ -21,6 +21,7 @@ class RoomsController < ApplicationController
       render inertia: 'Rooms/Show', props: {
         room: {
           id: @room.id,
+          share_token: @room.share_token,
           name: @room.name.to_s,
           description: @room.description.to_s,
           width: @room.width || 1000,

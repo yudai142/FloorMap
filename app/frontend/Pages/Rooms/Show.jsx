@@ -8,7 +8,7 @@ export default function RoomShow() {
   // データロード
   const fetchSessions = async () => {
     try {
-      const response = await fetch(`/rooms/${room.id}/canvas_data.json`)
+      const response = await fetch(`/rooms/${room.share_token}/canvas_data.json`)
       if (!response.ok) {
         return
       }
@@ -81,7 +81,7 @@ export default function RoomShow() {
         <h1 className="room-title">{room.name}</h1>
         {canManage && (
           <div className="action-buttons">
-            <a href={`/rooms/${room.id}/canvas_editor`} className="btn-primary">
+            <a href={`/rooms/${room.share_token}/canvas_editor`} className="btn-primary">
               座席配置図を編集
             </a>
           </div>
