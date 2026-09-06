@@ -377,8 +377,9 @@ export default function RoomShow() {
             {seats && seats.map((seat) => {
               const session = sessions.find(s => s.seat_id === seat.id && s.status === 'active')
               const isOccupied = seat.occupied || !!session
+              const displayText = (isOccupied && seat.occupant_name) ? seat.occupant_name : seat.label
               return (
-                <g key={`seat-${seat.id}`} transform={`translate(${seat.x}, ${seat.y})`}>
+                <g key={`seat-${seat.id}`} transform={`translate(${seat.position_x}, ${seat.position_y})`}>
                   <circle
                     r="12"
                     fill={isOccupied ? '#f87171' : '#4ade80'}
@@ -395,7 +396,7 @@ export default function RoomShow() {
                     fontWeight="bold"
                     style={{ pointerEvents: 'none' }}
                   >
-                    {seat.label}
+                    {displayText}
                   </text>
                 </g>
               )

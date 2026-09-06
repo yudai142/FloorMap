@@ -119,18 +119,33 @@ class RoomsController < ApplicationController
 
   def canvas_data
     sessions = Session.active.joins(:seat).where(seats: { room_id: @room.id })
+    sessions_by_seat = sessions.index_by(&:seat_id)
 
     seats_data = []
     @room.seats.each do |seat|
       seat_data = {
         id: seat.id,
-        seat_identifier: (seat.seat_identifier || "").to_s.encode('UTF-8', 'UTF-8', invalid: :replace, undef: :replace, replace: ''),
+        label: (seat.seat_identifier || "").to_s.encode('UTF-8', 'UTF-8', invalid: :replace, undef: :replace, replace: ''),
         position_x: seat.position_x,
         position_y: seat.position_y,
         row_number: seat.row_number,
         column_number: seat.column_number,
-        seat_type: seat.seat_type
+        seat_type: seat.seat_type,
+        occupied: false,
+        occupant_name: nil
       }
+
+      # セッションがあれば、ユーザー名または訪問者名を追加
+      session = sessions_by_seat[seat.id]
+      if session
+        seat_data[:occupied] = true
+        if session.user_id && session.user
+          seat_data[:occupant_name] = session.user.username || session.user.email.to_s.split('@').first
+        elsif session.visitor_id && session.visitor
+          seat_data[:occupant_name] = session.visitor.display_name || '不明'
+        end
+      end
+
       seats_data << seat_data
     end
 
