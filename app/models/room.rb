@@ -7,7 +7,7 @@ class Room < ApplicationRecord
   validates :name, presence: true
   validates :share_token, presence: true, uniqueness: true
 
-  before_create :generate_share_token
+  before_validation :generate_share_token, on: :create
   after_update_commit :broadcast_floor_plan_updated, if: :saved_change_to_floor_plan_data?
 
   scope :search, ->(query) {
