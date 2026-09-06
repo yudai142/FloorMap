@@ -207,7 +207,10 @@ class RoomsController < ApplicationController
         auto_checkout_time: current_user.auto_checkout_time
       }, status: :ok
     else
-      render json: { message: "設定の保存に失敗しました" }, status: :unprocessable_entity
+      render json: {
+        message: "設定の保存に失敗しました",
+        errors: current_user.errors.full_messages
+      }, status: :unprocessable_entity
     end
   end
 

@@ -55,13 +55,14 @@ export default function RoomShow() {
         body: JSON.stringify({
           auto_checkout_settings: {
             auto_checkout_enabled: checked,
-            auto_checkout_time: autoCheckoutTime
+            auto_checkout_time: autoCheckoutTime || null
           }
         })
       })
 
       if (!response.ok) {
-        console.error('Failed to save auto checkout enabled setting')
+        const error = await response.json()
+        console.error('Failed to save auto checkout enabled setting:', error)
         setAutoCheckoutEnabled(!checked)
       }
     } catch (error) {
