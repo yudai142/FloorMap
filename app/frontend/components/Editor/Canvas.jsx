@@ -887,6 +887,22 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
                 }}
                 style={{ cursor: 'ns-resize' }}
               />
+
+              {/* 右下角 */}
+              <rect
+                x={canvasWidth - 12}
+                y={canvasHeight - 12}
+                width="24"
+                height="24"
+                fill="none"
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  setIsResizing('both')
+                  setDragStart({ x: e.clientX, y: e.clientY })
+                }}
+                style={{ cursor: 'nwse-resize' }}
+              />
             </svg>
             </div>
           </div>
