@@ -10,15 +10,6 @@ class Room < ApplicationRecord
   before_create :generate_share_token
   after_update_commit :broadcast_floor_plan_updated, if: :saved_change_to_floor_plan_data?
 
-  private
-
-  def generate_share_token
-    self.share_token = loop do
-      token = SecureRandom.hex(6)
-      break token unless Room.exists?(share_token: token)
-    end
-  end
-
   scope :search, ->(query) {
     return all if query.blank?
 
@@ -88,7 +79,7 @@ class Room < ApplicationRecord
     Rails.cache.fetch("room:#{id}:seats_grouped_by_row", expires_in: 1.hour) do
       seats.order(:row_number, :column_number).group_by(&:row_number)
     end
-end
+  end
 
   def seat_with_session(seat)
     session = Session.where(seat_id: seat.id, status: :active).last
@@ -97,5 +88,14 @@ end
 
   def broadcast_floor_plan_updated
     RoomsChannel.broadcast_to(self, type: "floor_plan_updated", floor_plan_data: floor_plan_data, timestamp: Time.current)
+  end
+
+  private
+
+  def generate_share_token
+    self.share_token = loop do
+      token = SecureRandom.hex(6)
+      break token unless Room.exists?(share_token: token)
+    end
   end
 end
