@@ -563,22 +563,15 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
 
   // 親コンテナのサイズに基づいてリサイズ方向を判定
   const getResizeDirection = (e) => {
-    if (!svgContainerRef.current) {
-      console.log('svgContainerRef.current is null')
-      return null
-    }
+    if (!svgContainerRef.current) return null
 
     const rect = svgContainerRef.current.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
 
-    console.log('getResizeDirection - rect:', { width: rect.width, height: rect.height }, 'mouse:', { x, y })
-
     const handleSize = 50 // ハンドル判定範囲
     const isRightEdge = x > rect.width - handleSize
     const isBottomEdge = y > rect.height - handleSize
-
-    console.log('getResizeDirection - edges:', { isRightEdge, isBottomEdge })
 
     if (isRightEdge && isBottomEdge) return 'both'
     if (isRightEdge) return 'horizontal'
@@ -588,12 +581,10 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
 
   const handleContainerMouseDown = (e) => {
     const direction = getResizeDirection(e)
-    console.log('Container mousedown - direction:', direction, 'isResizing:', isResizing)
     if (direction) {
       e.preventDefault()
       setIsResizing(direction)
       setDragStart({ x: e.clientX, y: e.clientY })
-      console.log('Resize started:', direction)
     }
   }
 
@@ -742,8 +733,6 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
             style={{
               position: 'relative',
               display: 'inline-block',
-              borderRight: '3px solid #3b82f6',
-              borderBottom: '3px solid #3b82f6',
               cursor: 'pointer'
             }}
             onMouseDown={handleContainerMouseDown}
@@ -780,6 +769,18 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
                 </defs>
               )}
               {showGrid && <rect width={canvasWidth} height={canvasHeight} fill="url(#grid)" />}
+
+              {/* キャンバスの青い枠線 */}
+              <rect
+                x="0"
+                y="0"
+                width={canvasWidth}
+                height={canvasHeight}
+                stroke="#3b82f6"
+                strokeWidth="3"
+                fill="none"
+                pointerEvents="none"
+              />
 
               {/* Shapes */}
               {shapes.map((shape) => (
