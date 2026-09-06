@@ -894,7 +894,10 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
                 y={canvasHeight - 12}
                 width="24"
                 height="24"
-                fill="none"
+                fill="#3b82f6"
+                fillOpacity="0.6"
+                stroke="#3b82f6"
+                strokeWidth="1"
                 onMouseDown={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
