@@ -11,8 +11,5 @@ if Rails.env.production?
       "ActionController::UnknownAction",
       "AbstractController::ActionNotFound"
     ]
-
-    # Performance monitoring
-    config.enable_tracing = true
   end
 end
