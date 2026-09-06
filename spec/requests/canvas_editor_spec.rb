@@ -12,34 +12,34 @@ RSpec.describe 'Canvas Editor', type: :request do
     sign_out user
   end
 
-  describe 'GET /rooms/:id/canvas_editor' do
+  describe 'GET /rooms/:share_token/canvas_editor' do
     context 'when user is owner' do
       it 'renders canvas editor page' do
-        get canvas_editor_room_path(room)
+        get "/rooms/#{room.share_token}/canvas_editor"
         expect(response).to have_http_status(:success)
         expect(response.body).to include('Canvas')
       end
 
       it 'provides initial props' do
-        get canvas_editor_room_path(room)
+        get "/rooms/#{room.share_token}/canvas_editor"
         expect(response.body).to include(room.name)
       end
 
       it 'includes canvas-related styles and scripts' do
-        get canvas_editor_room_path(room)
+        get "/rooms/#{room.share_token}/canvas_editor"
         expect(response.body).to include('application')
       end
 
       it 'includes canvas dimensions in props' do
         room.update(width: 1200, height: 800)
-        get canvas_editor_room_path(room)
+        get "/rooms/#{room.share_token}/canvas_editor"
         expect(response.body).to include('1200')
         expect(response.body).to include('800')
       end
 
       it 'returns default dimensions when not set' do
         room.update(width: nil, height: nil)
-        get canvas_editor_room_path(room)
+        get "/rooms/#{room.share_token}/canvas_editor"
         # デフォルト値 1000 と 700 を確認
         expect(response.body).to include('1000')
         expect(response.body).to include('700')
@@ -49,16 +49,19 @@ RSpec.describe 'Canvas Editor', type: :request do
     context 'when user is not owner' do
       let(:other_user) { create(:user, :manager) }
 
-      it 'denies access' do
+      before do
         sign_out user
         sign_in other_user
-        get canvas_editor_room_path(room)
+      end
+
+      it 'denies access' do
+        get "/rooms/#{room.share_token}/canvas_editor"
         expect(response).to have_http_status(:forbidden)
       end
     end
   end
 
-  describe 'PATCH /rooms/:id/floor_plan' do
+  describe 'PATCH /rooms/:share_token/floor_plan' do
     let(:floor_plan_data) do
       [
         { type: 'rectangle', x: 10, y: 10, width: 100, height: 80, color: '#3b82f6', lineWidth: 2 },
@@ -68,7 +71,7 @@ RSpec.describe 'Canvas Editor', type: :request do
 
     context 'when user is owner' do
       it 'saves floor plan data' do
-        patch floor_plan_room_path(room), params: { room: { floor_plan_data: floor_plan_data.to_json } }
+        patch "/rooms/#{room.share_token}/floor_plan", params: { room: { floor_plan_data: floor_plan_data.to_json } }
         expect(response).to have_http_status(:ok)
         # JSON パラメータは文字列値として保存される
         saved_data = room.reload.floor_plan_data
@@ -77,13 +80,13 @@ RSpec.describe 'Canvas Editor', type: :request do
       end
 
       it 'returns updated floor plan data' do
-        patch floor_plan_room_path(room), params: { room: { floor_plan_data: floor_plan_data } }
+        patch "/rooms/#{room.share_token}/floor_plan", params: { room: { floor_plan_data: floor_plan_data } }
         json = JSON.parse(response.body)
         expect(json['floor_plan_data']).to be_present
       end
 
       it 'handles empty floor plan' do
-        patch floor_plan_room_path(room), params: { room: { floor_plan_data: [] } }
+        patch "/rooms/#{room.share_token}/floor_plan", params: { room: { floor_plan_data: [] } }
         expect(response).to have_http_status(:ok)
         expect(room.reload.floor_plan_data).to eq([])
       end
@@ -92,22 +95,25 @@ RSpec.describe 'Canvas Editor', type: :request do
     context 'when user is not owner' do
       let(:other_user) { create(:user, :manager) }
 
-      it 'denies access' do
+      before do
         sign_out user
         sign_in other_user
-        patch floor_plan_room_path(room), params: { room: { floor_plan_data: floor_plan_data } }
+      end
+
+      it 'denies access' do
+        patch "/rooms/#{room.share_token}/floor_plan", params: { room: { floor_plan_data: floor_plan_data } }
         expect(response).to have_http_status(:forbidden)
       end
     end
   end
 
-  describe 'GET /rooms/:id/canvas_data' do
+  describe 'GET /rooms/:share_token/canvas_data' do
     let!(:seat1) { create(:seat, room: room, position_x: 100, position_y: 150) }
     let!(:seat2) { create(:seat, room: room, position_x: 250, position_y: 150) }
 
     context 'when user has permission' do
       it 'returns canvas data' do
-        get canvas_data_room_path(room)
+        get "/rooms/#{room.share_token}/canvas_data"
         expect(response).to have_http_status(:ok)
 
         json = JSON.parse(response.body)
@@ -117,7 +123,7 @@ RSpec.describe 'Canvas Editor', type: :request do
       end
 
       it 'includes seat position data' do
-        get canvas_data_room_path(room)
+        get "/rooms/#{room.share_token}/canvas_data"
         json = JSON.parse(response.body)
         seat_data = json['seats'].first
         expect(seat_data).to include('id', 'position_x', 'position_y')
@@ -125,7 +131,7 @@ RSpec.describe 'Canvas Editor', type: :request do
 
       it 'includes floor plan data' do
         room.update(floor_plan_data: [{ type: 'rectangle', x: 0, y: 0 }])
-        get canvas_data_room_path(room)
+        get "/rooms/#{room.share_token}/canvas_data"
         json = JSON.parse(response.body)
         expect(json['floor_plan_data']).to eq([{ 'type' => 'rectangle', 'x' => 0, 'y' => 0 }])
       end
