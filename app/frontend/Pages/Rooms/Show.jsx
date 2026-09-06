@@ -26,7 +26,12 @@ export default function RoomShow() {
   // データロード
   const fetchSessions = async () => {
     try {
-      const response = await fetch(`/rooms/${room.share_token}/canvas_data.json`)
+      let url = `/rooms/${room.share_token}/canvas_data.json`
+      // For unauthenticated users, include deviceId in query params
+      if (!current_user && deviceId) {
+        url += `?device_identifier=${encodeURIComponent(deviceId)}`
+      }
+      const response = await fetch(url)
       if (!response.ok) {
         return
       }
@@ -58,7 +63,7 @@ export default function RoomShow() {
     // 3秒ごとにセッション情報を更新
     const interval = setInterval(fetchSessions, 3000)
     return () => clearInterval(interval)
-  }, [room.id])
+  }, [room.id, deviceId, current_user])
 
   // 初期化時に props から設定を復元
   useEffect(() => {
