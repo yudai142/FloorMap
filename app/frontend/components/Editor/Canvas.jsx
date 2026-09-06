@@ -212,6 +212,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
     setIsSaving(true)
     try {
       // Save shapes (floor plan)
+      console.log('Saving floor plan:', shapes)
       const floorPlanResponse = await fetch(`/rooms/${room.share_token}/floor_plan.json`, {
         method: 'PATCH',
         headers: {
@@ -221,7 +222,10 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
         body: JSON.stringify({ room: { floor_plan_data: shapes } }),
       })
 
+      console.log('Floor plan response status:', floorPlanResponse.status)
       if (!floorPlanResponse.ok) {
+        const errorText = await floorPlanResponse.text()
+        console.error('Floor plan error response:', errorText)
         throw new Error('上面図の保存に失敗しました')
       }
 
