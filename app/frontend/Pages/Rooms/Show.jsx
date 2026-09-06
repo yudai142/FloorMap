@@ -16,6 +16,8 @@ export default function RoomShow() {
   const [panY, setPanY] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [isResizing, setIsResizing] = useState(null) // 'horizontal', 'vertical', or 'both'
+  const [canvasSize, setCanvasSize] = useState({ width: room.width || 1000, height: room.height || 700 })
   const svgRef = useRef(null)
 
   // Initialize device ID on mount
@@ -297,6 +299,36 @@ export default function RoomShow() {
 
   const handleCanvasMouseUp = () => {
     setIsDragging(false)
+    setIsResizing(null)
+  }
+
+  const handleResizeMouseDown = (direction) => (e) => {
+    e.preventDefault()
+    setIsResizing(direction)
+    setDragStart({ x: e.clientX, y: e.clientY })
+  }
+
+  const handleResizeMouseMove = (e) => {
+    if (!isResizing) return
+
+    const deltaX = e.clientX - dragStart.x
+    const deltaY = e.clientY - dragStart.y
+
+    if (isResizing === 'horizontal' || isResizing === 'both') {
+      setCanvasSize(prev => ({
+        ...prev,
+        width: Math.max(100, prev.width + deltaX)
+      }))
+    }
+
+    if (isResizing === 'vertical' || isResizing === 'both') {
+      setCanvasSize(prev => ({
+        ...prev,
+        height: Math.max(100, prev.height + deltaY)
+      }))
+    }
+
+    setDragStart({ x: e.clientX, y: e.clientY })
   }
 
   return (
@@ -387,11 +419,12 @@ export default function RoomShow() {
           </div>
 
           <div style={{ position: 'relative', display: 'inline-block' }}>
+          <div style={{ position: 'relative', display: 'inline-block', borderRight: '3px solid #3b82f6', borderBottom: '3px solid #3b82f6' }}>
           <svg
             ref={svgRef}
             id="room-canvas"
             className="room-canvas"
-            viewBox={`0 0 ${room.width || 1000} ${room.height || 700}`}
+            viewBox={`0 0 ${canvasSize.width} ${canvasSize.height}`}
             preserveAspectRatio="xMidYMid meet"
             style={{
               border: '1px solid #e2e8f0',
@@ -402,7 +435,10 @@ export default function RoomShow() {
             }}
             onWheel={handleCanvasWheel}
             onMouseDown={handleCanvasMouseDown}
-            onMouseMove={handleCanvasMouseMove}
+            onMouseMove={(e) => {
+              handleCanvasMouseMove(e)
+              handleResizeMouseMove(e)
+            }}
             onMouseUp={handleCanvasMouseUp}
             onMouseLeave={handleCanvasMouseUp}
           >
@@ -531,6 +567,55 @@ export default function RoomShow() {
             })}
             </g>
           </svg>
+
+          {/* リサイズハンドル */}
+          {/* 右端のリサイズハンドル */}
+          <div
+            onMouseDown={handleResizeMouseDown('horizontal')}
+            style={{
+              position: 'absolute',
+              right: '-4px',
+              top: '0',
+              width: '8px',
+              height: '100%',
+              cursor: 'ew-resize',
+              backgroundColor: '#3b82f6',
+              opacity: isResizing === 'horizontal' ? 1 : 0.5,
+              transition: 'opacity 0.2s'
+            }}
+          />
+
+          {/* 下のリサイズハンドル */}
+          <div
+            onMouseDown={handleResizeMouseDown('vertical')}
+            style={{
+              position: 'absolute',
+              bottom: '-4px',
+              left: '0',
+              width: '100%',
+              height: '8px',
+              cursor: 'ns-resize',
+              backgroundColor: '#3b82f6',
+              opacity: isResizing === 'vertical' ? 1 : 0.5,
+              transition: 'opacity 0.2s'
+            }}
+          />
+
+          {/* 右下角のリサイズハンドル */}
+          <div
+            onMouseDown={handleResizeMouseDown('both')}
+            style={{
+              position: 'absolute',
+              bottom: '-4px',
+              right: '-4px',
+              width: '16px',
+              height: '16px',
+              cursor: 'nwse-resize',
+              backgroundColor: '#3b82f6',
+              opacity: isResizing === 'both' ? 1 : 0.5,
+              transition: 'opacity 0.2s'
+            }}
+          />
           </div>
         </div>
 
