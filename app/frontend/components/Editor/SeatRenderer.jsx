@@ -25,13 +25,8 @@ export default function SeatRenderer({ seat, onDelete }) {
         className="pointer-events-none"
         fontWeight="bold"
       >
-        {seat.label}
+        {seat.occupied ? seat.occupant_name : seat.label}
       </text>
-      {seat.occupied && (
-        <text x="16" y="14" fontSize="9" fill="#666" className="pointer-events-none">
-          {seat.occupant_name}
-        </text>
-      )}
     </g>
   )
 }
