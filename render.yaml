@@ -3,8 +3,8 @@ services:
     name: floormap-web
     runtime: ruby
     runtimeVersion: "3.3.0"
-    buildCommand: bundle install && npm ci && bundle exec rails db:migrate
-    startCommand: bundle exec puma -t 5:5 -p 3000
+    buildCommand: bundle install && npm ci
+    startCommand: bundle exec rails db:prepare && bundle exec puma -t 5:5 -p 3000
     envVars:
       - key: DATABASE_URL
         fromDatabase:
