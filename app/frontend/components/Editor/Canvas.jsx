@@ -731,7 +731,9 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
           <div
             style={{
               position: 'relative',
-              display: 'inline-block'
+              display: 'inline-block',
+              borderRight: '3px solid #3b82f6',
+              borderBottom: '3px solid #3b82f6'
             }}
           >
             <div
@@ -747,12 +749,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
               ref={svgRef}
               width={canvasWidth}
               height={canvasHeight}
-              className="canvas-svg border border-slate-300 rounded-lg bg-white block select-none"
-              style={{
-                borderRight: '3px solid #3b82f6',
-                borderBottom: '3px solid #3b82f6',
-                cursor: 'crosshair'
-              }}
+              className="canvas-svg border border-slate-300 rounded-lg bg-white block select-none cursor-crosshair"
               onMouseDown={(e) => {
                 const direction = getResizeDirection(e)
                 if (direction) {
