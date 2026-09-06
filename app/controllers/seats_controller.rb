@@ -94,7 +94,8 @@ class SeatsController < ApplicationController
   private
 
   def set_room
-    @room = Room.find(params[:room_id])
+    @room = Room.find_by(share_token: params[:room_share_token])
+    render :not_found, status: :not_found if @room.blank?
   end
 
   def set_seat
