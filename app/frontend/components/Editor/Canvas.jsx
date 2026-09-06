@@ -561,17 +561,17 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       moveSeat, setDragging, setDrawingStart, clearPreview, addLine, addRectangle, addCircle, addArrow, setSelectedElements, setSelectionStart, setSelectionBox,
       updateShape, snapToGrid, mergeSeat, setAlert])
 
-  // SVGのサイズに基づいてリサイズ方向を判定
+  // 親コンテナのサイズに基づいてリサイズ方向を判定
   const getResizeDirection = (e) => {
-    if (!svgRef.current) return null
+    if (!svgContainerRef.current) return null
 
-    const rect = svgRef.current.getBoundingClientRect()
+    const rect = svgContainerRef.current.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
 
-    const handleSize = 8 // ハンドル幅
-    const isRightEdge = x > rect.width - handleSize
-    const isBottomEdge = y > rect.height - handleSize
+    const borderSize = 3 // ボーダー幅
+    const isRightEdge = x > rect.width - borderSize
+    const isBottomEdge = y > rect.height - borderSize
 
     if (isRightEdge && isBottomEdge) return 'both'
     if (isRightEdge) return 'horizontal'
@@ -579,7 +579,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
     return null
   }
 
-  const handleSvgMouseDown = (e) => {
+  const handleContainerMouseDown = (e) => {
     const direction = getResizeDirection(e)
     if (direction) {
       e.preventDefault()
@@ -729,12 +729,15 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
           }}
         >
           <div
+            ref={svgContainerRef}
             style={{
               position: 'relative',
               display: 'inline-block',
               borderRight: '3px solid #3b82f6',
-              borderBottom: '3px solid #3b82f6'
+              borderBottom: '3px solid #3b82f6',
+              cursor: 'pointer'
             }}
+            onMouseDown={handleContainerMouseDown}
           >
             <div
               style={{
@@ -750,14 +753,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
               width={canvasWidth}
               height={canvasHeight}
               className="canvas-svg border border-slate-300 rounded-lg bg-white block select-none cursor-crosshair"
-              onMouseDown={(e) => {
-                const direction = getResizeDirection(e)
-                if (direction) {
-                  handleSvgMouseDown(e)
-                } else {
-                  handleMouseDown(e)
-                }
-              }}
+              onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
