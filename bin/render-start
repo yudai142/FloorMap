@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+echo "Building Vite assets..."
+npm run build
+
 MAX_RETRIES=5
 RETRY_COUNT=0
 
