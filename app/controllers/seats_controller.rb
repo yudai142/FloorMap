@@ -115,4 +115,19 @@ class SeatsController < ApplicationController
   def batch_position_params
     params.require(:positions).permit!.to_h
   end
+
+  def seat_canvas_json(seat)
+    data = seat.canvas_data
+    {
+      id: data[:id],
+      label: (data[:seat_identifier] || "").to_s.encode('UTF-8', 'UTF-8', invalid: :replace, undef: :replace, replace: ''),
+      x: data[:position_x] || 0,
+      y: data[:position_y] || 0,
+      occupied: data[:session].present?,
+      occupant_name: ((data[:session]&.dig(:name) || data[:session]&.dig(:user_id).to_s) || "不明").to_s.encode('UTF-8', 'UTF-8', invalid: :replace, undef: :replace, replace: ''),
+      seat_type: data[:seat_type]
+    }
+  rescue => e
+    {}
+  end
 end
