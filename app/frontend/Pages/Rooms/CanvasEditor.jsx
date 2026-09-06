@@ -5,7 +5,6 @@ import Canvas from '../../components/Editor/Canvas'
 export default function CanvasEditor({ room, shapes_data, seats, current_user }) {
   const { auth } = usePage().props
   const [canvasSize, setCanvasSize] = useState({ width: room.width, height: room.height })
-  const [isSizeSaving, setIsSizeSaving] = useState(false)
 
   const handleSave = async (shapes) => {
     // Save is handled in Canvas component
@@ -13,39 +12,28 @@ export default function CanvasEditor({ room, shapes_data, seats, current_user })
     console.log('Canvas saved:', shapes)
   }
 
-  const handleSizeChange = async () => {
-    if (canvasSize.width <= 0 || canvasSize.height <= 0) {
-      alert('幅と高さは 1 以上である必要があります')
-      return
-    }
-
-    setIsSizeSaving(true)
-    try {
-      const response = await fetch(`/rooms/${room.share_token}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
-        },
-        body: JSON.stringify({
-          room: {
-            width: canvasSize.width,
-            height: canvasSize.height
-          }
+  const handleSaveCanvas = async (shapes) => {
+    // Save room size if changed
+    if (canvasSize.width !== room.width || canvasSize.height !== room.height) {
+      try {
+        await fetch(`/rooms/${room.share_token}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
+          },
+          body: JSON.stringify({
+            room: {
+              width: canvasSize.width,
+              height: canvasSize.height
+            }
+          })
         })
-      })
-
-      if (response.ok) {
-        alert('キャンバスサイズを更新しました')
-      } else {
-        alert('キャンバスサイズの更新に失敗しました')
+      } catch (error) {
+        console.error('Error updating canvas size:', error)
       }
-    } catch (error) {
-      console.error('Error updating canvas size:', error)
-      alert('キャンバスサイズの更新に失敗しました')
-    } finally {
-      setIsSizeSaving(false)
     }
+    handleSave(shapes)
   }
 
   return (
@@ -85,13 +73,6 @@ export default function CanvasEditor({ room, shapes_data, seats, current_user })
               />
               <span className="text-sm text-slate-600">px</span>
             </div>
-            <button
-              onClick={handleSizeChange}
-              disabled={isSizeSaving || (canvasSize.width === room.width && canvasSize.height === room.height)}
-              className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50"
-            >
-              {isSizeSaving ? '保存中...' : '保存'}
-            </button>
           </div>
           <p className="text-sm text-slate-600 mt-1">
             座席配置図エディタ - ツールを選択して、キャンバスをクリック・ドラッグして描画
@@ -101,10 +82,10 @@ export default function CanvasEditor({ room, shapes_data, seats, current_user })
 
       {/* Canvas Component */}
       <Canvas
-        room={room}
+        room={{ ...room, width: canvasSize.width, height: canvasSize.height }}
         initialShapes={shapes_data || []}
         initialSeats={seats || []}
-        onSave={handleSave}
+        onSave={handleSaveCanvas}
       />
 
       {/* Footer */}
