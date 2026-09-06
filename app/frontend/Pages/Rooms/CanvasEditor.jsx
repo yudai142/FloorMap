@@ -86,6 +86,8 @@ export default function CanvasEditor({ room, shapes_data, seats, current_user })
         initialShapes={shapes_data || []}
         initialSeats={seats || []}
         onSave={handleSaveCanvas}
+        canvasSize={canvasSize}
+        onCanvasSizeChange={setCanvasSize}
       />
 
       {/* Footer */}

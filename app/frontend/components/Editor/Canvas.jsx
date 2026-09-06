@@ -10,7 +10,7 @@ import { useShapePreview } from './hooks/useShapePreview'
 import { snapToGrid, distanceToLine, isPointInPolygon } from './utils/snapToGrid'
 import './Canvas.css'
 
-export default function Canvas({ room = {}, initialShapes = [], initialSeats = [], onSave }) {
+export default function Canvas({ room = {}, initialShapes = [], initialSeats = [], onSave, canvasSize, onCanvasSizeChange }) {
   const svgRef = useRef(null)
   const svgContainerRef = useRef(null)
   const scrollContainerRef = useRef(null)
@@ -19,10 +19,12 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
   const [alert, setAlert] = useState(null)
   const [selectionStart, setSelectionStart] = useState(null)
   const [polygonClosed, setPolygonClosed] = useState(true)
+  const [isResizing, setIsResizing] = useState(null)
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
 
   // Default canvas dimensions if not provided
-  const canvasWidth = room?.width || 1000
-  const canvasHeight = room?.height || 700
+  const canvasWidth = canvasSize?.width || room?.width || 1000
+  const canvasHeight = canvasSize?.height || room?.height || 700
 
   // Zustand store
   const {
@@ -559,6 +561,39 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       moveSeat, setDragging, setDrawingStart, clearPreview, addLine, addRectangle, addCircle, addArrow, setSelectedElements, setSelectionStart, setSelectionBox,
       updateShape, snapToGrid, mergeSeat, setAlert])
 
+  const handleResizeMouseDown = (direction) => (e) => {
+    e.preventDefault()
+    setIsResizing(direction)
+    setDragStart({ x: e.clientX, y: e.clientY })
+  }
+
+  const handleResizeMouseMove = (e) => {
+    if (!isResizing || !onCanvasSizeChange) return
+
+    const deltaX = e.clientX - dragStart.x
+    const deltaY = e.clientY - dragStart.y
+
+    if (isResizing === 'horizontal' || isResizing === 'both') {
+      onCanvasSizeChange((prev) => ({
+        ...prev,
+        width: Math.max(100, prev.width + deltaX)
+      }))
+    }
+
+    if (isResizing === 'vertical' || isResizing === 'both') {
+      onCanvasSizeChange((prev) => ({
+        ...prev,
+        height: Math.max(100, prev.height + deltaY)
+      }))
+    }
+
+    setDragStart({ x: e.clientX, y: e.clientY })
+  }
+
+  const handleResizeMouseUp = () => {
+    setIsResizing(null)
+  }
+
   return (
     <div className="canvas-editor-container flex flex-col h-screen bg-base-100">
       {/* Polygon Cancel/Confirm Button */}
@@ -663,13 +698,24 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
         >
           <div
             style={{
-              width: `${canvasWidth}px`,
-              height: `${canvasHeight}px`,
-              transform: `scale(${zoom})`,
-              transformOrigin: 'top left',
-              transition: 'transform 0.1s ease-out',
+              position: 'relative',
+              display: 'inline-block',
+              borderRight: '3px solid #3b82f6',
+              borderBottom: '3px solid #3b82f6'
             }}
+            onMouseMove={handleResizeMouseMove}
+            onMouseUp={handleResizeMouseUp}
+            onMouseLeave={handleResizeMouseUp}
           >
+            <div
+              style={{
+                width: `${canvasWidth}px`,
+                height: `${canvasHeight}px`,
+                transform: `scale(${zoom})`,
+                transformOrigin: 'top left',
+                transition: 'transform 0.1s ease-out',
+              }}
+            >
             <svg
               ref={svgRef}
               width={canvasWidth}
@@ -776,6 +822,55 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
                 <SeatRenderer key={seat.id} seat={seat} onDelete={deleteSeat} />
               ))}
             </svg>
+
+            {/* リサイズハンドル */}
+            {/* 右端のリサイズハンドル */}
+            <div
+              onMouseDown={handleResizeMouseDown('horizontal')}
+              style={{
+                position: 'absolute',
+                right: '-4px',
+                top: '0',
+                width: '8px',
+                height: '100%',
+                cursor: 'ew-resize',
+                backgroundColor: '#3b82f6',
+                opacity: isResizing === 'horizontal' ? 1 : 0.5,
+                transition: 'opacity 0.2s'
+              }}
+            />
+
+            {/* 下のリサイズハンドル */}
+            <div
+              onMouseDown={handleResizeMouseDown('vertical')}
+              style={{
+                position: 'absolute',
+                bottom: '-4px',
+                left: '0',
+                width: '100%',
+                height: '8px',
+                cursor: 'ns-resize',
+                backgroundColor: '#3b82f6',
+                opacity: isResizing === 'vertical' ? 1 : 0.5,
+                transition: 'opacity 0.2s'
+              }}
+            />
+
+            {/* 右下角のリサイズハンドル */}
+            <div
+              onMouseDown={handleResizeMouseDown('both')}
+              style={{
+                position: 'absolute',
+                bottom: '-4px',
+                right: '-4px',
+                width: '16px',
+                height: '16px',
+                cursor: 'nwse-resize',
+                backgroundColor: '#3b82f6',
+                opacity: isResizing === 'both' ? 1 : 0.5,
+                transition: 'opacity 0.2s'
+              }}
+            />
           </div>
         </div>
       </div>
