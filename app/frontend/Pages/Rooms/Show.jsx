@@ -82,6 +82,17 @@ export default function RoomShow() {
   const handleCheckboxChange = async (checked) => {
     setAutoCheckoutEnabled(checked)
     try {
+      const requestBody = {
+        auto_checkout_settings: {
+          auto_checkout_enabled: checked,
+          auto_checkout_time: autoCheckoutTime || null
+        }
+      }
+      // For unauthenticated users, include device_identifier
+      if (!current_user && deviceId) {
+        requestBody.device_identifier = deviceId
+      }
+
       const response = await fetch(`/rooms/${room.share_token}/update_auto_checkout_settings`, {
         method: 'PATCH',
         headers: {
@@ -89,12 +100,7 @@ export default function RoomShow() {
           'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
           'Accept': 'application/json'
         },
-        body: JSON.stringify({
-          auto_checkout_settings: {
-            auto_checkout_enabled: checked,
-            auto_checkout_time: autoCheckoutTime || null
-          }
-        })
+        body: JSON.stringify(requestBody)
       })
 
       if (!response.ok) {
@@ -103,6 +109,9 @@ export default function RoomShow() {
         const errorMsg = error.errors ? error.errors.join(', ') : error.message
         alert(`エラー: ${errorMsg}`)
         setAutoCheckoutEnabled(!checked)
+      } else {
+        // Refresh sessions after successful save
+        await fetchSessions()
       }
     } catch (error) {
       console.error('Failed to save auto checkout enabled setting:', error)
