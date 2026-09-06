@@ -7,6 +7,21 @@ export default function RoomShow() {
   const [currentSession, setCurrentSession] = useState(initialSession)
   const [autoCheckoutEnabled, setAutoCheckoutEnabled] = useState(false)
   const [autoCheckoutTime, setAutoCheckoutTime] = useState('')
+  const [deviceId, setDeviceId] = useState('')
+
+  // Initialize device ID on mount
+  useEffect(() => {
+    try {
+      let id = localStorage.getItem('deviceId')
+      if (!id) {
+        id = `device-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        localStorage.setItem('deviceId', id)
+      }
+      setDeviceId(id)
+    } catch (error) {
+      console.error('Failed to initialize device ID:', error)
+    }
+  }, [])
 
   // データロード
   const fetchSessions = async () => {
@@ -135,6 +150,27 @@ export default function RoomShow() {
         }
       }
 
+      // For unauthenticated users, prompt for name
+      let userName = null
+      if (!current_user) {
+        userName = prompt('お名前を入力してください:')
+        if (!userName || !userName.trim()) {
+          alert('お名前を入力してください')
+          return
+        }
+      }
+
+      const requestBody = {
+        seat_id: seatId,
+        checkout_timer_minutes: checkoutTimer
+      }
+
+      // Add device info for unauthenticated users
+      if (!current_user && deviceId) {
+        requestBody.device_identifier = deviceId
+        requestBody.user_name = userName.trim()
+      }
+
       const response = await fetch('/sessions/check_in.json', {
         method: 'POST',
         headers: {
@@ -142,7 +178,7 @@ export default function RoomShow() {
           'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
           'Accept': 'application/json'
         },
-        body: JSON.stringify({ seat_id: seatId, checkout_timer_minutes: checkoutTimer })
+        body: JSON.stringify(requestBody)
       })
 
       if (response.ok) {
@@ -402,7 +438,7 @@ export default function RoomShow() {
                         </span>
                         {session && (
                           <span className="occupant-name">
-                            {session.user?.username || session.visitor?.display_name || '不明'}
+                            {session.user?.username || session.user_name || session.visitor?.display_name || '不明'}
                           </span>
                         )}
                       </div>

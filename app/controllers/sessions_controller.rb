@@ -40,15 +40,26 @@ class SessionsController < ApplicationController
             user_auto_checkout_time: current_user.auto_checkout_time
           )
         else
-          # Create visitor for unauthenticated users
-          visitor = Visitor.create!(nickname: "Anonymous User #{SecureRandom.hex(4)}")
-          session = Session.create!(
-            visitor_id: visitor.id,
-            seat_id: seat.id,
-            check_in_time: Time.current,
-            status: "active",
-            checkout_timer_minutes: checkout_timer_minutes
-          )
+          # Unauthenticated user - use device identifier and user name
+          device_identifier = params[:device_identifier]
+          user_name = params[:user_name]
+
+          if device_identifier && user_name.present?
+            # Check out any existing active session for this device
+            existing_session = Session.active.where(device_identifier: device_identifier).first
+            existing_session.check_out! if existing_session
+
+            session = Session.create!(
+              device_identifier: device_identifier,
+              user_name: user_name,
+              seat_id: seat.id,
+              check_in_time: Time.current,
+              status: "active",
+              checkout_timer_minutes: checkout_timer_minutes
+            )
+          else
+            raise ActiveRecord::RecordInvalid, "Device identifier and user name required for unauthenticated users"
+          end
         end
       end
     rescue ActiveRecord::RecordInvalid => e

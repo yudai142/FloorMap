@@ -167,7 +167,9 @@ class RoomsController < ApplicationController
         user_id: s.user_id,
         user: user_data,
         visitor_id: s.visitor_id,
-        visitor: visitor_data
+        visitor: visitor_data,
+        device_identifier: s.device_identifier,
+        user_name: s.user_name
       }
       sessions_data << session_item
     end
