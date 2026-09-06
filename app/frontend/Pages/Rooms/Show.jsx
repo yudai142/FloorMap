@@ -470,6 +470,7 @@ export default function RoomShow() {
                           disabled={
                             current_user ? (
                               current_user.id !== session.user_id &&
+                              current_user.id !== room.user_id &&
                               current_user.role !== 'admin'
                             ) : (
                               session.device_identifier !== deviceId
