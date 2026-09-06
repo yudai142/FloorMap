@@ -21,13 +21,13 @@ export default function RoomShow() {
       if (data.current_user_session) {
         setCurrentSession(data.current_user_session)
         setAutoCheckoutEnabled(data.current_user_session.user_auto_checkout_enabled || false)
+        // Only update time if server has a value, otherwise preserve user's input
         if (data.current_user_session.user_auto_checkout_time) {
           const dateTime = new Date(data.current_user_session.user_auto_checkout_time)
           const isoString = dateTime.toISOString().slice(0, 16)
           setAutoCheckoutTime(isoString)
-        } else {
-          setAutoCheckoutTime('')
         }
+        // Don't clear autoCheckoutTime on refresh - preserve user's input
       } else {
         setCurrentSession(null)
         setAutoCheckoutEnabled(false)
