@@ -561,10 +561,31 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       moveSeat, setDragging, setDrawingStart, clearPreview, addLine, addRectangle, addCircle, addArrow, setSelectedElements, setSelectionStart, setSelectionBox,
       updateShape, snapToGrid, mergeSeat, setAlert])
 
-  const handleResizeMouseDown = (direction) => (e) => {
-    e.preventDefault()
-    setIsResizing(direction)
-    setDragStart({ x: e.clientX, y: e.clientY })
+  // SVGのサイズに基づいてリサイズ方向を判定
+  const getResizeDirection = (e) => {
+    if (!svgRef.current) return null
+
+    const rect = svgRef.current.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+
+    const handleSize = 8 // ハンドル幅
+    const isRightEdge = x > rect.width - handleSize
+    const isBottomEdge = y > rect.height - handleSize
+
+    if (isRightEdge && isBottomEdge) return 'both'
+    if (isRightEdge) return 'horizontal'
+    if (isBottomEdge) return 'vertical'
+    return null
+  }
+
+  const handleSvgMouseDown = (e) => {
+    const direction = getResizeDirection(e)
+    if (direction) {
+      e.preventDefault()
+      setIsResizing(direction)
+      setDragStart({ x: e.clientX, y: e.clientY })
+    }
   }
 
   // リサイズイベントのグローバル監視
@@ -710,9 +731,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
           <div
             style={{
               position: 'relative',
-              display: 'inline-block',
-              borderRight: '3px solid #3b82f6',
-              borderBottom: '3px solid #3b82f6'
+              display: 'inline-block'
             }}
           >
             <div
@@ -728,8 +747,20 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
               ref={svgRef}
               width={canvasWidth}
               height={canvasHeight}
-              className="canvas-svg border border-slate-300 rounded-lg bg-white block select-none cursor-crosshair"
-              onMouseDown={handleMouseDown}
+              className="canvas-svg border border-slate-300 rounded-lg bg-white block select-none"
+              style={{
+                borderRight: '3px solid #3b82f6',
+                borderBottom: '3px solid #3b82f6',
+                cursor: 'crosshair'
+              }}
+              onMouseDown={(e) => {
+                const direction = getResizeDirection(e)
+                if (direction) {
+                  handleSvgMouseDown(e)
+                } else {
+                  handleMouseDown(e)
+                }
+              }}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
@@ -831,55 +862,6 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
               ))}
             </svg>
             </div>
-
-            {/* リサイズハンドル */}
-            {/* 右端のリサイズハンドル */}
-            <div
-              onMouseDown={handleResizeMouseDown('horizontal')}
-              style={{
-                position: 'absolute',
-                right: '0',
-                top: '0',
-                width: '8px',
-                height: '100%',
-                cursor: 'ew-resize',
-                backgroundColor: '#3b82f6',
-                opacity: isResizing === 'horizontal' ? 1 : 0.5,
-                transition: 'opacity 0.2s'
-              }}
-            />
-
-            {/* 下のリサイズハンドル */}
-            <div
-              onMouseDown={handleResizeMouseDown('vertical')}
-              style={{
-                position: 'absolute',
-                bottom: '0',
-                left: '0',
-                width: '100%',
-                height: '8px',
-                cursor: 'ns-resize',
-                backgroundColor: '#3b82f6',
-                opacity: isResizing === 'vertical' ? 1 : 0.5,
-                transition: 'opacity 0.2s'
-              }}
-            />
-
-            {/* 右下角のリサイズハンドル */}
-            <div
-              onMouseDown={handleResizeMouseDown('both')}
-              style={{
-                position: 'absolute',
-                bottom: '0',
-                right: '0',
-                width: '16px',
-                height: '16px',
-                cursor: 'nwse-resize',
-                backgroundColor: '#3b82f6',
-                opacity: isResizing === 'both' ? 1 : 0.5,
-                transition: 'opacity 0.2s'
-              }}
-            />
           </div>
         </div>
       </div>
