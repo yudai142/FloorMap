@@ -29,10 +29,20 @@
     <div id="root"></div>
     <%= yield %>
     <script>
-      // Suppress Vite HMR WebSocket errors when HMR is disabled
+      // Completely disable Vite HMR
       window.__VITE_HMR__ = false
-      if (window.location.pathname !== '/' && typeof window.__VITE__ !== 'undefined') {
-        delete window.__VITE__
+      window.__VITE_HMR_PROTOCOL__ = null
+      window.__VITE_HMR_HOSTNAME__ = null
+      window.__VITE_HMR_PORT__ = null
+
+      // Suppress HMR-related console errors
+      const originalError = console.error
+      console.error = function(...args) {
+        const message = (args[0]?.toString?.() || '').toLowerCase()
+        if (message.includes('vite') || message.includes('websocket') || message.includes('hmr')) {
+          return
+        }
+        originalError.apply(console, args)
       }
     </script>
   </body>
