@@ -11,6 +11,9 @@
   "development": {
     "autoBuild": true
   },
+  "production": {
+    "autoBuild": true
+  },
   "test": {
     "autoBuild": false,
     "skipManifestRead": true
