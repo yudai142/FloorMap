@@ -5,8 +5,8 @@ if Rails.env.production?
     config.traces_sample_rate = 0.1
     config.release = ENV["RENDER_GIT_COMMIT"] if ENV["RENDER_GIT_COMMIT"]
 
-    # Ignore specific errors
-    config.ignored_errors = [
+    # Ignore specific errors (use excluded_exceptions in sentry-ruby 6.x+)
+    config.excluded_exceptions = config.excluded_exceptions + [
       "ActionController::RoutingError",
       "ActionController::UnknownAction",
       "AbstractController::ActionNotFound"
