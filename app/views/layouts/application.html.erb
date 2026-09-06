@@ -28,5 +28,12 @@
   <body>
     <div id="root"></div>
     <%= yield %>
+    <script>
+      // Suppress Vite HMR WebSocket errors when HMR is disabled
+      window.__VITE_HMR__ = false
+      if (window.location.pathname !== '/' && typeof window.__VITE__ !== 'undefined') {
+        delete window.__VITE__
+      }
+    </script>
   </body>
 </html>
