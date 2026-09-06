@@ -1,5 +1,6 @@
 class RoomsController < ApplicationController
   before_action :set_room, only: [ :show, :edit, :update, :destroy, :canvas_data, :canvas_editor, :floor_plan ]
+  skip_before_action :authenticate_user!, only: [ :show, :canvas_data ]
 
   def index
     authorize Room
