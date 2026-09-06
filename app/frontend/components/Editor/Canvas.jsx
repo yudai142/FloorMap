@@ -250,16 +250,21 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
           }
 
           // Update local seat with server-assigned ID
-          const savedSeat = await createResponse.json()
-          mergeSeat({
-            id: savedSeat.id,
-            label: savedSeat.seat_identifier,
-            x: savedSeat.position_x,
-            y: savedSeat.position_y,
-            occupied: seat.occupied,
-            occupant_name: seat.occupant_name,
-            seat_type: savedSeat.seat_type
-          })
+          try {
+            const savedSeat = await createResponse.json()
+            mergeSeat({
+              id: savedSeat.id,
+              label: savedSeat.seat_identifier,
+              x: savedSeat.position_x,
+              y: savedSeat.position_y,
+              occupied: seat.occupied,
+              occupant_name: seat.occupant_name,
+              seat_type: savedSeat.seat_type
+            })
+          } catch (parseError) {
+            console.error('Failed to parse seat response:', parseError, createResponse)
+            // Continue anyway - server saved the seat
+          }
         } else {
           // Existing seat - update position
           const updateResponse = await fetch(`/rooms/${room.share_token}/seats/${seat.id}/position.json`, {
@@ -289,6 +294,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
         onSave(shapes)
       }
     } catch (err) {
+      console.error('Save error:', err)
       setAlert({ type: 'error', message: err.message })
     } finally {
       setIsSaving(false)
