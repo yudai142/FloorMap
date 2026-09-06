@@ -26,6 +26,7 @@ services:
       dockerfile: Dockerfile.dev
     ports:
       - "3000:3000"
+      - "5173:5173"
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/floormap_development
       REDIS_URL: redis://redis:6379/0
