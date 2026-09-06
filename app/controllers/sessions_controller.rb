@@ -49,9 +49,14 @@ class SessionsController < ApplicationController
         format.json { render json: { id: session.id, seat_id: session.seat_id, status: session.status }, status: :created }
       end
     else
+      error_message = if session
+        session.errors.full_messages.join(", ")
+      else
+        "チェックインに失敗しました"
+      end
       respond_to do |format|
-        format.html { render :check_in_form, alert: "チェックインに失敗しました" }
-        format.json { render json: { message: "チェックインに失敗しました" }, status: :unprocessable_entity }
+        format.html { render :check_in_form, alert: error_message }
+        format.json { render json: { message: error_message }, status: :unprocessable_entity }
       end
     end
   end
