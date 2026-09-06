@@ -864,6 +864,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
                 strokeLinecap="round"
                 onMouseDown={(e) => {
                   e.preventDefault()
+                  e.stopPropagation()
                   setIsResizing('horizontal')
                   setDragStart({ x: e.clientX, y: e.clientY })
                 }}
@@ -880,6 +881,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
                 strokeLinecap="round"
                 onMouseDown={(e) => {
                   e.preventDefault()
+                  e.stopPropagation()
                   setIsResizing('vertical')
                   setDragStart({ x: e.clientX, y: e.clientY })
                 }}
