@@ -3,7 +3,7 @@ class RoomPermissionsController < ApplicationController
 
   def create
     @room = Room.find_by(share_token: params[:room_share_token])
-    return render :not_found, status: :not_found if @room.blank?
+    raise ActiveRecord::RecordNotFound if @room.blank?
     @room_permission = @room.room_permissions.build(room_permission_params)
     authorize @room_permission, :create?
 
