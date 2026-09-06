@@ -223,46 +223,18 @@ export default function RoomShow() {
       clearTimeout(timeoutId)
 
       if (response.ok) {
-        // 5秒待機してから保存確認
+        // 5秒待機してからUIを更新
         await new Promise(resolve => setTimeout(resolve, 5000))
-
-        // 座席が実際に保存されているか確認
-        const verifyController = new AbortController()
-        const verifyTimeoutId = setTimeout(() => verifyController.abort(), 10000)
-
-        const verifyResponse = await fetch(`/rooms/${room.id}/canvas_data.json`, {
-          method: 'GET',
-          headers: { 'Accept': 'application/json' },
-          signal: verifyController.signal
-        })
-
-        clearTimeout(verifyTimeoutId)
-
-        if (verifyResponse.ok) {
-          const canvasData = await verifyResponse.json()
-          const seat = canvasData.seats?.find(s => s.id === seatId)
-
-          if (seat && seat.session) {
-            // 着席成功
-            await fetchSessions()
-            if (autoCheckoutEnabled && autoCheckoutTime) {
-              const timeStr = new Date(autoCheckoutTime).toLocaleString('ja-JP')
-              alert(`${timeStr} に自動離席します`)
-            }
-          } else {
-            // 着席が保存されていない
-            alert('チェックインに失敗しました')
-          }
-        } else {
-          alert('チェックインに失敗しました')
+        await fetchSessions()
+        if (autoCheckoutEnabled && autoCheckoutTime) {
+          const timeStr = new Date(autoCheckoutTime).toLocaleString('ja-JP')
+          console.log(`${timeStr} に自動離席します`)
         }
       } else {
-        const error = await response.json()
-        alert(error.message || 'チェックインに失敗しました')
+        console.error('チェックイン失敗:', response.status)
       }
     } catch (error) {
       console.error('チェックインエラー:', error)
-      alert('チェックインに失敗しました')
     }
   }
 
@@ -283,41 +255,14 @@ export default function RoomShow() {
       clearTimeout(timeoutId)
 
       if (response.ok) {
-        // 5秒待機してから保存確認
+        // 5秒待機してからUIを更新
         await new Promise(resolve => setTimeout(resolve, 5000))
-
-        // セッションが実際に削除されているか確認
-        const verifyController = new AbortController()
-        const verifyTimeoutId = setTimeout(() => verifyController.abort(), 10000)
-
-        const verifyResponse = await fetch(`/rooms/${room.id}/canvas_data.json`, {
-          method: 'GET',
-          headers: { 'Accept': 'application/json' },
-          signal: verifyController.signal
-        })
-
-        clearTimeout(verifyTimeoutId)
-
-        if (verifyResponse.ok) {
-          const canvasData = await verifyResponse.json()
-          const activeSessions = canvasData.sessions?.filter(s => s.id === sessionId) || []
-
-          if (activeSessions.length === 0) {
-            // 離席成功
-            await fetchSessions()
-          } else {
-            // 離席が保存されていない
-            alert('チェックアウトに失敗しました')
-          }
-        } else {
-          alert('チェックアウトに失敗しました')
-        }
+        await fetchSessions()
       } else {
-        alert('チェックアウトに失敗しました')
+        console.error('チェックアウト失敗:', response.status)
       }
     } catch (error) {
       console.error('チェックアウトエラー:', error)
-      alert('チェックアウトに失敗しました')
     }
   }
 
