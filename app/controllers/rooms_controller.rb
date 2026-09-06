@@ -85,9 +85,15 @@ class RoomsController < ApplicationController
     authorize @room
 
     if @room.update(room_params)
-      redirect_to @room, notice: "ルームを更新しました"
+      respond_to do |format|
+        format.html { redirect_to @room, notice: "ルームを更新しました" }
+        format.json { render json: @room.as_json(only: [:id, :share_token, :name, :description, :width, :height]), status: :ok }
+      end
     else
-      render :edit, status: :unprocessable_entity
+      respond_to do |format|
+        format.html { render :edit, status: :unprocessable_entity }
+        format.json { render json: { errors: @room.errors.messages }, status: :unprocessable_entity }
+      end
     end
   end
 
