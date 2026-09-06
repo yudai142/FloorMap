@@ -7,7 +7,20 @@ class Seat < ApplicationRecord
   validates :column_number, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :seat_type, presence: true
   validates :position_x, :position_y, presence: true, numericality: true
-  validates :position_x, :position_y, uniqueness: { scope: [ :room_id ] }
+
+  # position_x, position_y の組み合わせが room_id 内で一意
+  validate :unique_position_within_room
+
+  def unique_position_within_room
+    return if position_x.blank? || position_y.blank? || room_id.blank?
+
+    existing = room.seats.where(position_x: position_x, position_y: position_y)
+    existing = existing.where.not(id: id) if persisted?
+
+    if existing.exists?
+      errors.add(:base, "この座標には既に座席があります")
+    end
+  end
 
   enum :seat_type, { regular: "regular", accessible: "accessible", vip: "vip" }
 
