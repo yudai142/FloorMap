@@ -35,7 +35,9 @@ class SessionsController < ApplicationController
             seat_id: seat.id,
             check_in_time: Time.current,
             status: "active",
-            checkout_timer_minutes: checkout_timer_minutes
+            checkout_timer_minutes: checkout_timer_minutes,
+            user_auto_checkout_enabled: current_user.auto_checkout_enabled,
+            user_auto_checkout_time: current_user.auto_checkout_time
           )
         else
           # Create visitor for unauthenticated users
@@ -92,14 +94,6 @@ class SessionsController < ApplicationController
     # Allow unauthenticated users to check out (no authorization check)
 
     if @session.check_out!
-      # Reset auto checkout settings for the user
-      if @session.user_id.present?
-        user = User.find_by(id: @session.user_id)
-        if user
-          user.update_columns(auto_checkout_enabled: false, auto_checkout_time: nil)
-        end
-      end
-
       respond_to do |format|
         format.html { redirect_to sessions_path, notice: "チェックアウトしました" }
         format.json { render json: @session.seat.canvas_data, status: :ok }

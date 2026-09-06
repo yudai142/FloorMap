@@ -35,10 +35,9 @@ class RoomsController < ApplicationController
         current_user: current_user ? {
           id: current_user.id,
           email: current_user.email.to_s,
-          role: current_user.role,
-          auto_checkout_enabled: current_user.auto_checkout_enabled,
-          auto_checkout_time: current_user.auto_checkout_time
+          role: current_user.role
         } : nil,
+        current_session: current_user ? current_user.sessions.active.first&.as_json(only: [:id, :user_auto_checkout_enabled, :user_auto_checkout_time]) : nil,
         auth: auth_props
       }
     rescue Encoding::UndefinedConversionError, JSON::GeneratorError => e
@@ -201,6 +200,10 @@ class RoomsController < ApplicationController
   def update_auto_checkout_settings
     return head :unauthorized unless user_signed_in?
 
+    # Get current active session for this user
+    current_session = current_user.sessions.active.first
+    return head :not_found unless current_session
+
     settings = auto_checkout_settings_params.to_h
 
     # datetime-local 形式の文字列を datetime に変換
@@ -210,11 +213,17 @@ class RoomsController < ApplicationController
       settings[:auto_checkout_time] = nil
     end
 
+    # Map the settings to session fields
+    session_settings = {
+      user_auto_checkout_enabled: settings[:auto_checkout_enabled],
+      user_auto_checkout_time: settings[:auto_checkout_time]
+    }
+
     begin
-      current_user.update_columns(settings)
+      current_session.update_columns(session_settings)
       render json: {
-        auto_checkout_enabled: current_user.auto_checkout_enabled,
-        auto_checkout_time: current_user.auto_checkout_time
+        auto_checkout_enabled: current_session.user_auto_checkout_enabled,
+        auto_checkout_time: current_session.user_auto_checkout_time
       }, status: :ok
     rescue StandardError => e
       render json: {

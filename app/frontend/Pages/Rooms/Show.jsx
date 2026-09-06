@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { usePage } from '@inertiajs/react'
 
 export default function RoomShow() {
-  const { room, seats, current_user, auth } = usePage().props
+  const { room, seats, current_user, current_session, auth } = usePage().props
   const [sessions, setSessions] = useState([])
   const [autoCheckoutEnabled, setAutoCheckoutEnabled] = useState(false)
   const [autoCheckoutTime, setAutoCheckoutTime] = useState('')
@@ -30,16 +30,16 @@ export default function RoomShow() {
 
   // 初期化時に props から設定を復元
   useEffect(() => {
-    if (current_user) {
-      setAutoCheckoutEnabled(current_user.auto_checkout_enabled || false)
-      if (current_user.auto_checkout_time) {
+    if (current_session) {
+      setAutoCheckoutEnabled(current_session.user_auto_checkout_enabled || false)
+      if (current_session.user_auto_checkout_time) {
         // ISO形式に変換
-        const dateTime = new Date(current_user.auto_checkout_time)
+        const dateTime = new Date(current_session.user_auto_checkout_time)
         const isoString = dateTime.toISOString().slice(0, 16)
         setAutoCheckoutTime(isoString)
       }
     }
-  }, [current_user])
+  }, [current_session])
 
   // チェックボックスの状態が変わったら即座に保存
   const handleCheckboxChange = async (checked) => {
@@ -331,7 +331,7 @@ export default function RoomShow() {
         {/* 右パネル：座席一覧 */}
         <div className="right-panel">
           {/* 自動離席設定パネル - 着席中のみ表示 */}
-          {current_user && sessions.some(s => s.user_id === current_user.id && s.status === 'active') && (
+          {current_session && (
           <div className="auto-checkout-panel">
             <div className="panel-header">
               <h3>自動離席設定</h3>
