@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_06_000002) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_06_000003) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -176,8 +176,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_06_000002) do
   end
 
   create_table "sessions", force: :cascade do |t|
+    t.datetime "auto_checkout_at"
     t.datetime "check_in_time", null: false
     t.datetime "check_out_time"
+    t.integer "checkout_timer_minutes", default: 60
     t.datetime "created_at", null: false
     t.bigint "seat_id", null: false
     t.string "status", default: "active", null: false

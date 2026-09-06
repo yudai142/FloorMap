@@ -20,6 +20,7 @@ class Session < ApplicationRecord
 
   after_create_commit :clear_seat_caches
   after_create_commit :broadcast_seat_updated
+  after_create_commit :schedule_auto_checkout
   after_update_commit :clear_seat_caches, if: :saved_change_to_status?
   after_update_commit :broadcast_seat_updated, if: :saved_change_to_status?
 
@@ -32,7 +33,24 @@ class Session < ApplicationRecord
     update(status: "checked_out", check_out_time: Time.current)
   end
 
+  def has_auto_checkout?
+    auto_checkout_at.present? && auto_checkout_at > Time.current
+  end
+
+  def auto_checkout_time_formatted
+    return nil unless auto_checkout_at
+    auto_checkout_at.strftime("%H:%M")
+  end
+
   private
+
+  def schedule_auto_checkout
+    return if checkout_timer_minutes.blank? || status != "active"
+
+    checkout_time = check_in_time + checkout_timer_minutes.minutes
+    update_column(:auto_checkout_at, checkout_time)
+    AutoCheckoutJob.set(wait_until: checkout_time).perform_later(id)
+  end
 
   def clear_seat_caches
     seat.clear_caches

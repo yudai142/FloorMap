@@ -21,6 +21,8 @@ class SessionsController < ApplicationController
     end
 
     session = nil
+    checkout_timer_minutes = params[:checkout_timer_minutes]&.to_i || 60
+
     begin
       ActiveRecord::Base.transaction do
         if current_user
@@ -32,7 +34,8 @@ class SessionsController < ApplicationController
             user_id: current_user.id,
             seat_id: seat.id,
             check_in_time: Time.current,
-            status: "active"
+            status: "active",
+            checkout_timer_minutes: checkout_timer_minutes
           )
         else
           # Create visitor for unauthenticated users
@@ -41,7 +44,8 @@ class SessionsController < ApplicationController
             visitor_id: visitor.id,
             seat_id: seat.id,
             check_in_time: Time.current,
-            status: "active"
+            status: "active",
+            checkout_timer_minutes: checkout_timer_minutes
           )
         end
       end

@@ -28,6 +28,11 @@ export default function RoomShow() {
 
   const handleCheckIn = async (seatId) => {
     try {
+      const timerMinutes = prompt('自動離席時間を分単位で入力してください (デフォルト: 60分):', '60')
+      if (timerMinutes === null) return
+
+      const checkoutTimer = parseInt(timerMinutes) || 60
+
       const response = await fetch('/sessions/check_in.json', {
         method: 'POST',
         headers: {
@@ -35,11 +40,12 @@ export default function RoomShow() {
           'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
           'Accept': 'application/json'
         },
-        body: JSON.stringify({ seat_id: seatId })
+        body: JSON.stringify({ seat_id: seatId, checkout_timer_minutes: checkoutTimer })
       })
 
       if (response.ok) {
         await fetchSessions()
+        alert(`${checkoutTimer}分後に自動離席します`)
       } else {
         const error = await response.json()
         alert(error.message || 'チェックインに失敗しました')
