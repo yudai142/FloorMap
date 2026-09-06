@@ -9,7 +9,7 @@
   "codegenDir": "app/components",
   "aliasesToOptimize": [],
   "development": {
-    "autoBuild": false
+    "autoBuild": true
   },
   "test": {
     "autoBuild": false,
