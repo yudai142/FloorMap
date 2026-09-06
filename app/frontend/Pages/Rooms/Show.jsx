@@ -335,8 +335,7 @@ export default function RoomShow() {
               border: '1px solid #e2e8f0',
               backgroundColor: 'white',
               width: '100%',
-              height: 'auto',
-              maxHeight: '600px',
+              height: 'calc(100vh - 300px)',
               cursor: isDragging ? 'grabbing' : 'grab'
             }}
             onWheel={handleCanvasWheel}
