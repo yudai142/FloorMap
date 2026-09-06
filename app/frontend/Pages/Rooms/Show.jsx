@@ -352,6 +352,37 @@ export default function RoomShow() {
                 🔗 URLをコピー
               </button>
             </div>
+
+            {/* ズームコントロール */}
+            <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <label style={{ fontSize: '12px', color: '#475569' }}>拡大: </label>
+              <input
+                type="range"
+                min="0.5"
+                max="5"
+                step="0.1"
+                value={zoom}
+                onChange={(e) => setZoom(parseFloat(e.target.value))}
+                style={{ flex: 1, cursor: 'pointer' }}
+              />
+              <input
+                type="number"
+                min="0.5"
+                max="5"
+                step="0.1"
+                value={zoom.toFixed(1)}
+                onChange={(e) => setZoom(Math.max(0.5, Math.min(5, parseFloat(e.target.value))))}
+                style={{
+                  width: '50px',
+                  padding: '4px',
+                  fontSize: '12px',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '4px',
+                  textAlign: 'center'
+                }}
+              />
+              <span style={{ fontSize: '12px', color: '#475569', minWidth: '25px' }}>×{zoom.toFixed(1)}</span>
+            </div>
           </div>
 
           <div style={{ position: 'relative', display: 'inline-block' }}>
