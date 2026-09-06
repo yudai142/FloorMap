@@ -262,13 +262,16 @@ export default function RoomShow() {
 
   const handleCanvasMouseDown = (e) => {
     setIsDragging(true)
-    setDragStart({ x: e.clientX - panX, y: e.clientY - panY })
+    setDragStart({ x: e.clientX, y: e.clientY })
   }
 
   const handleCanvasMouseMove = (e) => {
     if (!isDragging) return
-    setPanX(e.clientX - dragStart.x)
-    setPanY(e.clientY - dragStart.y)
+    const deltaX = e.clientX - dragStart.x
+    const deltaY = e.clientY - dragStart.y
+    setPanX(panX + deltaX)
+    setPanY(panY + deltaY)
+    setDragStart({ x: e.clientX, y: e.clientY })
   }
 
   const handleCanvasMouseUp = () => {
