@@ -770,15 +770,25 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
               )}
               {showGrid && <rect width={canvasWidth} height={canvasHeight} fill="url(#grid)" />}
 
-              {/* キャンバスの青い枠線 */}
-              <rect
-                x="1.5"
-                y="1.5"
-                width={canvasWidth - 3}
-                height={canvasHeight - 3}
+              {/* キャンバスの右端と下の青い枠線 */}
+              {/* 右端 */}
+              <line
+                x1={canvasWidth - 1.5}
+                y1="0"
+                x2={canvasWidth - 1.5}
+                y2={canvasHeight}
                 stroke="#3b82f6"
                 strokeWidth="3"
-                fill="none"
+                pointerEvents="none"
+              />
+              {/* 下端 */}
+              <line
+                x1="0"
+                y1={canvasHeight - 1.5}
+                x2={canvasWidth}
+                y2={canvasHeight - 1.5}
+                stroke="#3b82f6"
+                strokeWidth="3"
                 pointerEvents="none"
               />
 
