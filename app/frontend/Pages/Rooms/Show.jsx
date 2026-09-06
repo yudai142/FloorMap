@@ -9,6 +9,13 @@ export default function RoomShow() {
   const [autoCheckoutTime, setAutoCheckoutTime] = useState('')
   const [deviceId, setDeviceId] = useState('')
 
+  // Canvas zoom and pan
+  const [zoom, setZoom] = useState(1)
+  const [panX, setPanX] = useState(0)
+  const [panY, setPanY] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+
   // Initialize device ID on mount
   useEffect(() => {
     try {
@@ -242,6 +249,27 @@ export default function RoomShow() {
 
   const canManage = current_user && (current_user.id === room.user_id || current_user.role === 'admin')
 
+  const handleCanvasWheel = (e) => {
+    e.preventDefault()
+    const delta = e.deltaY > 0 ? 0.8 : 1.2
+    setZoom(prevZoom => Math.max(0.5, Math.min(5, prevZoom * delta)))
+  }
+
+  const handleCanvasMouseDown = (e) => {
+    setIsDragging(true)
+    setDragStart({ x: e.clientX - panX, y: e.clientY - panY })
+  }
+
+  const handleCanvasMouseMove = (e) => {
+    if (!isDragging) return
+    setPanX(e.clientX - dragStart.x)
+    setPanY(e.clientY - dragStart.y)
+  }
+
+  const handleCanvasMouseUp = () => {
+    setIsDragging(false)
+  }
+
   return (
     <div className="room-detail-page">
       {/* ナビゲーション */}
@@ -308,8 +336,14 @@ export default function RoomShow() {
               backgroundColor: 'white',
               width: '100%',
               height: 'auto',
-              maxHeight: '600px'
+              maxHeight: '600px',
+              cursor: isDragging ? 'grabbing' : 'grab'
             }}
+            onWheel={handleCanvasWheel}
+            onMouseDown={handleCanvasMouseDown}
+            onMouseMove={handleCanvasMouseMove}
+            onMouseUp={handleCanvasMouseUp}
+            onMouseLeave={handleCanvasMouseUp}
           >
             {/* グリッド背景 */}
             <defs>
@@ -317,7 +351,9 @@ export default function RoomShow() {
                 <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#e2e8f0" strokeWidth="0.5" />
               </pattern>
             </defs>
-            <rect width={room.width || 1000} height={room.height || 700} fill="url(#smallGrid)" />
+
+            <g transform={`translate(${panX}, ${panY}) scale(${zoom})`}>
+              <rect width={room.width || 1000} height={room.height || 700} fill="url(#smallGrid)" />
 
             {/* 上面図（図形） */}
             {room.floor_plan_data && room.floor_plan_data.map((shape, idx) => {
@@ -432,6 +468,7 @@ export default function RoomShow() {
                 </g>
               )
             })}
+            </g>
           </svg>
           </div>
         </div>
