@@ -104,14 +104,30 @@ class Seat < ApplicationRecord
   private
 
   def broadcast_seat_updated
-    RoomsChannel.broadcast_to(room, type: "seat_updated", seat: canvas_data)
-  rescue Redis::CannotConnectError, Errno::ECONNREFUSED => e
-    Rails.logger.warn("Failed to broadcast seat update: #{e.message}")
+    begin
+      Timeout.timeout(5) do
+        RoomsChannel.broadcast_to(room, type: "seat_updated", seat: canvas_data)
+      end
+    rescue Timeout::Error => e
+      Rails.logger.warn("Broadcast seat update timeout: #{e.message}")
+    rescue Redis::CannotConnectError, Errno::ECONNREFUSED => e
+      Rails.logger.warn("Failed to broadcast seat update: #{e.message}")
+    rescue => e
+      Rails.logger.warn("Failed to broadcast seat update: #{e.class} - #{e.message}")
+    end
   end
 
   def broadcast_seat_removed
-    RoomsChannel.broadcast_to(room, type: "seat_removed", seat_id: id)
-  rescue Redis::CannotConnectError, Errno::ECONNREFUSED => e
-    Rails.logger.warn("Failed to broadcast seat removal: #{e.message}")
+    begin
+      Timeout.timeout(5) do
+        RoomsChannel.broadcast_to(room, type: "seat_removed", seat_id: id)
+      end
+    rescue Timeout::Error => e
+      Rails.logger.warn("Broadcast seat removal timeout: #{e.message}")
+    rescue Redis::CannotConnectError, Errno::ECONNREFUSED => e
+      Rails.logger.warn("Failed to broadcast seat removal: #{e.message}")
+    rescue => e
+      Rails.logger.warn("Failed to broadcast seat removal: #{e.class} - #{e.message}")
+    end
   end
 end

@@ -65,9 +65,17 @@ class Session < ApplicationRecord
   end
 
   def broadcast_seat_updated
-    RoomsChannel.broadcast_to(room, type: "seat_updated", seat: seat.canvas_data)
-  rescue Redis::CannotConnectError, Errno::ECONNREFUSED => e
-    Rails.logger.warn("Failed to broadcast seat update from session: #{e.message}")
+    begin
+      Timeout.timeout(5) do
+        RoomsChannel.broadcast_to(room, type: "seat_updated", seat: seat.canvas_data)
+      end
+    rescue Timeout::Error => e
+      Rails.logger.warn("Broadcast seat update timeout from session: #{e.message}")
+    rescue Redis::CannotConnectError, Errno::ECONNREFUSED => e
+      Rails.logger.warn("Failed to broadcast seat update from session: #{e.message}")
+    rescue => e
+      Rails.logger.warn("Failed to broadcast seat update from session: #{e.class} - #{e.message}")
+    end
   end
 
   def user_or_visitor_present
