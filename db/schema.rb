@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_05_000003) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_06_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -152,9 +152,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_05_000003) do
     t.jsonb "floor_plan_data", default: [], null: false
     t.integer "height", default: 700
     t.string "name", null: false
+    t.string "share_token"
     t.datetime "updated_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.bigint "user_id", null: false
     t.integer "width", default: 1000
+    t.index ["share_token"], name: "index_rooms_on_share_token", unique: true
     t.index ["user_id"], name: "index_rooms_on_user_id"
   end
 
@@ -164,6 +166,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_05_000003) do
     t.float "position_x"
     t.float "position_y"
     t.bigint "room_id", null: false
+    t.integer "rooms_count", default: 0
     t.integer "row_number", null: false
     t.string "seat_type", default: "regular", null: false
     t.datetime "updated_at", null: false

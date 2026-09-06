@@ -29,6 +29,7 @@ export default function EditorToolbar({
     { id: 'arrow', label: '矢印', emoji: '→' },
     { id: 'text', label: 'テキスト', emoji: 'T' },
     { id: 'polygon', label: 'ポリゴン', emoji: '▲' },
+    { id: 'fill', label: '塗りつぶし', emoji: '🪣' },
     { id: 'delete', label: '削除', emoji: '🗑️' },
   ]
 
@@ -97,7 +98,7 @@ export default function EditorToolbar({
         </div>
 
         {/* Draw Mode Group */}
-        {['line', 'rectangle', 'circle', 'arrow'].includes(currentTool) && (
+        {['line', 'rectangle', 'circle', 'arrow', 'polygon'].includes(currentTool) && (
           <div className="border-2 border-purple-300 rounded-lg p-3 bg-purple-50 shadow-sm">
             <div className="flex gap-2 items-center">
               <span className="text-xs font-bold text-purple-700">描画:</span>

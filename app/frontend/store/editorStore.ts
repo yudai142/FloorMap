@@ -61,9 +61,16 @@ export const useEditorStore = create<EditorState>()(
       }),
     deleteShape: (id) =>
       set((state) => {
-        state.shapes = state.shapes.filter((s) => s.id !== id)
-        state.selectedElements = state.selectedElements.filter((el) => !(el.type === 'shape' && el.id === id))
-        state.hasUnsavedChanges = true
+        console.log('Store deleteShape called with id:', id)
+        console.log('Current shapes:', state.shapes.map(s => ({ id: s.id, type: s.type })))
+        const shapeIndex = state.shapes.findIndex((s) => s.id === id)
+        console.log('Found shape at index:', shapeIndex)
+        if (shapeIndex !== -1) {
+          state.shapes.splice(shapeIndex, 1)
+          state.selectedElements = state.selectedElements.filter((el) => !(el.type === 'shape' && el.id === id))
+          state.hasUnsavedChanges = true
+        }
+        console.log('Shapes after deletion:', state.shapes.map(s => ({ id: s.id, type: s.type })))
       }),
     setShapes: (shapes) =>
       set((state) => {

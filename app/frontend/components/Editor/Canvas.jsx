@@ -14,9 +14,11 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
   const svgRef = useRef(null)
   const svgContainerRef = useRef(null)
   const scrollContainerRef = useRef(null)
+  const originalSeatsRef = useRef(initialSeats)
   const [isSaving, setIsSaving] = useState(false)
   const [alert, setAlert] = useState(null)
   const [selectionStart, setSelectionStart] = useState(null)
+  const [polygonClosed, setPolygonClosed] = useState(true)
 
   // Default canvas dimensions if not provided
   const canvasWidth = room?.width || 1000
@@ -73,39 +75,18 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
 
   // Initialize canvas data
   useEffect(() => {
-    if (initialShapes.length > 0 || initialSeats.length > 0) {
-      setShapes(initialShapes)
+    if ((initialShapes && initialShapes.length > 0) || (initialSeats && initialSeats.length > 0)) {
+      // Ensure each shape has a unique ID
+      const shapesWithIds = initialShapes.map((shape) => ({
+        ...shape,
+        id: shape.id || `${shape.type}-${Date.now()}-${Math.random()}`,
+      }))
+      setShapes(shapesWithIds)
       setSeats(initialSeats)
-      saveToHistory(initialSeats, initialShapes)
+      saveToHistory(initialSeats, shapesWithIds)
     }
   }, [initialShapes, initialSeats, setShapes, setSeats, saveToHistory])
 
-  // 座席データの定期更新（3秒ごと）
-  useEffect(() => {
-    const fetchUpdatedSeats = async () => {
-      try {
-        const response = await fetch(`/rooms/${room.share_token}/canvas_data.json`)
-        const data = await response.json()
-        if (data.seats) {
-          const updatedSeats = data.seats.map(seat => ({
-            id: seat.id,
-            label: seat.seat_identifier,
-            x: seat.position_x || 0,
-            y: seat.position_y || 0,
-            occupied: !!seat.session,
-            occupant_name: seat.session?.name || seat.session?.user_id?.toString() || '不明',
-            seat_type: seat.seat_type
-          }))
-          setSeats(updatedSeats)
-        }
-      } catch (error) {
-        // Silent fail
-      }
-    }
-
-    const interval = setInterval(fetchUpdatedSeats, 3000)
-    return () => clearInterval(interval)
-  }, [room.id, setSeats])
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -243,6 +224,27 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       }
 
       // Save seats (create, update, delete)
+      // Detect deleted seats (original seats that are no longer in current seats)
+      const currentSeatIds = new Set(seats.map(s => s.id).filter(id => id > 0))
+      const deletedSeats = originalSeatsRef.current.filter(
+        originalSeat => originalSeat.id > 0 && !currentSeatIds.has(originalSeat.id)
+      )
+
+      // Delete removed seats
+      for (const deletedSeat of deletedSeats) {
+        const deleteResponse = await fetch(`/rooms/${room.share_token}/seats/${deletedSeat.id}.json`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': getCsrfToken(),
+          },
+        })
+
+        if (!deleteResponse.ok) {
+          throw new Error('座席の削除に失敗しました')
+        }
+      }
+
       // Send current seats state to server
       for (const seat of seats) {
         if (seat.id < 0) {
@@ -303,6 +305,9 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
         }
       }
 
+      // Update the original seats reference for next save
+      originalSeatsRef.current = seats.filter(s => s.id > 0)
+
       setAlert({ type: 'success', message: '座席配置図を保存しました' })
       setTimeout(() => setAlert(null), 2000)
 
@@ -317,6 +322,21 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
   }, [room, shapes, seats, getCsrfToken, onSave, mergeSeat])
 
   const handleMouseDown = useCallback((e) => {
+    // Right-click: complete polygon
+    if (e.button === 2 && currentTool === 'polygon' && polygonPoints && polygonPoints.length >= 3) {
+      e.preventDefault()
+      addPolygon(polygonPoints)
+      setPolygonPoints([])
+      setDrawingStart(null)
+      return
+    }
+
+    // Prevent default right-click menu
+    if (e.button === 2) {
+      e.preventDefault()
+      return
+    }
+
     const { x, y } = getMousePosition(e)
 
     if (currentTool === 'seat') {
@@ -330,7 +350,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       const clickedSeat = getSeatAtPoint(x, y)
       if (clickedSeat) {
         // Check if already selected
-        const alreadySelected = selectedElements.some((el) => el.type === 'seat' && el.id === clickedSeat.id)
+        const alreadySelected = selectedElements && selectedElements.some((el) => el.type === 'seat' && el.id === clickedSeat.id)
         if (!alreadySelected && !e.ctrlKey && !e.metaKey) {
           clearSelection()
         }
@@ -343,6 +363,15 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
         // Initialize selection start for drag selection
         setSelectionStart({ x, y })
       }
+    } else if (currentTool === 'fill') {
+      const clickedShape = getShapeAtPoint(x, y)
+      if (clickedShape) {
+        // Toggle fill on the shape
+        const isFilled = clickedShape.fill && clickedShape.fill !== 'none'
+        updateShape(clickedShape.id, {
+          fill: isFilled ? 'none' : (clickedShape.color || '#e2e8f0')
+        })
+      }
     } else if (currentTool === 'delete') {
       const clickedSeat = getSeatAtPoint(x, y)
       if (clickedSeat) {
@@ -352,10 +381,11 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       } else {
         const clickedShape = getShapeAtPoint(x, y)
         if (clickedShape) {
+          console.log('Deleting shape:', clickedShape.id, 'Type:', clickedShape.type)
           deleteShape(clickedShape.id)
         }
       }
-    } else if (['line', 'rectangle', 'circle', 'arrow', 'polygon'].includes(currentTool)) {
+    } else if (['line', 'rectangle', 'circle', 'arrow'].includes(currentTool)) {
       // Handle two-point selection mode
       if (drawMode === 'click') {
         if (!drawingStart) {
@@ -380,11 +410,22 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
         // Drag mode: just set starting point
         setDrawingStart({ x, y })
       }
+    } else if (currentTool === 'polygon') {
+      // Add point to polygon
+      console.log('Adding polygon point:', { x, y }, 'Current points:', polygonPoints)
+      const updatedPoints = [...(polygonPoints || []), { x, y }]
+      console.log('Updated points:', updatedPoints)
+      setPolygonPoints(updatedPoints)
+      setDrawingStart({ x, y })
     } else if (currentTool === 'text') {
-      setTextInput({ x, y, text: '' })
+      // Show text input dialog
+      const text = prompt('テキストを入力してください:')
+      if (text && text.trim()) {
+        addText(x, y, text)
+      }
     }
-  }, [getMousePosition, currentTool, drawMode, drawingStart, getSeatAtPoint, getShapeAtPoint, createSeat, deleteSeat, deleteShape,
-      setDragging, clearSelection, setDrawingStart, setTextInput, addLine, addRectangle, addCircle, addArrow, clearPreview])
+  }, [currentTool, drawMode, getMousePosition, getSeatAtPoint, getShapeAtPoint, createSeat, deleteSeat, deleteShape, updateShape, moveSeat,
+      addLine, addRectangle, addCircle, addArrow, addText, addPolygon, polygonPoints, drawingStart, polygonClosed])
 
   const handleMouseMove = useCallback((e) => {
     const { x, y } = getMousePosition(e)
@@ -406,6 +447,9 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
           height: Math.abs(y - selectionStart.y),
         })
       }
+    } else if (currentTool === 'polygon' && polygonPoints && polygonPoints.length > 0) {
+      // Update polygon preview (draw line from last point to current mouse)
+      setDrawingStart({ x, y })
     } else if (drawingStart) {
       // Show previews in both drag and click modes (for preview display)
       if (currentTool === 'line') {
@@ -419,8 +463,9 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
         updateArrowPreview(drawingStart.x, drawingStart.y, x, y)
       }
     }
-  }, [getMousePosition, dragging, currentTool, drawingStart, drawMode, canvasWidth, canvasHeight, seats,
-      mergeSeat, updateLinePreview, updateRectanglePreview, updateCirclePreview, updateArrowPreview])
+  }, [getMousePosition, dragging, currentTool, drawingStart, drawMode, canvasWidth, canvasHeight, seats, shapes,
+      mergeSeat, updateLinePreview, updateRectanglePreview, updateCirclePreview, updateArrowPreview, setDrawingStart, polygonPoints,
+      updateShape, snapToGrid])
 
   const handleMouseUp = useCallback((e) => {
     const { x, y } = getMousePosition(e)
@@ -511,10 +556,73 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       clearPreview()
     }
   }, [getMousePosition, dragging, currentTool, drawingStart, drawMode, canvasWidth, canvasHeight, seats, shapes,
-      moveSeat, setDragging, setDrawingStart, clearPreview, addLine, addRectangle, addCircle, addArrow, setSelectedElements, setSelectionStart, setSelectionBox])
+      moveSeat, setDragging, setDrawingStart, clearPreview, addLine, addRectangle, addCircle, addArrow, setSelectedElements, setSelectionStart, setSelectionBox,
+      updateShape, snapToGrid, mergeSeat, setAlert])
 
   return (
     <div className="canvas-editor-container flex flex-col h-screen bg-base-100">
+      {/* Polygon Cancel/Confirm Button */}
+      {currentTool === "polygon" && polygonPoints && polygonPoints.length > 0 && (
+        <div className="bg-blue-100 border border-blue-300 rounded mx-4 mt-4 p-3 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-blue-800">
+              ポリゴンポイント: {polygonPoints.length} 個
+            </span>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={polygonClosed}
+                onChange={(e) => setPolygonClosed(e.target.checked)}
+                className="checkbox checkbox-sm"
+              />
+              <span className="text-sm text-blue-800">始点と結ぶ</span>
+            </label>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                if (polygonPoints && polygonPoints.length >= 2) {
+                  if (polygonClosed) {
+                    // Create a closed polygon
+                    const points = [...polygonPoints, polygonPoints[0]]
+                    addPolygon(points)
+                  } else {
+                    // Create lines between consecutive points
+                    for (let i = 0; i < polygonPoints.length - 1; i++) {
+                      addLine(
+                        polygonPoints[i].x,
+                        polygonPoints[i].y,
+                        polygonPoints[i + 1].x,
+                        polygonPoints[i + 1].y
+                      )
+                    }
+                  }
+                  setPolygonPoints([])
+                  setDrawingStart(null)
+                  setAlert({ type: 'success', message: polygonClosed ? 'ポリゴンを作成しました' : '直線を作成しました' })
+                } else {
+                  setAlert({ type: 'error', message: 'ポリゴンは2個以上のポイントが必要です' })
+                }
+              }}
+              disabled={!polygonPoints || polygonPoints.length < 2}
+              className="btn btn-sm btn-success"
+            >
+              確定
+            </button>
+            <button
+              onClick={() => {
+                setPolygonPoints([])
+                setDrawingStart(null)
+                setAlert(null)
+              }}
+              className="btn btn-sm btn-outline btn-error"
+            >
+              キャンセル
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Alert */}
       {alert && (
         <div className={`alert alert-${alert.type === 'error' ? 'error' : 'success'} mx-4 mt-4`}>
@@ -597,6 +705,56 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
 
               {/* Preview */}
               {preview && <PreviewRenderer preview={preview} />}
+
+              {/* Polygon Preview */}
+              {currentTool === 'polygon' && polygonPoints && polygonPoints.length > 0 && (
+                <g pointerEvents="none">
+                  {/* Draw lines between points */}
+                  {polygonPoints.map((point, idx) => {
+                    const nextPoint = polygonPoints[idx + 1]
+                    if (nextPoint) {
+                      return (
+                        <line
+                          key={`polygon-line-${idx}`}
+                          x1={point.x}
+                          y1={point.y}
+                          x2={nextPoint.x}
+                          y2={nextPoint.y}
+                          stroke="#06b6d4"
+                          strokeWidth="2"
+                          strokeDasharray="4,4"
+                        />
+                      )
+                    }
+                    return null
+                  })}
+                  {/* Draw circles at points */}
+                  {polygonPoints.map((point, idx) => (
+                    <circle
+                      key={`polygon-point-${idx}`}
+                      cx={point.x}
+                      cy={point.y}
+                      r="5"
+                      fill="#06b6d4"
+                      stroke="white"
+                      strokeWidth="2"
+                    />
+                  ))}
+                  {/* Draw line from last point to current mouse position */}
+                  {drawingStart && polygonPoints.length > 0 && (
+                    <line
+                      x1={polygonPoints[polygonPoints.length - 1].x}
+                      y1={polygonPoints[polygonPoints.length - 1].y}
+                      x2={drawingStart.x}
+                      y2={drawingStart.y}
+                      stroke="#06b6d4"
+                      strokeWidth="2"
+                      strokeDasharray="4,4"
+                      pointerEvents="none"
+                    />
+                  )}
+                </g>
+              )}
 
               {/* Selection Box */}
               {selectionBox && currentTool === 'select' && (

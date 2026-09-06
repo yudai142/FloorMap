@@ -29,7 +29,7 @@ export default function ShapeRenderer({ shape, isSelected }) {
         y={shape.y}
         width={shape.width}
         height={shape.height}
-        fill="none"
+        fill={shape.fill || 'none'}
         stroke={shape.color || '#ef4444'}
         strokeWidth="2"
         pointerEvents="none"
@@ -42,7 +42,7 @@ export default function ShapeRenderer({ shape, isSelected }) {
         cx={shape.cx}
         cy={shape.cy}
         r={shape.r}
-        fill="none"
+        fill={shape.fill || 'none'}
         stroke={shape.color || '#8b5cf6'}
         strokeWidth="2"
         pointerEvents="none"
@@ -78,7 +78,7 @@ export default function ShapeRenderer({ shape, isSelected }) {
     return (
       <polygon
         points={shape.points}
-        fill="none"
+        fill={shape.fill || 'none'}
         stroke={shape.color || '#06b6d4'}
         strokeWidth="2"
         pointerEvents="none"

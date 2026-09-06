@@ -15,8 +15,6 @@ class RoomsController < ApplicationController
   end
 
   def show
-    authorize @room
-
     begin
       render inertia: 'Rooms/Show', props: {
         room: {
@@ -34,11 +32,11 @@ class RoomsController < ApplicationController
           floor_plan_data: @room.floor_plan_data || []
         },
         seats: @room.seats.map { |s| seat_canvas_json(s) },
-        current_user: {
+        current_user: current_user ? {
           id: current_user.id,
           email: current_user.email.to_s,
           role: current_user.role
-        },
+        } : nil,
         auth: auth_props
       }
     rescue Encoding::UndefinedConversionError, JSON::GeneratorError => e
@@ -118,8 +116,6 @@ class RoomsController < ApplicationController
   end
 
   def canvas_data
-    authorize @room, :show?
-
     sessions = Session.active.joins(:seat).where(seats: { room_id: @room.id })
 
     seats_data = []
@@ -264,7 +260,7 @@ class RoomsController < ApplicationController
   end
 
   def floor_plan_params
-    params.require(:room).permit(floor_plan_data: [:type, :x, :y, :width, :height, :color, :lineWidth])
+    params.require(:room).permit(floor_plan_data: [:id, :type, :x, :y, :x1, :y1, :x2, :y2, :cx, :cy, :r, :width, :height, :color, :lineWidth, :text, :points, :pointsArray, :fill])
   end
 
   private
