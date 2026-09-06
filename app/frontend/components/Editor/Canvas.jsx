@@ -563,15 +563,22 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
 
   // 親コンテナのサイズに基づいてリサイズ方向を判定
   const getResizeDirection = (e) => {
-    if (!svgContainerRef.current) return null
+    if (!svgContainerRef.current) {
+      console.log('svgContainerRef.current is null')
+      return null
+    }
 
     const rect = svgContainerRef.current.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
 
+    console.log('getResizeDirection - rect:', { width: rect.width, height: rect.height }, 'mouse:', { x, y })
+
     const handleSize = 10 // ハンドル判定範囲
     const isRightEdge = x > rect.width - handleSize
     const isBottomEdge = y > rect.height - handleSize
+
+    console.log('getResizeDirection - edges:', { isRightEdge, isBottomEdge })
 
     if (isRightEdge && isBottomEdge) return 'both'
     if (isRightEdge) return 'horizontal'
