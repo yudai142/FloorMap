@@ -269,7 +269,6 @@ export default function RoomShow() {
               <span className="legend-item">
                 <span className="dot available"></span> 空き ({(room.seats_count || 0) - (room.occupied_count || 0)})
               </span>
-              <span className="occupancy">稼働率: {room.occupancy_rate || 0}%</span>
               <button
                 onClick={() => {
                   const url = window.location.href
