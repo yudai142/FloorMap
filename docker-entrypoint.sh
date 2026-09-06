@@ -10,10 +10,21 @@ rm -rf /app/public/vite /app/.vite /app/node_modules/.vite
 # Prepare database
 bundle exec rails db:prepare
 
-# Build Vite once for initial load
-echo "Building Vite..."
-bundle exec vite build
+# Start Vite dev server in background
+echo "Starting Vite dev server..."
+npm run dev &
+VITE_PID=$!
 
-# Start Rails server (which will auto-build Vite on file changes)
+# Wait for Vite to start
+sleep 5
+
+# Start Rails server
 echo "Starting Rails server..."
-exec bundle exec rails server -b 0.0.0.0
+bundle exec rails server -b 0.0.0.0 &
+RAILS_PID=$!
+
+# Handle shutdown gracefully
+trap "kill $VITE_PID $RAILS_PID 2>/dev/null || true" EXIT
+
+# Wait for both processes
+wait $VITE_PID $RAILS_PID
