@@ -171,6 +171,11 @@ class RoomsController < ApplicationController
       sessions_data << session_item
     end
 
+    current_user_session = nil
+    if user_signed_in?
+      current_user_session = current_user.sessions.active.first&.as_json(only: [:id, :user_auto_checkout_enabled, :user_auto_checkout_time])
+    end
+
     render json: {
       room: {
         id: @room.id,
@@ -178,7 +183,8 @@ class RoomsController < ApplicationController
         description: safe_encode(@room.description)
       },
       seats: seats_data,
-      sessions: sessions_data
+      sessions: sessions_data,
+      current_user_session: current_user_session
     }
   end
 

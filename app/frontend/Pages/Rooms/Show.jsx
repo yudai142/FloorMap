@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react'
 import { usePage } from '@inertiajs/react'
 
 export default function RoomShow() {
-  const { room, seats, current_user, current_session, auth } = usePage().props
+  const { room, seats, current_user, current_session: initialSession, auth } = usePage().props
   const [sessions, setSessions] = useState([])
+  const [currentSession, setCurrentSession] = useState(initialSession)
   const [autoCheckoutEnabled, setAutoCheckoutEnabled] = useState(false)
   const [autoCheckoutTime, setAutoCheckoutTime] = useState('')
 
@@ -16,6 +17,22 @@ export default function RoomShow() {
       }
       const data = await response.json()
       setSessions(data.sessions || [])
+      // Update current session from response
+      if (data.current_user_session) {
+        setCurrentSession(data.current_user_session)
+        setAutoCheckoutEnabled(data.current_user_session.user_auto_checkout_enabled || false)
+        if (data.current_user_session.user_auto_checkout_time) {
+          const dateTime = new Date(data.current_user_session.user_auto_checkout_time)
+          const isoString = dateTime.toISOString().slice(0, 16)
+          setAutoCheckoutTime(isoString)
+        } else {
+          setAutoCheckoutTime('')
+        }
+      } else {
+        setCurrentSession(null)
+        setAutoCheckoutEnabled(false)
+        setAutoCheckoutTime('')
+      }
     } catch (error) {
       // Silent fail
     }
@@ -30,16 +47,16 @@ export default function RoomShow() {
 
   // 初期化時に props から設定を復元
   useEffect(() => {
-    if (current_session) {
-      setAutoCheckoutEnabled(current_session.user_auto_checkout_enabled || false)
-      if (current_session.user_auto_checkout_time) {
+    if (currentSession) {
+      setAutoCheckoutEnabled(currentSession.user_auto_checkout_enabled || false)
+      if (currentSession.user_auto_checkout_time) {
         // ISO形式に変換
-        const dateTime = new Date(current_session.user_auto_checkout_time)
+        const dateTime = new Date(currentSession.user_auto_checkout_time)
         const isoString = dateTime.toISOString().slice(0, 16)
         setAutoCheckoutTime(isoString)
       }
     }
-  }, [current_session])
+  }, [currentSession])
 
   // チェックボックスの状態が変わったら即座に保存
   const handleCheckboxChange = async (checked) => {
@@ -129,6 +146,8 @@ export default function RoomShow() {
       })
 
       if (response.ok) {
+        // Update UI immediately - show auto checkout panel
+        // (auto checkout settings will be fetched from current session in props on next render)
         await fetchSessions()
         if (autoCheckoutEnabled && autoCheckoutTime) {
           const timeStr = new Date(autoCheckoutTime).toLocaleString('ja-JP')
@@ -331,7 +350,7 @@ export default function RoomShow() {
         {/* 右パネル：座席一覧 */}
         <div className="right-panel">
           {/* 自動離席設定パネル - 着席中のみ表示 */}
-          {current_session && (
+          {currentSession && (
           <div className="auto-checkout-panel">
             <div className="panel-header">
               <h3>自動離席設定</h3>
