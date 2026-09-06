@@ -32,6 +32,7 @@ services:
       REDIS_URL: redis://redis:6379/0
       RAILS_ENV: development
       VITE_PORT: 5173
+      VITE_HMR_PORT: 3036
     volumes:
       - .:/app
       - /app/node_modules

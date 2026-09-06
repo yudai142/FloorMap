@@ -13,6 +13,8 @@ export default defineConfig({
     port: 5173,
     hmr: {
       protocol: 'ws',
+      host: 'localhost',
+      port: process.env.VITE_HMR_PORT ? parseInt(process.env.VITE_HMR_PORT) : 5173,
     },
   },
   build: {
