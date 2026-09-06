@@ -122,6 +122,17 @@ export default function RoomShow() {
   // 確定ボタンで日時を保存
   const handleSaveCheckoutTime = async () => {
     try {
+      const requestBody = {
+        auto_checkout_settings: {
+          auto_checkout_enabled: autoCheckoutEnabled,
+          auto_checkout_time: autoCheckoutTime
+        }
+      }
+      // For unauthenticated users, include device_identifier
+      if (!current_user && deviceId) {
+        requestBody.device_identifier = deviceId
+      }
+
       const response = await fetch(`/rooms/${room.share_token}/update_auto_checkout_settings`, {
         method: 'PATCH',
         headers: {
@@ -129,12 +140,7 @@ export default function RoomShow() {
           'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
           'Accept': 'application/json'
         },
-        body: JSON.stringify({
-          auto_checkout_settings: {
-            auto_checkout_enabled: autoCheckoutEnabled,
-            auto_checkout_time: autoCheckoutTime
-          }
-        })
+        body: JSON.stringify(requestBody)
       })
 
       if (response.ok) {
