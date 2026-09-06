@@ -8,14 +8,10 @@ RSpec.describe 'Rooms', type: :request do
     sign_in user
   end
 
-  after do
-    sign_out user
-  end
-
-  describe 'PATCH /rooms/:id' do
-    context 'when updating room attributes' do
+  describe 'PATCH /rooms/:share_token' do
+    context 'when updating room attributes (HTML response)' do
       it 'updates room name and description' do
-        patch room_path(room), params: {
+        patch "/rooms/#{room.share_token}", params: {
           room: { name: 'New Room Name', description: 'New Description' }
         }
         expect(response).to have_http_status(:redirect)
@@ -24,7 +20,7 @@ RSpec.describe 'Rooms', type: :request do
       end
 
       it 'updates canvas width and height' do
-        patch room_path(room), params: {
+        patch "/rooms/#{room.share_token}", params: {
           room: { width: 1200, height: 800 }
         }
         expect(response).to have_http_status(:redirect)
@@ -33,7 +29,7 @@ RSpec.describe 'Rooms', type: :request do
       end
 
       it 'updates all attributes together' do
-        patch room_path(room), params: {
+        patch "/rooms/#{room.share_token}", params: {
           room: { name: 'Updated', description: 'Updated Desc', width: 1100, height: 750 }
         }
         room.reload
@@ -46,9 +42,9 @@ RSpec.describe 'Rooms', type: :request do
 
     context 'when sending JSON request' do
       it 'responds with JSON containing updated attributes' do
-        patch room_path(room), params: {
+        patch "/rooms/#{room.share_token}.json", params: {
           room: { width: 1300, height: 900 }
-        }, headers: { 'Content-Type': 'application/json' }
+        }
 
         expect(response).to have_http_status(:ok)
         json = JSON.parse(response.body)
@@ -58,9 +54,9 @@ RSpec.describe 'Rooms', type: :request do
       end
 
       it 'persists canvas size changes to database' do
-        patch room_path(room), params: {
+        patch "/rooms/#{room.share_token}.json", params: {
           room: { width: 1400, height: 1000 }
-        }, headers: { 'Content-Type': 'application/json' }
+        }
 
         expect(room.reload.width).to eq(1400)
         expect(room.reload.height).to eq(1000)
@@ -70,10 +66,13 @@ RSpec.describe 'Rooms', type: :request do
     context 'when user is not owner' do
       let(:other_user) { create(:user, :manager) }
 
-      it 'denies access' do
+      before do
         sign_out user
         sign_in other_user
-        patch room_path(room), params: {
+      end
+
+      it 'denies access' do
+        patch "/rooms/#{room.share_token}", params: {
           room: { width: 2000, height: 1500 }
         }
         expect(response).to have_http_status(:forbidden)
@@ -82,10 +81,10 @@ RSpec.describe 'Rooms', type: :request do
     end
   end
 
-  describe 'GET /rooms/:id/canvas_editor' do
+  describe 'GET /rooms/:share_token/canvas_editor' do
     context 'when user is owner' do
       it 'returns room with current canvas dimensions' do
-        get canvas_editor_room_path(room)
+        get "/rooms/#{room.share_token}/canvas_editor"
         expect(response).to have_http_status(:success)
         # Inertia.js ページの props を確認
         body = response.body
@@ -95,12 +94,26 @@ RSpec.describe 'Rooms', type: :request do
 
       it 'returns default dimensions when width/height are nil' do
         room.update(width: nil, height: nil)
-        get canvas_editor_room_path(room)
+        get "/rooms/#{room.share_token}/canvas_editor"
         expect(response).to have_http_status(:success)
         body = response.body
         # デフォルト値 1000 と 700 が返却されるはず
         expect(body).to include('1000')
         expect(body).to include('700')
+      end
+    end
+
+    context 'when user is not owner' do
+      let(:other_user) { create(:user, :manager) }
+
+      before do
+        sign_out user
+        sign_in other_user
+      end
+
+      it 'denies access' do
+        get "/rooms/#{room.share_token}/canvas_editor"
+        expect(response).to have_http_status(:forbidden)
       end
     end
   end
