@@ -3,7 +3,7 @@ services:
     name: floormap-web
     runtime: ruby
     runtimeVersion: "3.3.0"
-    buildCommand: bundle install && npm ci
+    buildCommand: bundle install && npm ci && npm run build
     startCommand: bash bin/render-start
     envVars:
       - key: REDIS_URL
