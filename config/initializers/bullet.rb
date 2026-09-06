@@ -13,4 +13,7 @@ if defined?(Bullet)
 
   # Whitelist N+1 queries that are acceptable (optional)
   # Bullet.add_whitelist(type: :n_plus_one_query, class_name: 'Room', association: :seats)
+
+  # Disable counter_cache warnings since we're using .count for flexibility
+  Bullet.counter_cache_enable = false
 end
