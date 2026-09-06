@@ -25,6 +25,7 @@ export default defineConfig({
         assetFileNames: '[name]-[hash][extname]',
       },
     },
+    minify: 'esbuild',
   },
   css: {
     postcss: path.resolve(__dirname, 'postcss.config.cjs'),

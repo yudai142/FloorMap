@@ -3,11 +3,16 @@ import { createInertiaApp } from '@inertiajs/react'
 import { createRoot } from 'react-dom/client'
 import Layout from '../components/Layout'
 
-// Suppress HMR errors when disabled
-if (!import.meta.hot) {
-  // HMR is disabled, suppress any potential errors
-  globalThis.__VITE_HMR__ = false
+// Disable HMR completely
+if (import.meta.hot) {
+  import.meta.hot.dispose?.(() => {})
+  try {
+    Object.defineProperty(import.meta, 'hot', { value: null })
+  } catch (e) {
+    // ignore if hot is not writable
+  }
 }
+globalThis.__VITE_HMR__ = false
 
 import Home from '../Pages/Home'
 import RoomsIndex from '../Pages/Rooms/Index'
