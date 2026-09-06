@@ -1,0 +1,136 @@
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+  <div class="w-full max-w-md space-y-8">
+    <!-- Header -->
+    <div class="text-center">
+      <h1 class="text-3xl font-bold text-slate-900">FloorMap</h1>
+      <h2 class="mt-6 text-2xl font-semibold text-slate-800">プロフィール編集</h2>
+    </div>
+
+    <!-- Error Messages -->
+    <% if resource.errors.any? %>
+      <div class="rounded-lg bg-red-50 border border-red-200 p-4" data-turbo-temporary>
+        <div class="flex gap-3">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-sm font-medium text-red-800">
+              <%= I18n.t("errors.messages.not_saved",
+                         count: resource.errors.count,
+                         resource: resource.class.model_name.human.downcase) %>
+            </h3>
+            <ul class="mt-2 list-inside space-y-1 text-sm text-red-700">
+              <% resource.errors.full_messages.each do |message| %>
+                <li class="flex gap-2">
+                  <span class="text-red-400">•</span>
+                  <span><%= message %></span>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Form -->
+    <form action="<%= registration_path(resource_name) %>" method="POST" class="mt-8 space-y-6">
+      <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+      <input type="hidden" name="_method" value="PATCH">
+
+      <!-- Username Field -->
+      <div>
+        <label for="user_username" class="block text-sm font-medium text-slate-700">ユーザー名</label>
+        <input
+          type="text"
+          name="user[username]"
+          id="user_username"
+          value="<%= resource.username %>"
+          class="mt-1 block w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors"
+          placeholder="ユーザー名"
+          required
+        >
+      </div>
+
+      <!-- Email Field -->
+      <div>
+        <label for="user_email" class="block text-sm font-medium text-slate-700">メールアドレス</label>
+        <input
+          type="email"
+          name="user[email]"
+          id="user_email"
+          value="<%= resource.email %>"
+          class="mt-1 block w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors"
+          placeholder="your@example.com"
+          required
+        >
+      </div>
+
+      <!-- Password Field (optional) -->
+      <div>
+        <label for="user_password" class="block text-sm font-medium text-slate-700">パスワード</label>
+        <p class="text-xs text-slate-500 mt-1">変更する場合のみ入力してください</p>
+        <input
+          type="password"
+          name="user[password]"
+          id="user_password"
+          autocomplete="new-password"
+          class="mt-1 block w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors"
+          placeholder="••••••••"
+        >
+      </div>
+
+      <!-- Password Confirmation Field -->
+      <div>
+        <label for="user_password_confirmation" class="block text-sm font-medium text-slate-700">パスワード確認</label>
+        <input
+          type="password"
+          name="user[password_confirmation]"
+          id="user_password_confirmation"
+          autocomplete="new-password"
+          class="mt-1 block w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors"
+          placeholder="••••••••"
+        >
+      </div>
+
+      <!-- Current Password Field -->
+      <div>
+        <label for="user_current_password" class="block text-sm font-medium text-slate-700">現在のパスワード</label>
+        <p class="text-xs text-slate-500 mt-1">変更を確認するために必要です</p>
+        <input
+          type="password"
+          name="user[current_password]"
+          id="user_current_password"
+          autocomplete="current-password"
+          class="mt-1 block w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors"
+          placeholder="••••••••"
+          required
+        >
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex gap-3">
+        <button
+          type="submit"
+          class="flex-1 rounded-lg bg-blue-600 py-2.5 px-4 font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+        >
+          変更を保存
+        </button>
+        <a
+          href="/rooms"
+          class="flex-1 rounded-lg bg-slate-200 py-2.5 px-4 font-semibold text-slate-900 shadow-sm hover:bg-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 transition-colors text-center"
+        >
+          キャンセル
+        </a>
+      </div>
+    </form>
+
+    <!-- Delete Account Link -->
+    <div class="mt-6 text-center text-sm">
+      <% if devise_mapping.registerable? %>
+        <%= button_to "アカウントを削除", registration_path(resource_name), method: :delete, data: { confirm: "本当に削除しますか？" }, class: "text-red-600 hover:text-red-700 underline" %>
+      <% end %>
+    </div>
+  </div>
+</div>

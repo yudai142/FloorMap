@@ -18,18 +18,50 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
-    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%# Disable Vite HMR before loading Vite scripts %>
+    <script>
+      window.__VITE_HMR__ = false
+      window.__VITE_HMR_PROTOCOL__ = null
+      window.__VITE_HMR_HOSTNAME__ = null
+      window.__VITE_HMR_PORT__ = null
+    </script>
 
-    <%# Vite entrypoint %>
+    <%# Vite entrypoint with CSS and JS %>
     <% unless Rails.env.test? %>
-      <%= vite_javascript_tag "application", "data-turbo-track": "reload" %>
-      <%= vite_stylesheet_tag "application", "data-turbo-track": "reload" %>
+      <%= vite_javascript_tag "application.jsx", "data-turbo-track": "reload" %>
+      <%= vite_stylesheet_tag "application.jsx", "data-turbo-track": "reload" %>
     <% end %>
   </head>
 
   <body>
     <div id="root"></div>
     <%= yield %>
+    <script>
+      // Completely disable Vite HMR
+      window.__VITE_HMR__ = false
+      window.__VITE_HMR_PROTOCOL__ = null
+      window.__VITE_HMR_HOSTNAME__ = null
+      window.__VITE_HMR_PORT__ = null
+
+      // Suppress HMR-related console messages
+      const originalError = console.error
+      const originalWarn = console.warn
+
+      console.error = function(...args) {
+        const message = (args[0]?.toString?.() || '').toLowerCase()
+        if (message.includes('vite') || message.includes('websocket') || message.includes('hmr')) {
+          return
+        }
+        originalError.apply(console, args)
+      }
+
+      console.warn = function(...args) {
+        const message = (args[0]?.toString?.() || '').toLowerCase()
+        if (message.includes('vite') || message.includes('websocket') || message.includes('hmr')) {
+          return
+        }
+        originalWarn.apply(console, args)
+      }
+    </script>
   </body>
 </html>

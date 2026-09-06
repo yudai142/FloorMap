@@ -5,6 +5,10 @@ class Room < ApplicationRecord
   has_many :share_links, dependent: :destroy
 
   validates :name, presence: true
+  validates :share_token, presence: true, uniqueness: true
+
+  before_validation :generate_share_token, on: :create
+  after_update_commit :broadcast_floor_plan_updated, if: :saved_change_to_floor_plan_data?
 
   scope :search, ->(query) {
     return all if query.blank?
@@ -52,6 +56,17 @@ class Room < ApplicationRecord
     seats.joins(sessions: :visitor).where(sessions: { status: :active }).select("DISTINCT seats.*")
   end
 
+  def active_users
+    Session
+      .where(status: :active)
+      .where(seat_id: seats.ids)
+      .joins(:user)
+      .select("DISTINCT users.*")
+      .map(&:user)
+      .compact
+      .uniq
+  end
+
   def occupancy_rate
     return 0 if seat_count.zero?
 
@@ -64,10 +79,23 @@ class Room < ApplicationRecord
     Rails.cache.fetch("room:#{id}:seats_grouped_by_row", expires_in: 1.hour) do
       seats.order(:row_number, :column_number).group_by(&:row_number)
     end
-end
+  end
 
   def seat_with_session(seat)
     session = Session.where(seat_id: seat.id, status: :active).last
     { seat: seat, session: session, user: session&.user }
+  end
+
+  def broadcast_floor_plan_updated
+    RoomsChannel.broadcast_to(self, type: "floor_plan_updated", floor_plan_data: floor_plan_data, timestamp: Time.current)
+  end
+
+  private
+
+  def generate_share_token
+    self.share_token = loop do
+      token = SecureRandom.hex(6)
+      break token unless Room.exists?(share_token: token)
+    end
   end
 end

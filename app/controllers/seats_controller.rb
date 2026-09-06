@@ -27,13 +27,24 @@ class SeatsController < ApplicationController
   end
 
   def create
-    @seat = @room.seats.build(seat_params)
+    attrs = seat_params
+    if attrs[:row_number].blank? && attrs[:column_number].blank? &&
+       attrs[:position_x].present? && attrs[:position_y].present?
+      attrs = attrs.merge(Seat.grid_position_for(position_x: attrs[:position_x], position_y: attrs[:position_y]))
+    end
+    @seat = @room.seats.build(attrs)
     authorize @seat
 
     if @seat.save
-      redirect_to room_seats_path(@room), notice: "座席を作成しました"
+      respond_to do |format|
+        format.html { redirect_to room_seats_path(@room), notice: "座席を作成しました" }
+        format.json { render json: @seat.canvas_data, status: :created }
+      end
     else
-      render :new, status: :unprocessable_entity
+      respond_to do |format|
+        format.html { render :new, status: :unprocessable_entity }
+        format.json { render json: { errors: @seat.errors }, status: :unprocessable_entity }
+      end
     end
   end
 
@@ -51,14 +62,17 @@ class SeatsController < ApplicationController
     authorize @seat
     @seat.destroy
 
-    redirect_to room_seats_path(@room), notice: "座席を削除しました"
+    respond_to do |format|
+      format.html { redirect_to room_seats_path(@room), notice: "座席を削除しました" }
+      format.json { head :no_content }
+    end
   end
 
   def position
     authorize @seat
 
     if @seat.update(position_params)
-      render json: @seat.canvas_data, status: :ok
+      render json: seat_canvas_json(@seat), status: :ok
     else
       render json: { errors: @seat.errors }, status: :unprocessable_entity
     end
@@ -74,13 +88,16 @@ class SeatsController < ApplicationController
       seat
     end
 
-    render json: updated_seats.map(&:canvas_data), status: :ok
+    render json: updated_seats.map { |s| seat_canvas_json(s) }, status: :ok
   end
 
   private
 
   def set_room
-    @room = Room.find(params[:room_id])
+    # Handle both nested route params (:share_token) and explicit params (:room_share_token)
+    token = params[:share_token] || params[:room_share_token]
+    @room = Room.find_by(share_token: token)
+    raise ActiveRecord::RecordNotFound if @room.blank?
   end
 
   def set_seat
@@ -97,5 +114,20 @@ class SeatsController < ApplicationController
 
   def batch_position_params
     params.require(:positions).permit!.to_h
+  end
+
+  def seat_canvas_json(seat)
+    data = seat.canvas_data
+    {
+      id: data[:id],
+      label: (data[:seat_identifier] || "").to_s.encode("UTF-8", "UTF-8", invalid: :replace, undef: :replace, replace: ""),
+      x: data[:position_x] || 0,
+      y: data[:position_y] || 0,
+      occupied: data[:session].present?,
+      occupant_name: ((data[:session]&.dig(:name) || data[:session]&.dig(:user_id).to_s) || "不明").to_s.encode("UTF-8", "UTF-8", invalid: :replace, undef: :replace, replace: ""),
+      seat_type: data[:seat_type]
+    }
+  rescue => e
+    {}
   end
 end

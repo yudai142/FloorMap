@@ -33,13 +33,13 @@ RSpec.describe 'Canvas Seat Layout & Drag-and-Drop', type: :request do
 
       it 'canvas data includes room ID' do
         seat = create(:seat, room: room, row_number: 1, column_number: 1)
-        get room_canvas_data_path(room), headers: { 'Accept' => 'application/json' }
+        get canvas_data_room_path(room), headers: { 'Accept' => 'application/json' }
         expect(response).to have_http_status(:success)
       end
 
       it 'canvas data includes all seats' do
         create_list(:seat, 5, room: room)
-        get room_canvas_data_path(room), headers: { 'Accept' => 'application/json' }
+        get canvas_data_room_path(room), headers: { 'Accept' => 'application/json' }
         expect(response).to have_http_status(:success)
       end
     end
@@ -49,7 +49,7 @@ RSpec.describe 'Canvas Seat Layout & Drag-and-Drop', type: :request do
         seat1 = create(:seat, room: room, row_number: 1, column_number: 1, position_x: 100, position_y: 100)
         seat2 = create(:seat, room: room, row_number: 1, column_number: 2, position_x: 200, position_y: 100)
 
-        get room_canvas_data_path(room), headers: { 'Accept' => 'application/json' }
+        get canvas_data_room_path(room), headers: { 'Accept' => 'application/json' }
         expect(response).to have_http_status(:success)
       end
 
@@ -71,7 +71,7 @@ RSpec.describe 'Canvas Seat Layout & Drag-and-Drop', type: :request do
       it 'shows seat identifier on canvas' do
         seat = create(:seat, room: room, row_number: 1, column_number: 2)
 
-        get room_canvas_data_path(room), headers: { 'Accept' => 'application/json' }
+        get canvas_data_room_path(room), headers: { 'Accept' => 'application/json' }
         expect(response).to have_http_status(:success)
       end
 
@@ -80,7 +80,7 @@ RSpec.describe 'Canvas Seat Layout & Drag-and-Drop', type: :request do
         seat_accessible = create(:seat, room: room, seat_type: 'accessible')
         seat_vip = create(:seat, room: room, seat_type: 'vip')
 
-        get room_canvas_data_path(room), headers: { 'Accept' => 'application/json' }
+        get canvas_data_room_path(room), headers: { 'Accept' => 'application/json' }
         expect(response).to have_http_status(:success)
       end
     end

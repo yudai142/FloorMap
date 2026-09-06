@@ -1,25 +1,41 @@
-<%- if controller_name != 'sessions' %>
-  <p><%= link_to "Log in", new_session_path(resource_name) %></p>
-<% end %>
-
-<%- if devise_mapping.registerable? && controller_name != 'registrations' %>
-  <p><%= link_to "Sign up", new_registration_path(resource_name) %></p>
-<% end %>
-
-<%- if devise_mapping.recoverable? && controller_name != 'passwords' && controller_name != 'registrations' %>
-  <p><%= link_to "Forgot your password?", new_password_path(resource_name) %></p>
-<% end %>
-
-<%- if devise_mapping.confirmable? && controller_name != 'confirmations' %>
-  <p><%= link_to "Didn't receive confirmation instructions?", new_confirmation_path(resource_name) %></p>
-<% end %>
-
-<%- if devise_mapping.lockable? && resource_class.unlock_strategy_enabled?(:email) && controller_name != 'unlocks' %>
-  <p><%= link_to "Didn't receive unlock instructions?", new_unlock_path(resource_name) %></p>
-<% end %>
-
-<%- if devise_mapping.omniauthable? %>
-  <%- resource_class.omniauth_providers.each do |provider| %>
-    <p><%= button_to "Sign in with #{OmniAuth::Utils.camelize(provider)}", omniauth_authorize_path(resource_name, provider), data: { turbo: false } %></p>
+<div class="space-y-3">
+  <%- if controller_name != 'sessions' %>
+    <a href="<%= new_session_path(resource_name) %>" class="block w-full text-center rounded-lg border border-slate-300 py-2 px-4 font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+      サインイン
+    </a>
   <% end %>
-<% end %>
+
+  <%- if devise_mapping.registerable? && controller_name != 'registrations' %>
+    <a href="<%= new_registration_path(resource_name) %>" class="block w-full text-center rounded-lg border border-slate-300 py-2 px-4 font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+      登録する
+    </a>
+  <% end %>
+
+  <%- if devise_mapping.recoverable? && controller_name != 'passwords' && controller_name != 'registrations' %>
+    <a href="<%= new_password_path(resource_name) %>" class="block w-full text-center text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors">
+      パスワードをお忘れですか？
+    </a>
+  <% end %>
+
+  <%- if devise_mapping.confirmable? && controller_name != 'confirmations' %>
+    <a href="<%= new_confirmation_path(resource_name) %>" class="block w-full text-center text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors">
+      確認メールを受け取っていない場合
+    </a>
+  <% end %>
+
+  <%- if devise_mapping.lockable? && resource_class.unlock_strategy_enabled?(:email) && controller_name != 'unlocks' %>
+    <a href="<%= new_unlock_path(resource_name) %>" class="block w-full text-center text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors">
+      ロック解除メールを受け取っていない場合
+    </a>
+  <% end %>
+
+  <%- if devise_mapping.omniauthable? %>
+    <%- resource_class.omniauth_providers.each do |provider| %>
+      <form action="<%= omniauth_authorize_path(resource_name, provider) %>" method="post">
+        <button type="submit" class="w-full rounded-lg border border-slate-300 py-2 px-4 font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+          <%= OmniAuth::Utils.camelize(provider) %> でサインイン
+        </button>
+      </form>
+    <% end %>
+  <% end %>
+</div>

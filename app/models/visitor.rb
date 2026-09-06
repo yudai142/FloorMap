@@ -1,7 +1,6 @@
 class Visitor < ApplicationRecord
   has_many :sessions, dependent: :destroy
 
-  validates :session_id, presence: true, uniqueness: true
   validates :nickname, presence: true, length: { maximum: 255 }
 
   scope :expired, -> { where("created_at < ?", 24.hours.ago) }

@@ -24,13 +24,16 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    command: bash -c "bundle exec rails db:create && bundle exec rails db:migrate && bundle exec rails server -b 0.0.0.0"
     ports:
       - "3000:3000"
+      - "5173:5173"
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/floormap_development
       REDIS_URL: redis://redis:6379/0
       RAILS_ENV: development
+      RAILS_LOG_LEVEL: info
+      VITE_PORT: 5173
+      VITE_HMR_PORT: 3036
     volumes:
       - .:/app
       - /app/node_modules

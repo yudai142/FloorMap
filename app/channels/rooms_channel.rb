@@ -11,7 +11,7 @@ class RoomsChannel < ApplicationCable::Channel
   private
 
   def authorize_room(room)
-    return if current_user.owner_of?(room) || current_user.admin?
+    return if current_user.owner_of?(room) || current_user.has_permission_in?(room) || current_user.admin?
 
     reject
   end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_13_101444) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_06_000006) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -149,9 +149,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_13_101444) do
   create_table "rooms", force: :cascade do |t|
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.text "description"
+    t.jsonb "floor_plan_data", default: [], null: false
+    t.integer "height", default: 700
     t.string "name", null: false
+    t.string "share_token"
     t.datetime "updated_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.bigint "user_id", null: false
+    t.integer "width", default: 1000
+    t.index ["share_token"], name: "index_rooms_on_share_token", unique: true
     t.index ["user_id"], name: "index_rooms_on_user_id"
   end
 
@@ -161,22 +166,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_13_101444) do
     t.float "position_x"
     t.float "position_y"
     t.bigint "room_id", null: false
+    t.integer "rooms_count", default: 0
     t.integer "row_number", null: false
     t.string "seat_type", default: "regular", null: false
     t.datetime "updated_at", null: false
+    t.index ["position_x", "position_y", "room_id"], name: "index_seats_on_position_x_and_position_y_and_room_id", unique: true
     t.index ["room_id", "row_number", "column_number"], name: "index_seats_on_room_id_and_row_number_and_column_number", unique: true
     t.index ["room_id"], name: "index_seats_on_room_id"
   end
 
   create_table "sessions", force: :cascade do |t|
+    t.datetime "auto_checkout_at"
     t.datetime "check_in_time", null: false
     t.datetime "check_out_time"
+    t.integer "checkout_timer_minutes", default: 60
     t.datetime "created_at", null: false
+    t.string "device_identifier"
     t.bigint "seat_id", null: false
     t.string "status", default: "active", null: false
     t.datetime "updated_at", null: false
+    t.boolean "user_auto_checkout_enabled", default: false
+    t.datetime "user_auto_checkout_time"
     t.bigint "user_id"
+    t.string "user_name"
     t.bigint "visitor_id"
+    t.index ["device_identifier"], name: "index_sessions_on_device_identifier"
     t.index ["seat_id", "status"], name: "index_sessions_on_seat_id_and_status"
     t.index ["seat_id"], name: "index_sessions_on_seat_id"
     t.index ["status"], name: "index_sessions_on_status"
@@ -197,6 +211,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_13_101444) do
   end
 
   create_table "users", force: :cascade do |t|
+    t.boolean "auto_checkout_enabled", default: false
+    t.datetime "auto_checkout_time"
     t.integer "consumed_timestep"
     t.datetime "created_at", null: false
     t.string "email", default: "", null: false
@@ -208,8 +224,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_13_101444) do
     t.string "reset_password_token"
     t.integer "role", default: 0, null: false
     t.datetime "updated_at", null: false
+    t.string "username"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+    t.index ["username"], name: "index_users_on_username", unique: true
   end
 
   create_table "visitors", force: :cascade do |t|

@@ -1,0 +1,214 @@
+<style>
+  .editor-container {
+    background-color: #f8fafc;
+    min-height: calc(100vh - 64px);
+    padding: 32px 64px;
+  }
+
+  .editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+
+  .editor-title {
+    font-size: 28px;
+    font-weight: bold;
+    color: #0f172a;
+  }
+
+  .back-link {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #64748b;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .back-link:hover {
+    color: #334155;
+  }
+
+  .editor-toolbar {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .toolbar-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .toolbar-divider {
+    width: 1px;
+    height: 24px;
+    background-color: #e2e8f0;
+  }
+
+  .toolbar-button {
+    background: white;
+    border: 1px solid #e2e8f0;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 13px;
+    color: #475569;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    transition: all 0.2s;
+  }
+
+  .toolbar-button:hover {
+    background-color: #f8fafc;
+    border-color: #cbd5e1;
+  }
+
+  .toolbar-button.active {
+    background-color: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+  }
+
+  .canvas-wrapper {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 32px;
+    min-height: calc(100vh - 280px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  canvas {
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    background-color: #ffffff;
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: default;
+  }
+
+  canvas.draw-mode {
+    cursor: crosshair;
+  }
+
+  canvas.delete-mode {
+    cursor: not-allowed;
+  }
+</style>
+
+<script>
+  window.currentEditMode = 'select';
+
+  function setEditMode(mode) {
+    window.currentEditMode = mode;
+
+    // ボタン状態を更新
+    document.querySelectorAll('.toolbar-button').forEach(btn => {
+      btn.classList.remove('active');
+    });
+    document.getElementById(`mode-${mode}`)?.classList.add('active');
+
+    // Canvas カーソルを変更
+    const canvas = document.querySelector('canvas');
+    if (canvas) {
+      canvas.classList.remove('draw-mode', 'delete-mode');
+      if (mode === 'draw') {
+        canvas.classList.add('draw-mode');
+      } else if (mode === 'delete') {
+        canvas.classList.add('delete-mode');
+      }
+    }
+  }
+
+  function undoAction() {
+    console.log('Undo triggered');
+    alert('Undo 機能は準備中です');
+  }
+
+  function redoAction() {
+    console.log('Redo triggered');
+    alert('Redo 機能は準備中です');
+  }
+
+  function resetCanvas() {
+    if (confirm('座席配置図をリセットしますか？')) {
+      console.log('Canvas reset triggered');
+      // TODO: リセット機能の実装
+    }
+  }
+
+  // キーボードショートカット
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 's' || e.key === 'S') setEditMode('select');
+    if (e.key === 'd' || e.key === 'D') setEditMode('draw');
+    if (e.key === 'Delete') setEditMode('delete');
+  });
+</script>
+
+<div class="editor-container">
+  <div class="editor-header">
+    <div>
+      <%= link_to "← 戻る", room_path(@room), class: "back-link" %>
+    </div>
+    <h1 class="editor-title">座席配置図エディタ</h1>
+  </div>
+
+  <!-- Editor Toolbar -->
+  <div class="editor-toolbar">
+    <div class="toolbar-group">
+      <span style="font-size: 12px; color: #64748b; font-weight: 600;">モード:</span>
+      <button class="toolbar-button active" onclick="setEditMode('select')" id="mode-select" title="選択モード (S)">
+        ✓ 選択
+      </button>
+      <button class="toolbar-button" onclick="setEditMode('draw')" id="mode-draw" title="描画モード (D)">
+        ✏️ 描画
+      </button>
+      <button class="toolbar-button" onclick="setEditMode('delete')" id="mode-delete" title="削除モード (Del)">
+        🗑️ 削除
+      </button>
+      <button class="toolbar-button" onclick="setEditMode('seat')" id="mode-seat" title="座席配置モード (C)">
+        🪑 座席
+      </button>
+    </div>
+    <div class="toolbar-divider"></div>
+    <div class="toolbar-group">
+      <button class="toolbar-button" onclick="undoAction()" title="やり直す (Ctrl+Z)">
+        ↶ やり直す
+      </button>
+      <button class="toolbar-button" onclick="redoAction()" title="再実行 (Ctrl+Y)">
+        ↷ 再実行
+      </button>
+    </div>
+    <div class="toolbar-divider"></div>
+    <div class="toolbar-group">
+      <button class="toolbar-button" onclick="resetCanvas()" title="リセット">
+        🔄 リセット
+      </button>
+    </div>
+    <div style="flex: 1;"></div>
+    <div class="toolbar-group">
+      <button class="toolbar-button" data-action="click->seat-canvas#save" style="background-color: #10b981; color: white; border-color: #10b981;">
+        💾 保存
+      </button>
+    </div>
+  </div>
+
+  <div class="canvas-wrapper">
+    <canvas id="floor-canvas" data-controller="seat-canvas" data-seat-canvas-target="canvas" data-seat-canvas-room-id-value="<%= @room.id %>" data-seat-canvas-context-value="editor" data-seat-canvas-current-user-id-value="<%= current_user.id %>" data-seat-canvas-can-manage-value="true" style="border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;"></canvas>
+  </div>
+</div>

@@ -1,5 +1,5 @@
 class SessionsController < ApplicationController
-  before_action :authenticate_user!, except: [ :check_in_form, :check_in ]
+  before_action :authenticate_user!, except: [ :check_in_form, :check_in, :check_out ]
 
   def check_in_form
     @rooms = current_user ? current_user.rooms : []
@@ -13,36 +13,107 @@ class SessionsController < ApplicationController
 
   def check_in
     seat = Seat.find_by(id: params[:seat_id])
-    return render json: { error: "座席が見つかりません" }, status: :not_found unless seat
+    unless seat
+      return respond_to do |format|
+        format.html { redirect_to sessions_path, alert: "座席が見つかりません" }
+        format.json { render json: { error: "座席が見つかりません" }, status: :not_found }
+      end
+    end
 
-    session = Session.create(
-      user_id: current_user&.id,
-      seat_id: seat.id,
-      check_in_time: Time.current,
-      status: "active"
-    )
+    session = nil
+    checkout_timer_minutes = params[:checkout_timer_minutes]&.to_i || 60
 
-    if session.persisted?
-      broadcast_check_in(session, seat.room)
-      redirect_to sessions_path, notice: "チェックインしました"
+    begin
+      ActiveRecord::Base.transaction do
+        if current_user
+          # Check out any existing active session for this user
+          existing_session = Session.active.where(user_id: current_user.id).first
+          existing_session.check_out! if existing_session
+
+          session = Session.create!(
+            user_id: current_user.id,
+            seat_id: seat.id,
+            check_in_time: Time.current,
+            status: "active",
+            checkout_timer_minutes: checkout_timer_minutes,
+            user_auto_checkout_enabled: current_user.auto_checkout_enabled,
+            user_auto_checkout_time: current_user.auto_checkout_time
+          )
+        else
+          # Unauthenticated user - use device identifier and user name
+          device_identifier = params[:device_identifier]
+          user_name = params[:user_name]
+
+          if device_identifier && user_name.present?
+            # Check out any existing active session for this device
+            existing_session = Session.active.where(device_identifier: device_identifier).first
+            existing_session.check_out! if existing_session
+
+            session = Session.create!(
+              device_identifier: device_identifier,
+              user_name: user_name,
+              seat_id: seat.id,
+              check_in_time: Time.current,
+              status: "active",
+              checkout_timer_minutes: checkout_timer_minutes
+            )
+          else
+            raise ActiveRecord::RecordInvalid, "Device identifier and user name required for unauthenticated users"
+          end
+        end
+      end
+    rescue ActiveRecord::RecordInvalid => e
+      session = e.record
+    end
+
+    if session&.persisted?
+      respond_to do |format|
+        format.html { redirect_to sessions_path, notice: "チェックインしました" }
+        format.json { render json: { id: session.id, seat_id: session.seat_id, status: session.status }, status: :created }
+      end
     else
-      render :check_in_form, alert: "チェックインに失敗しました"
+      error_message = if session&.errors&.any?
+        session.errors.full_messages.join(", ")
+      else
+        "チェックインに失敗しました"
+      end
+      respond_to do |format|
+        format.html { render :check_in_form, alert: error_message }
+        format.json { render json: { message: error_message }, status: :unprocessable_entity }
+      end
     end
   end
 
   def check_out
     @session = Session.find_by(id: params[:session_id])
-    return render json: { error: "セッションが見つかりません" }, status: :not_found unless @session
-
-    unless @session.user_id == current_user.id || current_user.admin?
-      return render json: { error: "権限がありません" }, status: :forbidden
+    unless @session
+      return respond_to do |format|
+        format.html { redirect_to sessions_path, alert: "セッションが見つかりません" }
+        format.json { render json: { error: "セッションが見つかりません" }, status: :not_found }
+      end
     end
 
-    if @session.update(check_out_time: Time.current, status: "checked_out")
-      broadcast_check_out(@session, @session.room)
-      redirect_to sessions_path, notice: "チェックアウトしました"
+    # Check authorization: allow if user owns the session, is room creator, or is admin
+    if current_user
+      unless @session.user_id == current_user.id || @session.room.user_id == current_user.id || current_user.admin?
+        return respond_to do |format|
+          format.html { redirect_to sessions_path, alert: "権限がありません" }
+          format.json { render json: { error: "権限がありません" }, status: :forbidden }
+        end
+      end
+    end
+    # Allow unauthenticated users to check out (no authorization check)
+
+    if @session.check_out!
+      respond_to do |format|
+        format.html { redirect_to sessions_path, notice: "チェックアウトしました" }
+        format.json { render json: @session.seat.canvas_data, status: :ok }
+      end
     else
-      render json: { error: "チェックアウトに失敗しました" }, status: :unprocessable_entity
+      respond_to do |format|
+        format.html { redirect_to sessions_path, alert: "チェックアウトに失敗しました" }
+        format.json { render json: { error: "チェックアウトに失敗しました" }, status: :unprocessable_entity }
+      end
     end
   end
 
@@ -52,21 +123,5 @@ class SessionsController < ApplicationController
     else
       Session.none
     end
-  end
-
-  private
-
-  def broadcast_check_in(session, room)
-    ActionCable.server.broadcast(
-      "room_#{room.id}",
-      { type: "check_in", session_id: session.id, seat_id: session.seat_id, user_id: session.user_id }
-    )
-  end
-
-  def broadcast_check_out(session, room)
-    ActionCable.server.broadcast(
-      "room_#{room.id}",
-      { type: "check_out", session_id: session.id, seat_id: session.seat_id, user_id: session.user_id }
-    )
   end
 end

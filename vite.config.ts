@@ -1,19 +1,21 @@
 import { defineConfig } from 'vite'
 import RubyPlugin from 'vite-plugin-ruby'
 import react from '@vitejs/plugin-react'
+import path from 'path'
 
 export default defineConfig({
   plugins: [
-    RubyPlugin({ skipCompatibilityCheck: true }),
+    RubyPlugin({ skipCompatibilityCheck: true, port: 5173, autoBuild: false, hmr: false }),
     react(),
   ],
   server: {
-    middlewareMode: true,
-    hmr: {
-      host: 'localhost',
-      port: 5173,
-      protocol: 'ws',
-    },
+    host: '0.0.0.0',
+    port: 5173,
+    hmr: false,
+    middlewareMode: false,
+  },
+  define: {
+    __HMR__: false,
   },
   build: {
     rollupOptions: {
@@ -23,5 +25,9 @@ export default defineConfig({
         assetFileNames: '[name]-[hash][extname]',
       },
     },
+    minify: 'esbuild',
+  },
+  css: {
+    postcss: path.resolve(__dirname, 'postcss.config.cjs'),
   },
 })

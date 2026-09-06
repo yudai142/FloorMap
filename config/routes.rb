@@ -1,5 +1,10 @@
 Rails.application.routes.draw do
-  devise_for :users, controllers: { sessions: "users/sessions" }
+  devise_for :users, controllers: {
+    sessions: "users/sessions",
+    registrations: "users/registrations",
+    passwords: "users/passwords",
+    confirmations: "users/confirmations"
+  }
 
   resources :notifications, only: :index do
     collection do
@@ -9,13 +14,19 @@ Rails.application.routes.draw do
 
   get "up" => "rails/health#show", as: :rails_health_check
 
+  # Handle Chrome DevTools optional endpoint
+  get "/.well-known/appspecific/com.chrome.devtools.json", to: proc { |env| [ 204, {}, [] ] }
+
   # Swagger UI for API documentation
   mount Rswag::Ui::Engine => "/api-docs"
   mount Rswag::Api::Engine => "/api-docs"
 
+  # ActionCable WebSocket
+  mount ActionCable.server => "/cable"
+
   get "/" => "pages#home", as: :root
 
-  resources :rooms do
+  resources :rooms, param: :share_token do
     resources :room_permissions, only: [ :create, :destroy ]
     resources :seats do
       member do
@@ -26,7 +37,12 @@ Rails.application.routes.draw do
         get :export
       end
     end
-    get :canvas_data
+    member do
+      get :canvas_editor
+      get :canvas_data
+      patch :floor_plan
+      patch :update_auto_checkout_settings
+    end
     collection do
       get :export
     end
