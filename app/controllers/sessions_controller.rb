@@ -93,9 +93,9 @@ class SessionsController < ApplicationController
       end
     end
 
-    # Check authorization: allow if user owns the session or is admin
+    # Check authorization: allow if user owns the session, is room creator, or is admin
     if current_user
-      unless @session.user_id == current_user.id || current_user.admin?
+      unless @session.user_id == current_user.id || @session.room.user_id == current_user.id || current_user.admin?
         return respond_to do |format|
           format.html { redirect_to sessions_path, alert: "権限がありません" }
           format.json { render json: { error: "権限がありません" }, status: :forbidden }
