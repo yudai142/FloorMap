@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { usePage } from '@inertiajs/react'
 
 export default function RoomShow() {
-  const { room, seats, current_user, current_session: initialSession, auth } = usePage().props
+  const { room, seats: initialSeats, current_user, current_session: initialSession, auth } = usePage().props
+  const [seats, setSeats] = useState(initialSeats || [])
   const [sessions, setSessions] = useState([])
   const [currentSession, setCurrentSession] = useState(initialSession)
   const [autoCheckoutEnabled, setAutoCheckoutEnabled] = useState(false)
@@ -44,6 +45,10 @@ export default function RoomShow() {
       }
       const data = await response.json()
       setSessions(data.sessions || [])
+      // Update seats data with position and occupant info
+      if (data.seats) {
+        setSeats(data.seats)
+      }
       // Update current session from response
       if (data.current_user_session) {
         setCurrentSession(data.current_user_session)
