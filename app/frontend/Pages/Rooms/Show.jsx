@@ -365,23 +365,24 @@ export default function RoomShow() {
                 onChange={(e) => setZoom(parseFloat(e.target.value))}
                 style={{ flex: 1, cursor: 'pointer' }}
               />
-              <input
-                type="number"
-                min="0.5"
-                max="5"
-                step="0.1"
-                value={zoom.toFixed(1)}
-                onChange={(e) => setZoom(Math.max(0.5, Math.min(5, parseFloat(e.target.value))))}
+              <select
+                value={Math.round(zoom * 10) / 10}
+                onChange={(e) => setZoom(parseFloat(e.target.value))}
                 style={{
-                  width: '50px',
-                  padding: '4px',
+                  padding: '4px 8px',
                   fontSize: '12px',
                   border: '1px solid #e2e8f0',
                   borderRadius: '4px',
-                  textAlign: 'center'
+                  backgroundColor: 'white',
+                  cursor: 'pointer'
                 }}
-              />
-              <span style={{ fontSize: '12px', color: '#475569', minWidth: '25px' }}>×{zoom.toFixed(1)}</span>
+              >
+                {[0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0].map((val) => (
+                  <option key={val} value={val}>
+                    {(val * 100).toFixed(0)}%
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
