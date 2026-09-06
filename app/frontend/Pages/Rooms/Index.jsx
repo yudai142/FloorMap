@@ -129,7 +129,7 @@ export default function RoomsIndex() {
             filteredRooms.map((room) => (
               <a
                 key={room.id}
-                href={`/rooms/${room.id}`}
+                href={`/rooms/${room.share_token}`}
                 className="room-card"
               >
                 <div className="room-card-header">

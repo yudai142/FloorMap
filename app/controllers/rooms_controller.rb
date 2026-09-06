@@ -219,6 +219,7 @@ class RoomsController < ApplicationController
   def room_index_json(room)
     {
       id: room.id,
+      share_token: room.share_token,
       name: room.name,
       description: room.description,
       seats_count: room.seats.count,
