@@ -29,6 +29,21 @@ RSpec.describe 'Canvas Editor', type: :request do
         get canvas_editor_room_path(room)
         expect(response.body).to include('application')
       end
+
+      it 'includes canvas dimensions in props' do
+        room.update(width: 1200, height: 800)
+        get canvas_editor_room_path(room)
+        expect(response.body).to include('1200')
+        expect(response.body).to include('800')
+      end
+
+      it 'returns default dimensions when not set' do
+        room.update(width: nil, height: nil)
+        get canvas_editor_room_path(room)
+        # デフォルト値 1000 と 700 を確認
+        expect(response.body).to include('1000')
+        expect(response.body).to include('700')
+      end
     end
 
     context 'when user is not owner' do
