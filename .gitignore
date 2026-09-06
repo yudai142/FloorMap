@@ -47,7 +47,6 @@ yarn.lock
 # Ignore Vite build output
 dist/
 .vite-cache/
-/public/vite/
 
 # Ignore test coverage reports
 /coverage/

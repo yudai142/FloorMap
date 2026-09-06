@@ -52,9 +52,6 @@ RUN bundle install && \
 # Copy application code
 COPY . .
 
-# Install npm dependencies and build Vite assets
-RUN npm ci --legacy-peer-deps && npm run build
-
 # Precompile bootsnap code for faster boot times.
 # -j 1 disable parallel compilation to avoid a QEMU bug: https://github.com/rails/bootsnap/issues/495
 RUN bundle exec bootsnap precompile -j 1 app/ lib/
