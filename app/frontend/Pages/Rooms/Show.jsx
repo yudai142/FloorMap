@@ -627,32 +627,44 @@ export default function RoomShow() {
 
         .room-container {
           display: grid;
-          grid-template-columns: 1fr 350px;
-          gap: 24px;
+          grid-template-columns: 1fr 280px;
+          gap: 16px;
           max-width: 100%;
           margin: 0;
-          padding: 20px 24px;
+          padding: 16px 12px;
+          height: calc(100vh - 100px);
         }
 
-        .left-panel,
+        .left-panel {
+          background-color: white;
+          border-radius: 8px;
+          padding: 12px;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
+
         .right-panel {
           background-color: white;
-          border-radius: 12px;
-          padding: 20px;
+          border-radius: 8px;
+          padding: 12px;
           box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          overflow-y: auto;
         }
 
         .panel-header {
-          margin-bottom: 20px;
-          padding-bottom: 16px;
+          margin-bottom: 12px;
+          padding-bottom: 12px;
           border-bottom: 1px solid #e2e8f0;
+          flex-shrink: 0;
         }
 
         .panel-header h2 {
-          font-size: 18px;
+          font-size: 16px;
           font-weight: 600;
           color: #0f172a;
-          margin: 0 0 12px 0;
+          margin: 0;
         }
 
         .legend {
