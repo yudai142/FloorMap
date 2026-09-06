@@ -16,6 +16,7 @@ export default function RoomShow() {
   const [panY, setPanY] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const svgRef = useRef(null)
 
   // Initialize device ID on mount
   useEffect(() => {
@@ -266,11 +267,31 @@ export default function RoomShow() {
   }
 
   const handleCanvasMouseMove = (e) => {
-    if (!isDragging) return
+    if (!isDragging || !svgRef.current) return
+
     const deltaX = (e.clientX - dragStart.x) * 2.5
     const deltaY = (e.clientY - dragStart.y) * 2.5
-    setPanX(panX + deltaX)
-    setPanY(panY + deltaY)
+
+    const svg = svgRef.current
+    const rect = svg.getBoundingClientRect()
+    const svgWidth = rect.width
+    const svgHeight = rect.height
+
+    const canvasWidth = (room.width || 1000) * zoom
+    const canvasHeight = (room.height || 700) * zoom
+
+    // 制限値を計算
+    const maxPanX = Math.max(0, (canvasWidth - svgWidth) / 2)
+    const maxPanY = Math.max(0, (canvasHeight - svgHeight) / 2)
+    const minPanX = -maxPanX
+    const minPanY = -maxPanY
+
+    // panX, panY を制限
+    const newPanX = Math.max(minPanX, Math.min(maxPanX, panX + deltaX))
+    const newPanY = Math.max(minPanY, Math.min(maxPanY, panY + deltaY))
+
+    setPanX(newPanX)
+    setPanY(newPanY)
     setDragStart({ x: e.clientX, y: e.clientY })
   }
 
@@ -335,6 +356,7 @@ export default function RoomShow() {
 
           <div style={{ position: 'relative', display: 'inline-block' }}>
           <svg
+            ref={svgRef}
             id="room-canvas"
             className="room-canvas"
             viewBox={`0 0 ${room.width || 1000} ${room.height || 700}`}
