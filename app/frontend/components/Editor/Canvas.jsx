@@ -211,7 +211,9 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       })
 
       // Save canvas size if changed
-      if (canvasSize.width !== room.width || canvasSize.height !== room.height) {
+      console.log('handleSave - canvasSize:', canvasSize, 'room:', { width: room.width, height: room.height })
+      if (canvasSize && (canvasSize.width !== room.width || canvasSize.height !== room.height)) {
+        console.log('Saving canvas size:', canvasSize)
         const sizeResponse = await fetch(`/rooms/${room.share_token}`, {
           method: 'PATCH',
           headers: {
