@@ -84,7 +84,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
   useEffect(() => {
     const fetchUpdatedSeats = async () => {
       try {
-        const response = await fetch(`/rooms/${room.id}/canvas_data.json`)
+        const response = await fetch(`/rooms/${room.share_token}/canvas_data.json`)
         const data = await response.json()
         if (data.seats) {
           const updatedSeats = data.seats.map(seat => ({
@@ -212,7 +212,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
     setIsSaving(true)
     try {
       // Save shapes (floor plan)
-      const floorPlanResponse = await fetch(`/rooms/${room.id}/floor_plan.json`, {
+      const floorPlanResponse = await fetch(`/rooms/${room.share_token}/floor_plan.json`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -230,7 +230,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       for (const seat of seats) {
         if (seat.id < 0) {
           // New seat - create it
-          const createResponse = await fetch(`/rooms/${room.id}/seats.json`, {
+          const createResponse = await fetch(`/rooms/${room.share_token}/seats.json`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -262,7 +262,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
           })
         } else {
           // Existing seat - update position
-          const updateResponse = await fetch(`/rooms/${room.id}/seats/${seat.id}/position.json`, {
+          const updateResponse = await fetch(`/rooms/${room.share_token}/seats/${seat.id}/position.json`, {
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',

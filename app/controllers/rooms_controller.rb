@@ -104,6 +104,7 @@ class RoomsController < ApplicationController
     render inertia: 'Rooms/CanvasEditor', props: {
       room: {
         id: @room.id,
+        share_token: @room.share_token,
         name: @room.name,
         description: @room.description,
         width: 1000,  # Default width
