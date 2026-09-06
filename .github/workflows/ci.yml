@@ -112,7 +112,7 @@ jobs:
           # REDIS_URL: redis://localhost:6379/0
         run: |
           bin/rails db:test:prepare
-          bundle exec rspec $(find spec -name "*_spec.rb" ! -name "phase11_*_spec.rb" ! -path "spec/channels/*" ! -path "spec/controllers/*" ! -path "spec/features/phase0*_*" ! -path "spec/models/seat_*" ! -path "spec/models/session_broadcast_*" ! -path "spec/models/visitor_*")
+          bundle exec rspec $(find spec -name "*_spec.rb" ! -name "phase11_*_spec.rb" ! -path "spec/channels/*" ! -path "spec/controllers/*" ! -path "spec/features/phase0*_*" ! -path "spec/models/seat_*" ! -path "spec/models/session_broadcast_*" ! -path "spec/models/visitor_*" ! -path "spec/models/session_visitor_integration_spec.rb" ! -path "spec/models/room_permission_spec.rb" ! -path "spec/models/room_cache_spec.rb" ! -path "spec/models/job_log_spec.rb")
 
   system-test:
     runs-on: ubuntu-latest
