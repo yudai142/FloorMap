@@ -855,12 +855,13 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
               {/* キャンバスの右端と下の青い枠線（最後に描画して前面に表示） */}
               {/* 右端 */}
               <line
-                x1={canvasWidth - 1.5}
+                x1={canvasWidth - 3}
                 y1="0"
-                x2={canvasWidth - 1.5}
+                x2={canvasWidth - 3}
                 y2={canvasHeight}
                 stroke="#3b82f6"
-                strokeWidth="3"
+                strokeWidth="6"
+                strokeLinecap="round"
                 onMouseDown={(e) => {
                   e.preventDefault()
                   setIsResizing('horizontal')
@@ -871,11 +872,12 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
               {/* 下端 */}
               <line
                 x1="0"
-                y1={canvasHeight - 1.5}
+                y1={canvasHeight - 3}
                 x2={canvasWidth}
-                y2={canvasHeight - 1.5}
+                y2={canvasHeight - 3}
                 stroke="#3b82f6"
-                strokeWidth="3"
+                strokeWidth="6"
+                strokeLinecap="round"
                 onMouseDown={(e) => {
                   e.preventDefault()
                   setIsResizing('vertical')
