@@ -252,7 +252,6 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
           // Update local seat with server-assigned ID
           try {
             const savedSeat = await createResponse.json()
-            console.log('Saved seat response:', JSON.stringify(savedSeat, null, 2))
             mergeSeat({
               id: savedSeat.id,
               label: savedSeat.seat_identifier,
@@ -263,7 +262,6 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
               seat_type: savedSeat.seat_type
             })
           } catch (parseError) {
-            console.error('Failed to parse seat response:', parseError, createResponse)
             // Continue anyway - server saved the seat
           }
         } else {
@@ -295,7 +293,6 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
         onSave(shapes)
       }
     } catch (err) {
-      console.error('Save error:', err)
       setAlert({ type: 'error', message: err.message })
     } finally {
       setIsSaving(false)
