@@ -201,7 +201,14 @@ class RoomsController < ApplicationController
   def update_auto_checkout_settings
     return head :unauthorized unless user_signed_in?
 
-    if current_user.update(auto_checkout_settings_params)
+    settings = auto_checkout_settings_params
+
+    # datetime-local 形式の文字列を datetime に変換
+    if settings[:auto_checkout_time].present?
+      settings[:auto_checkout_time] = DateTime.parse(settings[:auto_checkout_time])
+    end
+
+    if current_user.update(settings)
       render json: {
         auto_checkout_enabled: current_user.auto_checkout_enabled,
         auto_checkout_time: current_user.auto_checkout_time
