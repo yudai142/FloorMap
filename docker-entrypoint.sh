@@ -12,7 +12,7 @@ bundle exec rails db:prepare
 
 # Start Vite dev server in background
 echo "Starting Vite dev server..."
-npm run dev &
+npx vite --port 5173 &
 VITE_PID=$!
 
 # Wait for Vite to start
