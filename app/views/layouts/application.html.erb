@@ -18,6 +18,14 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
+    <%# Disable Vite HMR before loading Vite scripts %>
+    <script>
+      window.__VITE_HMR__ = false
+      window.__VITE_HMR_PROTOCOL__ = null
+      window.__VITE_HMR_HOSTNAME__ = null
+      window.__VITE_HMR_PORT__ = null
+    </script>
+
     <%# Vite entrypoint with CSS and JS %>
     <% unless Rails.env.test? %>
       <%= vite_javascript_tag "application.jsx", "data-turbo-track": "reload" %>
