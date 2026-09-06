@@ -42,9 +42,9 @@ RSpec.describe 'Rooms', type: :request do
 
     context 'when sending JSON request' do
       it 'responds with JSON containing updated attributes' do
-        patch "/rooms/#{room.share_token}.json", params: {
+        patch "/rooms/#{room.share_token}", params: {
           room: { width: 1300, height: 900 }
-        }
+        }, headers: { 'Accept' => 'application/json' }
 
         expect(response).to have_http_status(:ok)
         json = JSON.parse(response.body)
@@ -54,9 +54,9 @@ RSpec.describe 'Rooms', type: :request do
       end
 
       it 'persists canvas size changes to database' do
-        patch "/rooms/#{room.share_token}.json", params: {
+        patch "/rooms/#{room.share_token}", params: {
           room: { width: 1400, height: 1000 }
-        }
+        }, headers: { 'Accept' => 'application/json' }
 
         expect(room.reload.width).to eq(1400)
         expect(room.reload.height).to eq(1000)
