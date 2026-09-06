@@ -27,6 +27,6 @@ export default defineConfig({
     },
   },
   css: {
-    postcss: process.env.NODE_ENV === 'development' ? false : path.resolve(__dirname, 'postcss.config.cjs'),
+    postcss: path.resolve(__dirname, 'postcss.config.cjs'),
   },
 })
