@@ -1,14 +1,51 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { usePage } from '@inertiajs/react'
 import Canvas from '../../components/Editor/Canvas'
 
 export default function CanvasEditor({ room, shapes_data, seats, current_user }) {
   const { auth } = usePage().props
+  const [canvasSize, setCanvasSize] = useState({ width: room.width, height: room.height })
+  const [isSizeSaving, setIsSizeSaving] = useState(false)
 
   const handleSave = async (shapes) => {
     // Save is handled in Canvas component
     // This callback can be extended for additional logic
     console.log('Canvas saved:', shapes)
+  }
+
+  const handleSizeChange = async () => {
+    if (canvasSize.width <= 0 || canvasSize.height <= 0) {
+      alert('幅と高さは 1 以上である必要があります')
+      return
+    }
+
+    setIsSizeSaving(true)
+    try {
+      const response = await fetch(`/rooms/${room.share_token}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
+        },
+        body: JSON.stringify({
+          room: {
+            width: canvasSize.width,
+            height: canvasSize.height
+          }
+        })
+      })
+
+      if (response.ok) {
+        alert('キャンバスサイズを更新しました')
+      } else {
+        alert('キャンバスサイズの更新に失敗しました')
+      }
+    } catch (error) {
+      console.error('Error updating canvas size:', error)
+      alert('キャンバスサイズの更新に失敗しました')
+    } finally {
+      setIsSizeSaving(false)
+    }
   }
 
   return (
@@ -22,8 +59,39 @@ export default function CanvasEditor({ room, shapes_data, seats, current_user })
             </a>
             <h1 className="text-2xl font-bold text-slate-900">{room.name}</h1>
             <span className="badge badge-lg">
-              {room.width} × {room.height}px
+              {canvasSize.width} × {canvasSize.height}px
             </span>
+          </div>
+          <div className="flex items-center gap-4 mt-2">
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-slate-600">幅:</label>
+              <input
+                type="number"
+                min="100"
+                value={canvasSize.width}
+                onChange={(e) => setCanvasSize({ ...canvasSize, width: parseInt(e.target.value) })}
+                className="w-20 px-2 py-1 border border-slate-300 rounded text-sm"
+              />
+              <span className="text-sm text-slate-600">px</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-slate-600">高さ:</label>
+              <input
+                type="number"
+                min="100"
+                value={canvasSize.height}
+                onChange={(e) => setCanvasSize({ ...canvasSize, height: parseInt(e.target.value) })}
+                className="w-20 px-2 py-1 border border-slate-300 rounded text-sm"
+              />
+              <span className="text-sm text-slate-600">px</span>
+            </div>
+            <button
+              onClick={handleSizeChange}
+              disabled={isSizeSaving || (canvasSize.width === room.width && canvasSize.height === room.height)}
+              className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50"
+            >
+              {isSizeSaving ? '保存中...' : '保存'}
+            </button>
           </div>
           <p className="text-sm text-slate-600 mt-1">
             座席配置図エディタ - ツールを選択して、キャンバスをクリック・ドラッグして描画
