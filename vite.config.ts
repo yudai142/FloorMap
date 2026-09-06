@@ -11,11 +11,7 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
-    hmr: {
-      protocol: 'ws',
-      host: 'localhost',
-      port: process.env.VITE_HMR_PORT ? parseInt(process.env.VITE_HMR_PORT) : 5173,
-    },
+    middlewareMode: true,
   },
   build: {
     rollupOptions: {
