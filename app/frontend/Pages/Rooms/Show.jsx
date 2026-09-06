@@ -4,6 +4,8 @@ import { usePage } from '@inertiajs/react'
 export default function RoomShow() {
   const { room, seats, current_user, auth } = usePage().props
   const [sessions, setSessions] = useState([])
+  const [autoCheckoutEnabled, setAutoCheckoutEnabled] = useState(false)
+  const [autoCheckoutTime, setAutoCheckoutTime] = useState('')
 
   // データロード
   const fetchSessions = async () => {
@@ -28,10 +30,19 @@ export default function RoomShow() {
 
   const handleCheckIn = async (seatId) => {
     try {
-      const timerMinutes = prompt('自動離席時間を分単位で入力してください (デフォルト: 60分):', '60')
-      if (timerMinutes === null) return
+      let checkoutTimer = 60
 
-      const checkoutTimer = parseInt(timerMinutes) || 60
+      // 自動離席が有効な場合、日時から分数を計算
+      if (autoCheckoutEnabled && autoCheckoutTime) {
+        const checkoutTime = new Date(autoCheckoutTime)
+        const now = new Date()
+        checkoutTimer = Math.round((checkoutTime - now) / 60000) // 分に変換
+
+        if (checkoutTimer <= 0) {
+          alert('離席日時は現在時刻より後に設定してください')
+          return
+        }
+      }
 
       const response = await fetch('/sessions/check_in.json', {
         method: 'POST',
@@ -45,7 +56,10 @@ export default function RoomShow() {
 
       if (response.ok) {
         await fetchSessions()
-        alert(`${checkoutTimer}分後に自動離席します`)
+        if (autoCheckoutEnabled && autoCheckoutTime) {
+          const timeStr = new Date(autoCheckoutTime).toLocaleString('ja-JP')
+          alert(`${timeStr} に自動離席します`)
+        }
       } else {
         const error = await response.json()
         alert(error.message || 'チェックインに失敗しました')
@@ -242,6 +256,34 @@ export default function RoomShow() {
 
         {/* 右パネル：座席一覧 */}
         <div className="right-panel">
+          {/* 自動離席設定パネル */}
+          <div className="auto-checkout-panel">
+            <div className="panel-header">
+              <h3>自動離席設定</h3>
+            </div>
+            <div className="auto-checkout-content">
+              <label className="auto-checkout-checkbox">
+                <input
+                  type="checkbox"
+                  checked={autoCheckoutEnabled}
+                  onChange={(e) => setAutoCheckoutEnabled(e.target.checked)}
+                />
+                <span>自動離席を有効にする</span>
+              </label>
+              {autoCheckoutEnabled && (
+                <div className="auto-checkout-input-group">
+                  <label htmlFor="checkout-time">離席日時:</label>
+                  <input
+                    id="checkout-time"
+                    type="datetime-local"
+                    value={autoCheckoutTime}
+                    onChange={(e) => setAutoCheckoutTime(e.target.value)}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="panel-header">
             <h2>座席ステータス一覧</h2>
           </div>
@@ -508,6 +550,75 @@ export default function RoomShow() {
           text-align: center;
           padding: 40px 20px;
           color: #64748b;
+        }
+
+        .auto-checkout-panel {
+          background-color: #f0fdf4;
+          border: 1px solid #bbf7d0;
+          border-radius: 8px;
+          padding: 16px;
+          margin-bottom: 20px;
+        }
+
+        .auto-checkout-panel .panel-header {
+          margin-bottom: 12px;
+          padding-bottom: 8px;
+          border-bottom: 1px solid #bbf7d0;
+        }
+
+        .auto-checkout-panel h3 {
+          margin: 0;
+          font-size: 16px;
+          font-weight: 600;
+          color: #166534;
+        }
+
+        .auto-checkout-content {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .auto-checkout-checkbox {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          cursor: pointer;
+          font-size: 14px;
+          color: #166534;
+        }
+
+        .auto-checkout-checkbox input[type="checkbox"] {
+          width: 18px;
+          height: 18px;
+          cursor: pointer;
+          accent-color: #22c55e;
+        }
+
+        .auto-checkout-input-group {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .auto-checkout-input-group label {
+          font-size: 12px;
+          font-weight: 600;
+          color: #166534;
+        }
+
+        .auto-checkout-input-group input[type="datetime-local"] {
+          padding: 8px 12px;
+          border: 1px solid #bbf7d0;
+          border-radius: 6px;
+          font-size: 14px;
+          color: #166534;
+        }
+
+        .auto-checkout-input-group input[type="datetime-local"]:focus {
+          outline: none;
+          border-color: #22c55e;
+          box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
         }
 
         @media (max-width: 1024px) {
