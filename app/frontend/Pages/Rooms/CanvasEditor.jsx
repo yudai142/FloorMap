@@ -56,8 +56,11 @@ export default function CanvasEditor({ room, shapes_data, seats, current_user })
               <input
                 type="number"
                 min="100"
-                value={canvasSize.width}
-                onChange={(e) => setCanvasSize({ ...canvasSize, width: parseInt(e.target.value) })}
+                value={canvasSize.width || room.width || 1000}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value) || 100
+                  setCanvasSize({ ...canvasSize, width: val })
+                }}
                 className="w-20 px-2 py-1 border border-slate-300 rounded text-sm"
               />
               <span className="text-sm text-slate-600">px</span>
@@ -67,8 +70,11 @@ export default function CanvasEditor({ room, shapes_data, seats, current_user })
               <input
                 type="number"
                 min="100"
-                value={canvasSize.height}
-                onChange={(e) => setCanvasSize({ ...canvasSize, height: parseInt(e.target.value) })}
+                value={canvasSize.height || room.height || 700}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value) || 100
+                  setCanvasSize({ ...canvasSize, height: val })
+                }}
                 className="w-20 px-2 py-1 border border-slate-300 rounded text-sm"
               />
               <span className="text-sm text-slate-600">px</span>

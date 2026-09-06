@@ -113,8 +113,8 @@ class RoomsController < ApplicationController
         share_token: @room.share_token,
         name: @room.name,
         description: @room.description,
-        width: 1000,  # Default width
-        height: 700   # Default height
+        width: @room.width || 1000,
+        height: @room.height || 700
       },
       shapes_data: @room.floor_plan_data || [],
       seats: @room.seats.map { |s| seat_canvas_json(s) },
@@ -317,7 +317,7 @@ class RoomsController < ApplicationController
   end
 
   def room_params
-    params.require(:room).permit(:name, :description)
+    params.require(:room).permit(:name, :description, :width, :height)
   end
 
   def seat_canvas_json(seat)

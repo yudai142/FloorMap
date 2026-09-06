@@ -621,14 +621,14 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       if (isResizing === 'horizontal' || isResizing === 'both') {
         onCanvasSizeChange((prev) => ({
           ...prev,
-          width: Math.max(100, prev.width + deltaX)
+          width: Math.max(100, (prev?.width || canvasWidth) + deltaX)
         }))
       }
 
       if (isResizing === 'vertical' || isResizing === 'both') {
         onCanvasSizeChange((prev) => ({
           ...prev,
-          height: Math.max(100, prev.height + deltaY)
+          height: Math.max(100, (prev?.height || canvasHeight) + deltaY)
         }))
       }
 
