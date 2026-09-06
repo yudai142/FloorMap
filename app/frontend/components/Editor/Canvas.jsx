@@ -252,6 +252,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
           // Update local seat with server-assigned ID
           try {
             const savedSeat = await createResponse.json()
+            console.log('Saved seat response:', savedSeat)
             mergeSeat({
               id: savedSeat.id,
               label: savedSeat.seat_identifier,
