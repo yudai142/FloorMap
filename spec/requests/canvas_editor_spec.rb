@@ -130,10 +130,10 @@ RSpec.describe 'Canvas Editor', type: :request do
       end
 
       it 'includes floor plan data' do
-        room.update(floor_plan_data: [{ type: 'rectangle', x: 0, y: 0 }])
+        room.update(floor_plan_data: [ { type: 'rectangle', x: 0, y: 0 } ])
         get "/rooms/#{room.share_token}/canvas_data"
         json = JSON.parse(response.body)
-        expect(json['floor_plan_data']).to eq([{ 'type' => 'rectangle', 'x' => 0, 'y' => 0 }])
+        expect(json['floor_plan_data']).to eq([ { 'type' => 'rectangle', 'x' => 0, 'y' => 0 } ])
       end
     end
   end
