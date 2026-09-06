@@ -20,27 +20,29 @@ class SessionsController < ApplicationController
       end
     end
 
-    if current_user
-      session = Session.create(
-        user_id: current_user.id,
-        seat_id: seat.id,
-        check_in_time: Time.current,
-        status: "active"
-      )
-    else
-      # Create visitor for unauthenticated users
-      visitor = Visitor.create(nickname: "Anonymous User #{SecureRandom.hex(4)}")
-
-      if visitor.persisted?
-        session = Session.create(
-          visitor_id: visitor.id,
-          seat_id: seat.id,
-          check_in_time: Time.current,
-          status: "active"
-        )
-      else
-        session = nil
+    session = nil
+    begin
+      ActiveRecord::Base.transaction do
+        if current_user
+          session = Session.create!(
+            user_id: current_user.id,
+            seat_id: seat.id,
+            check_in_time: Time.current,
+            status: "active"
+          )
+        else
+          # Create visitor for unauthenticated users
+          visitor = Visitor.create!(nickname: "Anonymous User #{SecureRandom.hex(4)}")
+          session = Session.create!(
+            visitor_id: visitor.id,
+            seat_id: seat.id,
+            check_in_time: Time.current,
+            status: "active"
+          )
+        end
       end
+    rescue ActiveRecord::RecordInvalid => e
+      session = e.record
     end
 
     if session&.persisted?
@@ -49,7 +51,7 @@ class SessionsController < ApplicationController
         format.json { render json: { id: session.id, seat_id: session.seat_id, status: session.status }, status: :created }
       end
     else
-      error_message = if session
+      error_message = if session&.errors&.any?
         session.errors.full_messages.join(", ")
       else
         "チェックインに失敗しました"
