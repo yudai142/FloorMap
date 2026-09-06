@@ -21,8 +21,10 @@ class Session < ApplicationRecord
   after_create_commit :clear_seat_caches
   after_create_commit :broadcast_seat_updated
   after_create_commit :schedule_auto_checkout
+  after_create_commit :schedule_user_auto_checkout
   after_update_commit :clear_seat_caches, if: :saved_change_to_status?
   after_update_commit :broadcast_seat_updated, if: :saved_change_to_status?
+  after_update_commit :schedule_user_auto_checkout, if: :saved_change_to_user_auto_checkout_time?
 
   def duration
     end_time = check_out_time || Time.current
@@ -50,6 +52,12 @@ class Session < ApplicationRecord
     checkout_time = check_in_time + checkout_timer_minutes.minutes
     update_column(:auto_checkout_at, checkout_time)
     AutoCheckoutJob.set(wait_until: checkout_time).perform_later(id)
+  end
+
+  def schedule_user_auto_checkout
+    return if !user_auto_checkout_enabled || user_auto_checkout_time.blank? || status != "active"
+
+    AutoCheckoutJob.set(wait_until: user_auto_checkout_time).perform_later(id)
   end
 
   def clear_seat_caches
