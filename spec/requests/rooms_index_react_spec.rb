@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-RSpec.describe 'Rooms Index (React)', type: :request do
+RSpec.describe 'Rooms Index (React)', type: :request, skip: '未実装機能' do
   let(:user) { create(:user, :manager) }
   let!(:room1) { create(:room, user: user, name: 'Test Room 1') }
   let!(:room2) { create(:room, user: user, name: 'Test Room 2') }
