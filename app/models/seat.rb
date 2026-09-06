@@ -92,9 +92,13 @@ class Seat < ApplicationRecord
 
   def broadcast_seat_updated
     RoomsChannel.broadcast_to(room, type: "seat_updated", seat: canvas_data)
+  rescue Redis::CannotConnectError, Errno::ECONNREFUSED => e
+    Rails.logger.warn("Failed to broadcast seat update: #{e.message}")
   end
 
   def broadcast_seat_removed
     RoomsChannel.broadcast_to(room, type: "seat_removed", seat_id: id)
+  rescue Redis::CannotConnectError, Errno::ECONNREFUSED => e
+    Rails.logger.warn("Failed to broadcast seat removal: #{e.message}")
   end
 end
