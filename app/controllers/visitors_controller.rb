@@ -61,7 +61,8 @@ class VisitorsController < ApplicationController
   end
 
   def set_room
-    @room = Room.find_by(share_token: params[:room_share_token]) if params[:room_share_token]
+    token = params[:share_token] || params[:room_share_token]
+    @room = Room.find_by(share_token: token) if token
   end
 
   def set_seat
