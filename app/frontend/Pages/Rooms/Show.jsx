@@ -418,7 +418,7 @@ export default function RoomShow() {
             </div>
           </div>
 
-          <div style={{ position: 'relative', display: 'inline-block', borderRight: '3px solid #3b82f6', borderBottom: '3px solid #3b82f6' }}>
+          <div style={{ position: 'relative', display: 'inline-block', borderRight: '3px solid #3b82f6', borderBottom: '3px solid #3b82f6', width: '100%', height: 'calc(100vh - 180px)' }}>
           <svg
             ref={svgRef}
             id="room-canvas"
@@ -429,7 +429,7 @@ export default function RoomShow() {
               border: '1px solid #e2e8f0',
               backgroundColor: 'white',
               width: '100%',
-              height: 'calc(100vh - 180px)',
+              height: '100%',
               cursor: isDragging ? 'grabbing' : 'grab'
             }}
             onWheel={handleCanvasWheel}
