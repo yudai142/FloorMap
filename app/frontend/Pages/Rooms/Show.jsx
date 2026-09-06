@@ -419,7 +419,7 @@ export default function RoomShow() {
           </div>
 
           <div
-            style={{ position: 'relative', display: 'block', borderRight: '3px solid #3b82f6', borderBottom: '3px solid #3b82f6', width: '100%', height: 'calc(100vh - 180px)' }}
+            style={{ position: 'relative', display: 'block', width: '100%', height: 'calc(100vh - 180px)' }}
             onMouseMove={(e) => {
               handleCanvasMouseMove(e)
               handleResizeMouseMove(e)
@@ -570,55 +570,6 @@ export default function RoomShow() {
             })}
             </g>
           </svg>
-
-          {/* リサイズハンドル */}
-          {/* 右端のリサイズハンドル */}
-          <div
-            onMouseDown={handleResizeMouseDown('horizontal')}
-            style={{
-              position: 'absolute',
-              right: '-4px',
-              top: '0',
-              width: '8px',
-              height: '100%',
-              cursor: 'ew-resize',
-              backgroundColor: '#3b82f6',
-              opacity: isResizing === 'horizontal' ? 1 : 0.5,
-              transition: 'opacity 0.2s'
-            }}
-          />
-
-          {/* 下のリサイズハンドル */}
-          <div
-            onMouseDown={handleResizeMouseDown('vertical')}
-            style={{
-              position: 'absolute',
-              bottom: '-4px',
-              left: '0',
-              width: '100%',
-              height: '8px',
-              cursor: 'ns-resize',
-              backgroundColor: '#3b82f6',
-              opacity: isResizing === 'vertical' ? 1 : 0.5,
-              transition: 'opacity 0.2s'
-            }}
-          />
-
-          {/* 右下角のリサイズハンドル */}
-          <div
-            onMouseDown={handleResizeMouseDown('both')}
-            style={{
-              position: 'absolute',
-              bottom: '-4px',
-              right: '-4px',
-              width: '16px',
-              height: '16px',
-              cursor: 'nwse-resize',
-              backgroundColor: '#3b82f6',
-              opacity: isResizing === 'both' ? 1 : 0.5,
-              transition: 'opacity 0.2s'
-            }}
-          />
           </div>
         </div>
 
