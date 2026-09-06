@@ -38,6 +38,7 @@ Rails.application.routes.draw do
       get :canvas_editor
       get :canvas_data
       patch :floor_plan
+      patch :update_auto_checkout_settings
     end
     collection do
       get :export

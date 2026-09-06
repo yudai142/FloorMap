@@ -28,6 +28,77 @@ export default function RoomShow() {
     return () => clearInterval(interval)
   }, [room.id])
 
+  // 初期化時に props から設定を復元
+  useEffect(() => {
+    if (current_user) {
+      setAutoCheckoutEnabled(current_user.auto_checkout_enabled || false)
+      if (current_user.auto_checkout_time) {
+        // ISO形式に変換
+        const dateTime = new Date(current_user.auto_checkout_time)
+        const isoString = dateTime.toISOString().slice(0, 16)
+        setAutoCheckoutTime(isoString)
+      }
+    }
+  }, [current_user])
+
+  // チェックボックスの状態が変わったら即座に保存
+  const handleCheckboxChange = async (checked) => {
+    setAutoCheckoutEnabled(checked)
+    try {
+      const response = await fetch(`/rooms/${room.share_token}/update_auto_checkout_settings`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          auto_checkout_settings: {
+            auto_checkout_enabled: checked,
+            auto_checkout_time: autoCheckoutTime
+          }
+        })
+      })
+
+      if (!response.ok) {
+        console.error('Failed to save auto checkout enabled setting')
+        setAutoCheckoutEnabled(!checked)
+      }
+    } catch (error) {
+      console.error('Failed to save auto checkout enabled setting:', error)
+      setAutoCheckoutEnabled(!checked)
+    }
+  }
+
+  // 確定ボタンで日時を保存
+  const handleSaveCheckoutTime = async () => {
+    try {
+      const response = await fetch(`/rooms/${room.share_token}/update_auto_checkout_settings`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content,
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          auto_checkout_settings: {
+            auto_checkout_enabled: autoCheckoutEnabled,
+            auto_checkout_time: autoCheckoutTime
+          }
+        })
+      })
+
+      if (response.ok) {
+        alert('離席日時を保存しました')
+      } else {
+        alert('離席日時の保存に失敗しました')
+      }
+    } catch (error) {
+      console.error('Failed to save auto checkout time:', error)
+      alert('離席日時の保存に失敗しました')
+    }
+  }
+
   const handleCheckIn = async (seatId) => {
     try {
       let checkoutTimer = 60
@@ -266,7 +337,7 @@ export default function RoomShow() {
                 <input
                   type="checkbox"
                   checked={autoCheckoutEnabled}
-                  onChange={(e) => setAutoCheckoutEnabled(e.target.checked)}
+                  onChange={(e) => handleCheckboxChange(e.target.checked)}
                 />
                 <span>自動離席を有効にする</span>
               </label>
@@ -279,6 +350,12 @@ export default function RoomShow() {
                     value={autoCheckoutTime}
                     onChange={(e) => setAutoCheckoutTime(e.target.value)}
                   />
+                  <button
+                    onClick={handleSaveCheckoutTime}
+                    className="btn-confirm-checkout"
+                  >
+                    確定
+                  </button>
                 </div>
               )}
             </div>
@@ -619,6 +696,27 @@ export default function RoomShow() {
           outline: none;
           border-color: #22c55e;
           box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+        }
+
+        .btn-confirm-checkout {
+          padding: 8px 16px;
+          background-color: #22c55e;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background-color 0.2s;
+          margin-top: 4px;
+        }
+
+        .btn-confirm-checkout:hover {
+          background-color: #16a34a;
+        }
+
+        .btn-confirm-checkout:active {
+          background-color: #15803d;
         }
 
         @media (max-width: 1024px) {

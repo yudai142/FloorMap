@@ -35,7 +35,9 @@ class RoomsController < ApplicationController
         current_user: current_user ? {
           id: current_user.id,
           email: current_user.email.to_s,
-          role: current_user.role
+          role: current_user.role,
+          auto_checkout_enabled: current_user.auto_checkout_enabled,
+          auto_checkout_time: current_user.auto_checkout_time
         } : nil,
         auth: auth_props
       }
@@ -196,7 +198,24 @@ class RoomsController < ApplicationController
     send_data exporter.to_csv, filename: "rooms_#{Time.current.strftime("%Y%m%d_%H%M%S")}.csv", type: "text/csv; charset=utf-8"
   end
 
+  def update_auto_checkout_settings
+    return head :unauthorized unless user_signed_in?
+
+    if current_user.update(auto_checkout_settings_params)
+      render json: {
+        auto_checkout_enabled: current_user.auto_checkout_enabled,
+        auto_checkout_time: current_user.auto_checkout_time
+      }, status: :ok
+    else
+      render json: { message: "設定の保存に失敗しました" }, status: :unprocessable_entity
+    end
+  end
+
   private
+
+  def auto_checkout_settings_params
+    params.require(:auto_checkout_settings).permit(:auto_checkout_enabled, :auto_checkout_time)
+  end
 
   def auth_props
     {
