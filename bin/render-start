@@ -1,0 +1,29 @@
+#!/bin/bash
+set -e
+
+MAX_RETRIES=5
+RETRY_COUNT=0
+
+echo "Starting database preparation with retries..."
+
+while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+  echo "Attempt $(($RETRY_COUNT + 1))/$MAX_RETRIES: Preparing database..."
+
+  if bundle exec rails db:prepare; then
+    echo "✓ Database preparation successful"
+    break
+  else
+    RETRY_COUNT=$(($RETRY_COUNT + 1))
+    if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+      WAIT_TIME=$(($RETRY_COUNT * 10))
+      echo "✗ Database preparation failed. Retrying in ${WAIT_TIME}s..."
+      sleep $WAIT_TIME
+    else
+      echo "✗ Database preparation failed after $MAX_RETRIES attempts"
+      exit 1
+    fi
+  fi
+done
+
+echo "Starting Puma..."
+exec bundle exec puma -t 5:5 -p 3000
