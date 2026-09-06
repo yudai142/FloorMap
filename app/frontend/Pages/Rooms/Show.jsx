@@ -273,6 +273,7 @@ export default function RoomShow() {
             </div>
           </div>
 
+          <div style={{ position: 'relative', display: 'inline-block' }}>
           <svg
             id="room-canvas"
             className="room-canvas"
@@ -402,6 +403,40 @@ export default function RoomShow() {
               )
             })}
           </svg>
+
+          {/* URLコピーボタンレイヤー */}
+          {seats && seats.map((seat) => (
+            <button
+              key={`copy-btn-${seat.id}`}
+              onClick={() => {
+                const url = `${window.location.origin}/rooms/${room.share_token}?seat_id=${seat.id}`
+                navigator.clipboard.writeText(url).then(() => {
+                  alert('座席のURLをコピーしました')
+                }).catch(() => {
+                  alert('URLのコピーに失敗しました')
+                })
+              }}
+              style={{
+                position: 'absolute',
+                left: `${seat.position_x + 30}px`,
+                top: `${seat.position_y - 8}px`,
+                padding: '2px 6px',
+                fontSize: '10px',
+                backgroundColor: '#3b82f6',
+                color: 'white',
+                border: 'none',
+                borderRadius: '3px',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                zIndex: 10
+              }}
+              onMouseEnter={(e) => e.target.style.backgroundColor = '#2563eb'}
+              onMouseLeave={(e) => e.target.style.backgroundColor = '#3b82f6'}
+            >
+              🔗 コピー
+            </button>
+          ))}
+          </div>
         </div>
 
         {/* 右パネル：座席一覧 */}
