@@ -9,7 +9,6 @@ class Session < ApplicationRecord
   validates :seat_id, :check_in_time, presence: true
   validates :status, presence: true
   validate :user_or_visitor_present
-  validate :user_not_already_checked_in
   validate :seat_not_already_occupied
 
   scope :active, -> { where(status: :active) }
@@ -47,15 +46,6 @@ class Session < ApplicationRecord
     return if user_id.present? || visitor_id.present?
 
     errors.add(:base, "ユーザーまたは訪問者のいずれかが必要です")
-  end
-
-  def user_not_already_checked_in
-    return unless user_id.present? && status == "active"
-
-    existing = Session.active.where(user_id: user_id).first
-    if existing
-      errors.add(:base, "既に別の座席にチェックインしています。先にチェックアウトしてください")
-    end
   end
 
   def seat_not_already_occupied
