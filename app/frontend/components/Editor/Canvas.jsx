@@ -830,7 +830,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
               onMouseDown={handleResizeMouseDown('horizontal')}
               style={{
                 position: 'absolute',
-                right: '-4px',
+                right: '0',
                 top: '0',
                 width: '8px',
                 height: '100%',
@@ -846,7 +846,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
               onMouseDown={handleResizeMouseDown('vertical')}
               style={{
                 position: 'absolute',
-                bottom: '-4px',
+                bottom: '0',
                 left: '0',
                 width: '100%',
                 height: '8px',
@@ -862,8 +862,8 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
               onMouseDown={handleResizeMouseDown('both')}
               style={{
                 position: 'absolute',
-                bottom: '-4px',
-                right: '-4px',
+                bottom: '0',
+                right: '0',
                 width: '16px',
                 height: '16px',
                 cursor: 'nwse-resize',
