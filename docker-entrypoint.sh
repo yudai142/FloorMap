@@ -10,13 +10,18 @@ rm -rf /app/public/vite /app/.vite /app/node_modules/.vite
 # Prepare database
 bundle exec rails db:prepare
 
-# Start Vite dev server in background
+# Start Vite dev server in background with logging
 echo "Starting Vite dev server..."
-npm run dev &
+npm run dev > /tmp/vite.log 2>&1 &
 VITE_PID=$!
+echo "Vite PID: $VITE_PID"
 
 # Wait for Vite to start
 sleep 10
+
+# Show Vite logs
+echo "=== Vite startup logs ==="
+cat /tmp/vite.log || echo "No Vite logs yet"
 
 # Start Rails server
 echo "Starting Rails server..."
