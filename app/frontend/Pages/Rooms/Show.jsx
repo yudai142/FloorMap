@@ -301,9 +301,15 @@ export default function RoomShow() {
           <svg
             id="room-canvas"
             className="room-canvas"
-            width={room.width || 1000}
-            height={room.height || 700}
-            style={{ border: '1px solid #e2e8f0', backgroundColor: 'white' }}
+            viewBox={`0 0 ${room.width || 1000} ${room.height || 700}`}
+            preserveAspectRatio="xMidYMid meet"
+            style={{
+              border: '1px solid #e2e8f0',
+              backgroundColor: 'white',
+              width: '100%',
+              height: 'auto',
+              maxHeight: '600px'
+            }}
           >
             {/* グリッド背景 */}
             <defs>
