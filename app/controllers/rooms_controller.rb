@@ -3,7 +3,7 @@ class RoomsController < ApplicationController
 
   def index
     authorize Room
-    @rooms = current_user.rooms
+    @rooms = current_user.rooms.includes(:seats)
     @rooms = @rooms.search(params[:search]) if params[:search].present?
     @rooms = @rooms.sorted(params[:sort], params[:direction]) if params[:sort].present?
 
