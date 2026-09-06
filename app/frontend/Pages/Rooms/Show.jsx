@@ -448,9 +448,12 @@ export default function RoomShow() {
                           onClick={() => handleCheckOut(session.id)}
                           className="btn-checkout"
                           disabled={
-                            current_user &&
-                            current_user.id !== session.user_id &&
-                            current_user.role !== 'admin'
+                            current_user ? (
+                              current_user.id !== session.user_id &&
+                              current_user.role !== 'admin'
+                            ) : (
+                              session.device_identifier !== deviceId
+                            )
                           }
                         >
                           離席
