@@ -210,6 +210,26 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
         return true
       })
 
+      // Save canvas size if changed
+      if (canvasSize.width !== room.width || canvasSize.height !== room.height) {
+        const sizeResponse = await fetch(`/rooms/${room.share_token}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': getCsrfToken(),
+          },
+          body: JSON.stringify({
+            room: {
+              width: canvasSize.width,
+              height: canvasSize.height
+            }
+          }),
+        })
+        if (!sizeResponse.ok) {
+          throw new Error('キャンバスサイズの保存に失敗しました')
+        }
+      }
+
       // Save shapes (floor plan)
       const floorPlanResponse = await fetch(`/rooms/${room.share_token}/floor_plan.json`, {
         method: 'PATCH',
