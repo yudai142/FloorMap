@@ -327,7 +327,8 @@ export default function RoomShow() {
 
         {/* 右パネル：座席一覧 */}
         <div className="right-panel">
-          {/* 自動離席設定パネル */}
+          {/* 自動離席設定パネル - 着席中のみ表示 */}
+          {current_user && sessions.some(s => s.user_id === current_user.id && s.status === 'active') && (
           <div className="auto-checkout-panel">
             <div className="panel-header">
               <h3>自動離席設定</h3>
@@ -360,6 +361,7 @@ export default function RoomShow() {
               )}
             </div>
           </div>
+          )}
 
           <div className="panel-header">
             <h2>座席ステータス一覧</h2>
