@@ -627,11 +627,11 @@ export default function RoomShow() {
 
         .room-container {
           display: grid;
-          grid-template-columns: 1fr 400px;
+          grid-template-columns: 1fr 350px;
           gap: 24px;
-          max-width: 1600px;
-          margin: 0 auto;
-          padding: 32px 64px;
+          max-width: 100%;
+          margin: 0;
+          padding: 20px 24px;
         }
 
         .left-panel,
