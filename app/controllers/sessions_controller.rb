@@ -24,6 +24,10 @@ class SessionsController < ApplicationController
     begin
       ActiveRecord::Base.transaction do
         if current_user
+          # Check out any existing active session for this user
+          existing_session = Session.active.where(user_id: current_user.id).first
+          existing_session.check_out! if existing_session
+
           session = Session.create!(
             user_id: current_user.id,
             seat_id: seat.id,
