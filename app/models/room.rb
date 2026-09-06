@@ -1,7 +1,7 @@
 class Room < ApplicationRecord
   belongs_to :user
   has_many :room_permissions, dependent: :destroy
-  has_many :seats, dependent: :destroy, counter_cache: true
+  has_many :seats, dependent: :destroy
   has_many :share_links, dependent: :destroy
 
   validates :name, presence: true
