@@ -3,7 +3,7 @@
 ## 0. テストルームリンク
 ログイン無しで完成イメージを把握しやすくなるよう作成しましたので合わせてご確認ください。
 座りたい座席をクリックすると着席、もう一度クリックで離席ができます。
-https://floormap-seating-manager.onrender.com/rooms/vNx9WWHZdCHynuJVMp3bdGdb
+https://floormap.onrender.com/rooms/d80d848c8b6f
 
 
 ## 1. サービス概要
