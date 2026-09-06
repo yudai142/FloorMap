@@ -39,7 +39,7 @@ export default function Layout({ children, auth = {} }) {
       {/* ヘッダー */}
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-blue-600">🗺️ FloorMap</h1>
+          <a href="/" className="text-2xl font-bold text-blue-600 hover:text-blue-800 transition">🗺️ FloorMap</a>
           <div className="flex items-center space-x-4">
             {auth?.is_authenticated ? (
               <>
