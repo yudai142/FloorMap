@@ -24,7 +24,7 @@ RSpec.describe 'Floor Plan Data', type: :model do
       floor_plan = [
         {
           type: 'polygon',
-          points: [[10, 10], [100, 10], [100, 100], [10, 100]],
+          points: [ [ 10, 10 ], [ 100, 10 ], [ 100, 100 ], [ 10, 100 ] ],
           color: '#22c55e',
           lineWidth: 2
         }
@@ -35,7 +35,7 @@ RSpec.describe 'Floor Plan Data', type: :model do
     end
 
     it 'persists after multiple updates' do
-      floor_plan_v1 = [{ type: 'rectangle', x: 0, y: 0 }]
+      floor_plan_v1 = [ { type: 'rectangle', x: 0, y: 0 } ]
       floor_plan_v2 = [
         { type: 'rectangle', x: 0, y: 0 },
         { type: 'circle', x: 100, y: 100 }
@@ -78,11 +78,11 @@ RSpec.describe 'Floor Plan Data', type: :model do
         { type: 'line', x: 0, y: 0, x2: 100, y2: 100 },
         { type: 'arrow', x: 0, y: 0, x2: 100, y2: 100 },
         { type: 'text', x: 50, y: 50, text: 'Label', fontSize: 14 },
-        { type: 'polygon', points: [[0, 0], [100, 0], [100, 100]] }
+        { type: 'polygon', points: [ [ 0, 0 ], [ 100, 0 ], [ 100, 100 ] ] }
       ]
 
       valid_shapes.each do |shape|
-        room.update(floor_plan_data: [shape])
+        room.update(floor_plan_data: [ shape ])
         expect(room.reload.floor_plan_data).to be_present
       end
     end

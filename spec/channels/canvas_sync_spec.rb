@@ -64,14 +64,14 @@ RSpec.describe RoomsChannel, type: :channel do
     end
 
     it 'broadcasts floor plan updated event' do
-      floor_plan = [{ type: 'rectangle', x: 0, y: 0, width: 100, height: 100 }]
+      floor_plan = [ { type: 'rectangle', x: 0, y: 0, width: 100, height: 100 } ]
       expect {
         room.update(floor_plan_data: floor_plan)
       }.to have_broadcasted_to(room).with(hash_including(type: 'floor_plan_updated'))
     end
 
     it 'includes floor plan data in broadcast' do
-      floor_plan = [{ type: 'rectangle', x: 0, y: 0 }]
+      floor_plan = [ { type: 'rectangle', x: 0, y: 0 } ]
       expect {
         room.update(floor_plan_data: floor_plan)
       }.to have_broadcasted_to(room).with(hash_including(

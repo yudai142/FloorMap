@@ -124,5 +124,4 @@ class SessionsController < ApplicationController
       Session.none
     end
   end
-
 end

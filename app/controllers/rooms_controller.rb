@@ -8,16 +8,16 @@ class RoomsController < ApplicationController
     @rooms = @rooms.search(params[:search]) if params[:search].present?
     @rooms = @rooms.sorted(params[:sort], params[:direction]) if params[:sort].present?
 
-    render inertia: 'Rooms/Index', props: {
+    render inertia: "Rooms/Index", props: {
       rooms: @rooms.map { |r| room_index_json(r) },
-      current_user: current_user.as_json(only: [:id, :email, :role]),
+      current_user: current_user.as_json(only: [ :id, :email, :role ]),
       auth: auth_props
     }
   end
 
   def show
     begin
-      render inertia: 'Rooms/Show', props: {
+      render inertia: "Rooms/Show", props: {
         room: {
           id: @room.id,
           share_token: @room.share_token,
@@ -38,7 +38,7 @@ class RoomsController < ApplicationController
           email: current_user.email.to_s,
           role: current_user.role
         } : nil,
-        current_session: current_user ? current_user.sessions.active.first&.as_json(only: [:id, :user_auto_checkout_enabled, :user_auto_checkout_time]) : nil,
+        current_session: current_user ? current_user.sessions.active.first&.as_json(only: [ :id, :user_auto_checkout_enabled, :user_auto_checkout_time ]) : nil,
         auth: auth_props
       }
     rescue Encoding::UndefinedConversionError, JSON::GeneratorError => e
@@ -50,11 +50,11 @@ class RoomsController < ApplicationController
     authorize Room, :create?
     @room = Room.new
 
-    render inertia: 'Rooms/New', props: {
+    render inertia: "Rooms/New", props: {
       room: {
         id: nil,
-        name: '',
-        description: ''
+        name: "",
+        description: ""
       },
       auth: auth_props
     }
@@ -67,7 +67,7 @@ class RoomsController < ApplicationController
     if @room.save
       respond_to do |format|
         format.html { redirect_to @room, notice: "ルームを作成しました" }
-        format.json { render json: @room.as_json(only: [:id, :share_token, :name, :description]), status: :created }
+        format.json { render json: @room.as_json(only: [ :id, :share_token, :name, :description ]), status: :created }
       end
     else
       respond_to do |format|
@@ -87,7 +87,7 @@ class RoomsController < ApplicationController
     if @room.update(room_params)
       respond_to do |format|
         format.html { redirect_to @room, notice: "ルームを更新しました" }
-        format.json { render json: @room.as_json(only: [:id, :share_token, :name, :description, :width, :height]), status: :ok }
+        format.json { render json: @room.as_json(only: [ :id, :share_token, :name, :description, :width, :height ]), status: :ok }
       end
     else
       respond_to do |format|
@@ -107,7 +107,7 @@ class RoomsController < ApplicationController
   def canvas_editor
     authorize @room, :canvas_editor?
 
-    render inertia: 'Rooms/CanvasEditor', props: {
+    render inertia: "Rooms/CanvasEditor", props: {
       room: {
         id: @room.id,
         share_token: @room.share_token,
@@ -118,7 +118,7 @@ class RoomsController < ApplicationController
       },
       shapes_data: @room.floor_plan_data || [],
       seats: @room.seats.map { |s| seat_canvas_json(s) },
-      current_user: current_user.as_json(only: [:id, :email]),
+      current_user: current_user.as_json(only: [ :id, :email ]),
       auth: auth_props
     }
   end
@@ -131,7 +131,7 @@ class RoomsController < ApplicationController
     @room.seats.each do |seat|
       seat_data = {
         id: seat.id,
-        label: (seat.seat_identifier || "").to_s.encode('UTF-8', 'UTF-8', invalid: :replace, undef: :replace, replace: ''),
+        label: (seat.seat_identifier || "").to_s.encode("UTF-8", "UTF-8", invalid: :replace, undef: :replace, replace: ""),
         position_x: seat.position_x,
         position_y: seat.position_y,
         row_number: seat.row_number,
@@ -146,9 +146,9 @@ class RoomsController < ApplicationController
       if session
         seat_data[:occupied] = true
         if session.user_id && session.user
-          seat_data[:occupant_name] = session.user.username || session.user.email.to_s.split('@').first
+          seat_data[:occupant_name] = session.user.username || session.user.email.to_s.split("@").first
         elsif session.visitor_id && session.visitor
-          seat_data[:occupant_name] = session.visitor.display_name || '不明'
+          seat_data[:occupant_name] = session.visitor.display_name || "\u4E0D\u660E"
         end
       end
 
@@ -161,7 +161,7 @@ class RoomsController < ApplicationController
       if s.user_id
         user = s.user
         if user
-          username = safe_encode(user.username || user.email.to_s.split('@').first)
+          username = safe_encode(user.username || user.email.to_s.split("@").first)
           user_data = {
             id: user.id,
             email: safe_encode(user.email),
@@ -176,7 +176,7 @@ class RoomsController < ApplicationController
         if visitor
           visitor_data = {
             id: visitor.id,
-            display_name: safe_encode(visitor.display_name || '不明')
+            display_name: safe_encode(visitor.display_name || "\u4E0D\u660E")
           }
         end
       end
@@ -197,10 +197,10 @@ class RoomsController < ApplicationController
 
     current_user_session = nil
     if user_signed_in?
-      current_user_session = current_user.sessions.active.first&.as_json(only: [:id, :user_auto_checkout_enabled, :user_auto_checkout_time])
+      current_user_session = current_user.sessions.active.first&.as_json(only: [ :id, :user_auto_checkout_enabled, :user_auto_checkout_time ])
     elsif params[:device_identifier].present?
       # For unauthenticated users, find active session by device_identifier
-      current_user_session = Session.active.where(device_identifier: params[:device_identifier]).first&.as_json(only: [:id, :user_auto_checkout_enabled, :user_auto_checkout_time])
+      current_user_session = Session.active.where(device_identifier: params[:device_identifier]).first&.as_json(only: [ :id, :user_auto_checkout_enabled, :user_auto_checkout_time ])
     end
 
     render json: {
@@ -263,7 +263,7 @@ class RoomsController < ApplicationController
     rescue StandardError => e
       render json: {
         message: "設定の保存に失敗しました",
-        errors: [e.message]
+        errors: [ e.message ]
       }, status: :unprocessable_entity
     end
   end
@@ -324,11 +324,11 @@ class RoomsController < ApplicationController
     data = seat.canvas_data
     {
       id: data[:id],
-      label: (data[:seat_identifier] || "").to_s.encode('UTF-8', 'UTF-8', invalid: :replace, undef: :replace, replace: ''),
+      label: (data[:seat_identifier] || "").to_s.encode("UTF-8", "UTF-8", invalid: :replace, undef: :replace, replace: ""),
       x: data[:position_x] || 0,
       y: data[:position_y] || 0,
       occupied: data[:session].present?,
-      occupant_name: ((data[:session]&.dig(:name) || data[:session]&.dig(:user_id).to_s) || "不明").to_s.encode('UTF-8', 'UTF-8', invalid: :replace, undef: :replace, replace: ''),
+      occupant_name: ((data[:session]&.dig(:name) || data[:session]&.dig(:user_id).to_s) || "不明").to_s.encode("UTF-8", "UTF-8", invalid: :replace, undef: :replace, replace: ""),
       seat_type: data[:seat_type]
     }
   rescue => e
@@ -336,14 +336,14 @@ class RoomsController < ApplicationController
   end
 
   def floor_plan_params
-    params.require(:room).permit(floor_plan_data: [:id, :type, :x, :y, :x1, :y1, :x2, :y2, :cx, :cy, :r, :width, :height, :color, :lineWidth, :text, :points, :pointsArray, :fill])
+    params.require(:room).permit(floor_plan_data: [ :id, :type, :x, :y, :x1, :y1, :x2, :y2, :cx, :cy, :r, :width, :height, :color, :lineWidth, :text, :points, :pointsArray, :fill ])
   end
 
   private
 
   def safe_encode(str)
     return nil if str.nil?
-    str.to_s.encode('UTF-8', 'UTF-8', invalid: :replace, undef: :replace, replace: '')
+    str.to_s.encode("UTF-8", "UTF-8", invalid: :replace, undef: :replace, replace: "")
   rescue => e
     ""
   end

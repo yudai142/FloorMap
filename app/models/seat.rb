@@ -45,8 +45,8 @@ class Seat < ApplicationRecord
 
   def self.grid_position_for(position_x:, position_y:)
     {
-      row_number: [position_y.to_i, 0].max,
-      column_number: [position_x.to_i, 1].max
+      row_number: [ position_y.to_i, 0 ].max,
+      column_number: [ position_x.to_i, 1 ].max
     }
   end
 
@@ -58,18 +58,18 @@ class Seat < ApplicationRecord
       if active_session
         if active_session.user_id
           user = active_session.user
-          username = (user&.email&.to_s&.split('@')&.first || user&.email&.to_s)
-          username = username.encode('UTF-8', 'UTF-8', invalid: :replace, undef: :replace, replace: '') if username
+          username = (user&.email&.to_s&.split("@")&.first || user&.email&.to_s)
+          username = username.encode("UTF-8", "UTF-8", invalid: :replace, undef: :replace, replace: "") if username
           session_data = { id: active_session.id, user_id: active_session.user_id, type: "user", name: username }
         elsif active_session.visitor_id
           display_name = active_session.visitor&.display_name&.to_s
-          display_name = display_name.encode('UTF-8', 'UTF-8', invalid: :replace, undef: :replace, replace: '') if display_name
+          display_name = display_name.encode("UTF-8", "UTF-8", invalid: :replace, undef: :replace, replace: "") if display_name
           session_data = { id: active_session.id, visitor_id: active_session.visitor_id, type: "visitor", name: display_name }
         end
       end
 
       identifier = begin
-        seat_identifier.encode('UTF-8', 'UTF-8', invalid: :replace, undef: :replace, replace: '')
+        seat_identifier.encode("UTF-8", "UTF-8", invalid: :replace, undef: :replace, replace: "")
       rescue => e
         "S#{id}"
       end
