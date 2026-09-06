@@ -63,6 +63,8 @@ export default function RoomShow() {
       if (!response.ok) {
         const error = await response.json()
         console.error('Failed to save auto checkout enabled setting:', error)
+        const errorMsg = error.errors ? error.errors.join(', ') : error.message
+        alert(`エラー: ${errorMsg}`)
         setAutoCheckoutEnabled(!checked)
       }
     } catch (error) {
