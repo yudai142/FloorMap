@@ -1,6 +1,6 @@
 class RoomsController < ApplicationController
-  before_action :set_room, only: [ :show, :edit, :update, :destroy, :canvas_data, :canvas_editor, :floor_plan ]
-  skip_before_action :authenticate_user!, only: [ :show, :canvas_data ]
+  before_action :set_room, only: [ :show, :edit, :update, :destroy, :canvas_data, :canvas_editor, :floor_plan, :update_auto_checkout_settings ]
+  skip_before_action :authenticate_user!, only: [ :show, :canvas_data, :update_auto_checkout_settings ]
 
   def index
     authorize Room
@@ -177,6 +177,9 @@ class RoomsController < ApplicationController
     current_user_session = nil
     if user_signed_in?
       current_user_session = current_user.sessions.active.first&.as_json(only: [:id, :user_auto_checkout_enabled, :user_auto_checkout_time])
+    elsif params[:device_identifier].present?
+      # For unauthenticated users, find active session by device_identifier
+      current_user_session = Session.active.where(device_identifier: params[:device_identifier]).first&.as_json(only: [:id, :user_auto_checkout_enabled, :user_auto_checkout_time])
     end
 
     render json: {
@@ -207,10 +210,12 @@ class RoomsController < ApplicationController
   end
 
   def update_auto_checkout_settings
-    return head :unauthorized unless user_signed_in?
+    current_session = if user_signed_in?
+      current_user.sessions.active.first
+    elsif params[:device_identifier].present?
+      Session.active.where(device_identifier: params[:device_identifier]).first
+    end
 
-    # Get current active session for this user
-    current_session = current_user.sessions.active.first
     return head :not_found unless current_session
 
     settings = auto_checkout_settings_params.to_h
