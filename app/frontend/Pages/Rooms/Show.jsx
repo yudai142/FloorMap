@@ -418,7 +418,6 @@ export default function RoomShow() {
             </div>
           </div>
 
-          <div style={{ position: 'relative', display: 'inline-block' }}>
           <div style={{ position: 'relative', display: 'inline-block', borderRight: '3px solid #3b82f6', borderBottom: '3px solid #3b82f6' }}>
           <svg
             ref={svgRef}
