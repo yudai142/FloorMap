@@ -211,15 +211,31 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
 
     setIsSaving(true)
     try {
+      // Filter out incomplete shapes before saving
+      const validShapes = shapes.filter(shape => {
+        if (shape.type === 'line' || shape.type === 'arrow') {
+          return shape.x1 !== undefined && shape.y1 !== undefined && shape.x2 !== undefined && shape.y2 !== undefined
+        } else if (shape.type === 'rectangle') {
+          return shape.x !== undefined && shape.y !== undefined && shape.width !== undefined && shape.height !== undefined
+        } else if (shape.type === 'circle') {
+          return shape.cx !== undefined && shape.cy !== undefined && shape.r !== undefined
+        } else if (shape.type === 'text') {
+          return shape.x !== undefined && shape.y !== undefined && shape.text !== undefined
+        } else if (shape.type === 'polygon') {
+          return shape.pointsArray !== undefined && shape.pointsArray.length > 0
+        }
+        return true
+      })
+
       // Save shapes (floor plan)
-      console.log('Saving floor plan:', shapes)
+      console.log('Saving floor plan:', validShapes)
       const floorPlanResponse = await fetch(`/rooms/${room.share_token}/floor_plan.json`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'X-CSRF-Token': getCsrfToken(),
         },
-        body: JSON.stringify({ room: { floor_plan_data: shapes } }),
+        body: JSON.stringify({ room: { floor_plan_data: validShapes } }),
       })
 
       console.log('Floor plan response status:', floorPlanResponse.status)
