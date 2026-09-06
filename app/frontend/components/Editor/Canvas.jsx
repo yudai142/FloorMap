@@ -822,6 +822,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
                 <SeatRenderer key={seat.id} seat={seat} onDelete={deleteSeat} />
               ))}
             </svg>
+            </div>
 
             {/* リサイズハンドル */}
             {/* 右端のリサイズハンドル */}
