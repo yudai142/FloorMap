@@ -268,7 +268,7 @@ export default function RoomShow() {
                             current_user.role !== 'admin'
                           }
                         >
-                          解放
+                          離席
                         </button>
                       ) : (
                         <button
