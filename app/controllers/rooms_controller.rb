@@ -67,7 +67,7 @@ class RoomsController < ApplicationController
     if @room.save
       respond_to do |format|
         format.html { redirect_to @room, notice: "ルームを作成しました" }
-        format.json { render json: @room, status: :created }
+        format.json { render json: @room.as_json(only: [:id, :share_token, :name, :description]), status: :created }
       end
     else
       respond_to do |format|

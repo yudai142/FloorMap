@@ -42,7 +42,7 @@ export default function New() {
       }
 
       const data = await response.json()
-      window.location.href = `/rooms/${data.id}`
+      window.location.href = `/rooms/${data.share_token}`
     } catch (error) {
       setErrors({ general: 'エラーが発生しました' })
       setIsSubmitting(false)
