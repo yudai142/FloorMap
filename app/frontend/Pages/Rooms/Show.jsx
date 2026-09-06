@@ -418,7 +418,15 @@ export default function RoomShow() {
             </div>
           </div>
 
-          <div style={{ position: 'relative', display: 'inline-block', borderRight: '3px solid #3b82f6', borderBottom: '3px solid #3b82f6', width: '100%', height: 'calc(100vh - 180px)' }}>
+          <div
+            style={{ position: 'relative', display: 'block', borderRight: '3px solid #3b82f6', borderBottom: '3px solid #3b82f6', width: '100%', height: 'calc(100vh - 180px)' }}
+            onMouseMove={(e) => {
+              handleCanvasMouseMove(e)
+              handleResizeMouseMove(e)
+            }}
+            onMouseUp={handleCanvasMouseUp}
+            onMouseLeave={handleCanvasMouseUp}
+          >
           <svg
             ref={svgRef}
             id="room-canvas"
@@ -434,10 +442,6 @@ export default function RoomShow() {
             }}
             onWheel={handleCanvasWheel}
             onMouseDown={handleCanvasMouseDown}
-            onMouseMove={(e) => {
-              handleCanvasMouseMove(e)
-              handleResizeMouseMove(e)
-            }}
             onMouseUp={handleCanvasMouseUp}
             onMouseLeave={handleCanvasMouseUp}
           >
