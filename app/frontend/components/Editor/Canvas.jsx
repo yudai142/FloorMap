@@ -772,10 +772,10 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
 
               {/* キャンバスの青い枠線 */}
               <rect
-                x="0"
-                y="0"
-                width={canvasWidth}
-                height={canvasHeight}
+                x="1.5"
+                y="1.5"
+                width={canvasWidth - 3}
+                height={canvasHeight - 3}
                 stroke="#3b82f6"
                 strokeWidth="3"
                 fill="none"
