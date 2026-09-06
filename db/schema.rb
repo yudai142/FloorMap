@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_06_000005) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_06_000006) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -181,13 +181,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_06_000005) do
     t.datetime "check_out_time"
     t.integer "checkout_timer_minutes", default: 60
     t.datetime "created_at", null: false
+    t.string "device_identifier"
     t.bigint "seat_id", null: false
     t.string "status", default: "active", null: false
     t.datetime "updated_at", null: false
     t.boolean "user_auto_checkout_enabled", default: false
     t.datetime "user_auto_checkout_time"
     t.bigint "user_id"
+    t.string "user_name"
     t.bigint "visitor_id"
+    t.index ["device_identifier"], name: "index_sessions_on_device_identifier"
     t.index ["seat_id", "status"], name: "index_sessions_on_seat_id_and_status"
     t.index ["seat_id"], name: "index_sessions_on_seat_id"
     t.index ["status"], name: "index_sessions_on_status"
