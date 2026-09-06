@@ -346,6 +346,66 @@ export default function RoomShow() {
         )}
       </div>
 
+      {/* URL共有セクション */}
+      <div style={{
+        backgroundColor: '#f0f9ff',
+        borderBottom: '1px solid #dbeafe',
+        padding: '16px 24px',
+        margin: '0 0 20px 0'
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '16px',
+          justifyContent: 'space-between'
+        }}>
+          <div style={{ flex: 1 }}>
+            <p style={{
+              margin: '0 0 8px 0',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#1e40af'
+            }}>
+              🔗 ルームのURLを共有
+            </p>
+            <p style={{
+              margin: '0',
+              fontSize: '13px',
+              color: '#1e3a8a'
+            }}>
+              下のボタンをクリックしてURLをコピーしたら、他の人に共有してください。リンクを開くだけで着席状況を確認できます。
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              const url = window.location.href
+              navigator.clipboard.writeText(url).then(() => {
+                alert('ルームのURLをコピーしました！他の人に共有してください。')
+              }).catch(() => {
+                alert('URLのコピーに失敗しました')
+              })
+            }}
+            style={{
+              padding: '10px 20px',
+              fontSize: '14px',
+              fontWeight: '600',
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              transition: 'background-color 0.2s',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+            }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = '#2563eb'}
+            onMouseLeave={(e) => e.target.style.backgroundColor = '#3b82f6'}
+          >
+            📋 URLをコピー
+          </button>
+        </div>
+      </div>
+
       <div className="room-container">
         {/* 左パネル：座席配置図 */}
         <div className="left-panel">
@@ -358,31 +418,6 @@ export default function RoomShow() {
               <span className="legend-item">
                 <span className="dot available"></span> 空き ({(room.seats_count || 0) - (room.occupied_count || 0)})
               </span>
-              <button
-                onClick={() => {
-                  const url = window.location.href
-                  navigator.clipboard.writeText(url).then(() => {
-                    alert('ルームのURLをコピーしました')
-                  }).catch(() => {
-                    alert('URLのコピーに失敗しました')
-                  })
-                }}
-                style={{
-                  marginLeft: '12px',
-                  padding: '4px 8px',
-                  fontSize: '12px',
-                  backgroundColor: '#3b82f6',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap'
-                }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = '#2563eb'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = '#3b82f6'}
-              >
-                🔗 URLをコピー
-              </button>
             </div>
 
             {/* ズームコントロール */}
