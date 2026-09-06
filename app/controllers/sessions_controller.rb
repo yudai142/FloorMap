@@ -92,6 +92,14 @@ class SessionsController < ApplicationController
     # Allow unauthenticated users to check out (no authorization check)
 
     if @session.check_out!
+      # Reset auto checkout settings for the user
+      if @session.user_id.present?
+        user = User.find_by(id: @session.user_id)
+        if user
+          user.update_columns(auto_checkout_enabled: false, auto_checkout_time: nil)
+        end
+      end
+
       respond_to do |format|
         format.html { redirect_to sessions_path, notice: "チェックアウトしました" }
         format.json { render json: @session.seat.canvas_data, status: :ok }
