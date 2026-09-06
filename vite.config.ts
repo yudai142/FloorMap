@@ -12,6 +12,10 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 5173,
     hmr: false,
+    middlewareMode: false,
+  },
+  define: {
+    __HMR__: false,
   },
   build: {
     rollupOptions: {
