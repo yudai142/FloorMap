@@ -16,7 +16,9 @@
     <link rel="apple-touch-icon" href="/icon.png">
 
     <%# Vite stylesheet only (no JS for Devise views) %>
-    <link rel="stylesheet" href="/vite/application-C_NQO3XJ.css">
+    <% unless Rails.env.test? %>
+      <%= vite_stylesheet_tag "application.jsx", "data-turbo-track": "reload" %>
+    <% end %>
   </head>
 
   <body>
