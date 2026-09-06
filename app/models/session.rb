@@ -69,9 +69,9 @@ class Session < ApplicationRecord
   end
 
   def user_or_visitor_present
-    return if user_id.present? || visitor_id.present?
+    return if user_id.present? || visitor_id.present? || device_identifier.present?
 
-    errors.add(:base, "ユーザーまたは訪問者のいずれかが必要です")
+    errors.add(:base, "ユーザー、訪問者、またはデバイス識別子のいずれかが必要です")
   end
 
   def seat_not_already_occupied
