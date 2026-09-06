@@ -94,7 +94,9 @@ class SeatsController < ApplicationController
   private
 
   def set_room
-    @room = Room.find_by(share_token: params[:room_share_token])
+    # Handle both nested route params (:share_token) and explicit params (:room_share_token)
+    token = params[:share_token] || params[:room_share_token]
+    @room = Room.find_by(share_token: token)
     raise ActiveRecord::RecordNotFound if @room.blank?
   end
 
