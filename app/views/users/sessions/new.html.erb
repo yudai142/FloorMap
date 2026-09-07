@@ -24,7 +24,7 @@
               <% if flash[:alert].present? %>
                 <li class="flex gap-2">
                   <span class="text-red-400">•</span>
-                  <span><%= flash[:alert] %></span>
+                  <span><%= convert_flash_alert(flash[:alert]) %></span>
                 </li>
               <% end %>
               <% resource.errors.each do |error| %>
