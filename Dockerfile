@@ -53,7 +53,7 @@ RUN bundle install && \
 COPY . .
 
 # Install JavaScript dependencies
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 # Precompile bootsnap code for faster boot times.
 # -j 1 disable parallel compilation to avoid a QEMU bug: https://github.com/rails/bootsnap/issues/495
