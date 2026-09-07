@@ -6,6 +6,7 @@ class Room < ApplicationRecord
 
   validates :name, presence: true
   validates :share_token, presence: true, uniqueness: true
+  validates :auto_checkout_time, format: { with: /\A([01]?[0-9]|2[0-3]):[0-5][0-9]\z/, message: "must be in HH:MM format" }, allow_blank: true
 
   before_validation :generate_share_token, on: :create
   after_update_commit :broadcast_floor_plan_updated, if: :saved_change_to_floor_plan_data?

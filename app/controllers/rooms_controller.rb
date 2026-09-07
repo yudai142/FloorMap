@@ -114,7 +114,9 @@ class RoomsController < ApplicationController
         name: @room.name,
         description: @room.description,
         width: @room.width || 1000,
-        height: @room.height || 700
+        height: @room.height || 700,
+        auto_checkout_enabled: @room.auto_checkout_enabled || false,
+        auto_checkout_time: @room.auto_checkout_time
       },
       shapes_data: @room.floor_plan_data || [],
       seats: @room.seats.map { |s| seat_canvas_json(s) },
@@ -317,7 +319,7 @@ class RoomsController < ApplicationController
   end
 
   def room_params
-    params.require(:room).permit(:name, :description, :width, :height)
+    params.require(:room).permit(:name, :description, :width, :height, :auto_checkout_enabled, :auto_checkout_time)
   end
 
   def seat_canvas_json(seat)
