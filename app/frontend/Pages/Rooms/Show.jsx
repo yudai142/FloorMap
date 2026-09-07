@@ -245,9 +245,7 @@ export default function RoomShow() {
 
       // response が 200 の場合は成功
       if (response.ok) {
-        const seatLabel = `座席`
-        const displayName = current_user?.name || userName || 'ゲスト'
-        setAlert({ type: 'success', message: `${displayName}さんが${seatLabel}に着席しました` })
+        setAlert({ type: 'success', message: '着席しました' })
       }
 
       await fetchSessions()
