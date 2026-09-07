@@ -120,7 +120,6 @@ export default function RoomShow() {
 
       if (!response.ok) {
         const error = await response.json()
-        console.error('Failed to save auto checkout enabled setting:', error)
         const errorMsg = error.errors ? error.errors.join(', ') : error.message
         alert(`エラー: ${errorMsg}`)
         setAutoCheckoutEnabled(!checked)
@@ -129,7 +128,6 @@ export default function RoomShow() {
         await fetchSessions()
       }
     } catch (error) {
-      console.error('Failed to save auto checkout enabled setting:', error)
       setAutoCheckoutEnabled(!checked)
     }
   }
@@ -164,7 +162,6 @@ export default function RoomShow() {
         alert('離席日時の保存に失敗しました')
       }
     } catch (error) {
-      console.error('Failed to save auto checkout time:', error)
       alert('離席日時の保存に失敗しました')
     }
   }
@@ -222,14 +219,12 @@ export default function RoomShow() {
 
       clearTimeout(timeoutId)
 
-      if (response.ok) {
-        // 5秒待機してからUIを更新
-        await new Promise(resolve => setTimeout(resolve, 5000))
-        await fetchSessions()
-        if (autoCheckoutEnabled && autoCheckoutTime) {
-          const timeStr = new Date(autoCheckoutTime).toLocaleString('ja-JP')
-          console.log(`${timeStr} に自動離席します`)
-        }
+      // 5秒待機してからUIを更新（status code に関わらず always refresh）
+      await new Promise(resolve => setTimeout(resolve, 5000))
+      await fetchSessions()
+      if (autoCheckoutEnabled && autoCheckoutTime) {
+        const timeStr = new Date(autoCheckoutTime).toLocaleString('ja-JP')
+        console.log(`${timeStr} に自動離席します`)
       }
     } catch (error) {
       // Silent fail
@@ -252,11 +247,9 @@ export default function RoomShow() {
 
       clearTimeout(timeoutId)
 
-      if (response.ok) {
-        // 5秒待機してからUIを更新
-        await new Promise(resolve => setTimeout(resolve, 5000))
-        await fetchSessions()
-      }
+      // 5秒待機してからUIを更新（status code に関わらず always refresh）
+      await new Promise(resolve => setTimeout(resolve, 5000))
+      await fetchSessions()
     } catch (error) {
       // Silent fail
     }
