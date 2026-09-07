@@ -28,6 +28,9 @@ done
 echo "Clearing esbuild and Vite caches..."
 rm -rf node_modules/.esbuild node_modules/.vite .vite public/vite
 
+echo "Building assets..."
+npm run build
+
 echo "Running pending migrations..."
 bundle exec rails db:migrate
 
