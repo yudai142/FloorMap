@@ -261,7 +261,7 @@ export default class extends Controller {
           this.mergeSeat(updatedSeat)
         }
       })
-      .catch(err => console.error("Check-in failed:", err))
+      .catch(() => {})
   }
 
   checkOut(seat) {
@@ -281,7 +281,7 @@ export default class extends Controller {
           this.mergeSeat(updatedSeat)
         }
       })
-      .catch(err => console.error("Check-out failed:", err))
+      .catch(() => {})
   }
 
   save() {
