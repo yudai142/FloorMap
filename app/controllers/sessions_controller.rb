@@ -64,6 +64,9 @@ class SessionsController < ApplicationController
       end
     rescue ActiveRecord::RecordInvalid => e
       session = e.record
+    rescue => e
+      Rails.logger.error("Check-in error: #{e.message}")
+      session = nil
     end
 
     if session&.persisted?
