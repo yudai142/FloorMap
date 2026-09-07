@@ -451,11 +451,15 @@ export default function RoomShow() {
             <ErrorAlert
               message={alert.message}
               onDismiss={() => setAlert(null)}
+              autoClose={true}
+              duration={5000}
             />
           ) : (
             <SuccessAlert
               message={alert.message}
               onDismiss={() => setAlert(null)}
+              autoClose={true}
+              duration={5000}
             />
           )}
         </div>
