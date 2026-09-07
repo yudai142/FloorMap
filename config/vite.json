@@ -12,7 +12,7 @@
     "autoBuild": true
   },
   "production": {
-    "autoBuild": false
+    "autoBuild": true
   },
   "test": {
     "autoBuild": false,
