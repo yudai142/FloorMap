@@ -1,6 +1,7 @@
 module ErrorMessagesHelper
   def convert_flash_alert(message)
     case message
+    # 英語のメッセージ
     when /Invalid Email or password/, /invalid email or password/i
       "メールアドレスまたはパスワードが正しくありません"
     when /You need to sign in or sign up before continuing/, /unauthenticated/i
@@ -9,6 +10,19 @@ module ErrorMessagesHelper
       "メールアドレスを確認してください"
     when /already confirmed/i
       "既に確認されています"
+    # 日本語のメッセージ（Devise の i18n で既に日本語）
+    when /無効な.*またはパスワード/
+      "メールアドレスまたはパスワードが正しくありません"
+    when /続行する前に/
+      "ログインしてください"
+    when /既にサインイン/
+      "既にサインインしています"
+    when /アカウントが.*有効化されていません/
+      "アカウントがまだ有効化されていません"
+    when /ロックされています/
+      "アカウントがロックされています"
+    when /タイムアウト/
+      "セッションがタイムアウトしました。もう一度サインインしてください"
     else
       message
     end
