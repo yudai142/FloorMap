@@ -1,6 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { usePage } from '@inertiajs/react'
 
+// Suppress 422 console errors from check-in/check-out
+const originalError = console.error
+const originalWarn = console.warn
+const suppressMessages = (message) => {
+  const msg = String(message)
+  return msg.includes('422') && msg.includes('check_in')
+}
+console.error = function(...args) {
+  if (!suppressMessages(args.join(' '))) {
+    originalError.apply(console, args)
+  }
+}
+console.warn = function(...args) {
+  if (!suppressMessages(args.join(' '))) {
+    originalWarn.apply(console, args)
+  }
+}
+
 export default function RoomShow() {
   const { room, seats: initialSeats, current_user, current_session: initialSession, auth } = usePage().props
   const [seats, setSeats] = useState(initialSeats || [])
