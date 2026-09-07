@@ -10,6 +10,10 @@ rm -rf /app/public/vite /app/.vite /app/node_modules/.vite
 # Prepare database
 bundle exec rails db:prepare
 
+# Run pending migrations
+echo "Running pending migrations..."
+bundle exec rails db:migrate
+
 # Start Vite dev server in background with logging
 echo "Starting Vite dev server..."
 npm run dev > /tmp/vite.log 2>&1 &
