@@ -242,15 +242,15 @@ export default function RoomShow() {
 
       // 5秒待機してからUIを更新（status code に関わらず always refresh）
       await new Promise(resolve => setTimeout(resolve, 5000))
-      await fetchSessions()
 
-      // Check if check-in was successful by verifying the seat is now occupied
-      const currentSeat = seats.find(s => s.id === seatId)
-      if (currentSeat && currentSeat.occupied) {
-        const occupantName = currentSeat.occupant_name || userName
-        const seatLabel = currentSeat.label || `座席${seatId}`
-        setAlert({ type: 'success', message: `${occupantName}さんが${seatLabel}に着席しました` })
+      // response が 200 の場合は成功
+      if (response.ok) {
+        const seatLabel = `座席`
+        const displayName = current_user ? current_user.name : userName
+        setAlert({ type: 'success', message: `${displayName}さんが${seatLabel}に着席しました` })
       }
+
+      await fetchSessions()
 
       if (autoCheckoutEnabled && autoCheckoutTime) {
         const timeStr = new Date(autoCheckoutTime).toLocaleString('ja-JP')
