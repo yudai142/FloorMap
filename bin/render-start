@@ -25,5 +25,8 @@ while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
   fi
 done
 
+echo "Running pending migrations..."
+bundle exec rails db:migrate
+
 echo "Starting Puma..."
 exec bundle exec puma -t 5:5 -p 3000
