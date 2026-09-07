@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+# Clear esbuild and Vite caches on every startup
+echo "Clearing esbuild and Vite caches..."
+rm -rf node_modules/.esbuild node_modules/.vite .vite public/vite
+
 MAX_RETRIES=5
 RETRY_COUNT=0
 
