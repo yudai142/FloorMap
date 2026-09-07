@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { usePage } from '@inertiajs/react'
+import { ErrorAlert, SuccessAlert } from '../components/Alert'
 
 // Suppress 422 console errors from check-in/check-out
 const originalError = console.error
@@ -21,6 +22,7 @@ console.warn = function(...args) {
 
 export default function RoomShow() {
   const { room, seats: initialSeats, current_user, current_session: initialSession, auth } = usePage().props
+  const [alert, setAlert] = useState(null)
   const [seats, setSeats] = useState(initialSeats || [])
   const [sessions, setSessions] = useState([])
   const [currentSession, setCurrentSession] = useState(initialSession)
@@ -186,6 +188,7 @@ export default function RoomShow() {
 
   const handleCheckIn = async (seatId) => {
     try {
+      setAlert(null)
       let checkoutTimer = 60
 
       // 自動離席が有効な場合、日時から分数を計算
@@ -195,7 +198,7 @@ export default function RoomShow() {
         checkoutTimer = Math.round((checkoutTime - now) / 60000) // 分に変換
 
         if (checkoutTimer <= 0) {
-          alert('離席日時は現在時刻より後に設定してください')
+          setAlert({ type: 'error', message: '離席日時は現在時刻より後に設定してください' })
           return
         }
       }
@@ -205,7 +208,7 @@ export default function RoomShow() {
       if (!current_user) {
         userName = prompt('お名前を入力してください:')
         if (!userName || !userName.trim()) {
-          alert('お名前を入力してください')
+          setAlert({ type: 'error', message: 'お名前を入力してください' })
           return
         }
       }
@@ -240,17 +243,27 @@ export default function RoomShow() {
       // 5秒待機してからUIを更新（status code に関わらず always refresh）
       await new Promise(resolve => setTimeout(resolve, 5000))
       await fetchSessions()
+
+      // Check if check-in was successful by verifying the seat is now occupied
+      const currentSeat = seats.find(s => s.id === seatId)
+      if (currentSeat && currentSeat.occupied) {
+        const occupantName = currentSeat.occupant_name || userName
+        const seatLabel = currentSeat.label || `座席${seatId}`
+        setAlert({ type: 'success', message: `${occupantName}さんが${seatLabel}に着席しました` })
+      }
+
       if (autoCheckoutEnabled && autoCheckoutTime) {
         const timeStr = new Date(autoCheckoutTime).toLocaleString('ja-JP')
         console.log(`${timeStr} に自動離席します`)
       }
     } catch (error) {
-      // Silent fail
+      setAlert({ type: 'error', message: 'チェックインに失敗しました。もう一度お試しください。' })
     }
   }
 
   const handleCheckOut = async (sessionId) => {
     try {
+      setAlert(null)
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 30000)
 
@@ -268,8 +281,10 @@ export default function RoomShow() {
       // 5秒待機してからUIを更新（status code に関わらず always refresh）
       await new Promise(resolve => setTimeout(resolve, 5000))
       await fetchSessions()
+
+      setAlert({ type: 'success', message: '離席しました' })
     } catch (error) {
-      // Silent fail
+      setAlert({ type: 'error', message: 'チェックアウトに失敗しました。もう一度お試しください。' })
     }
   }
 
@@ -423,6 +438,30 @@ export default function RoomShow() {
           </button>
         </div>
       </div>
+
+      {/* アラート表示 */}
+      {alert && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          left: '20px',
+          right: '20px',
+          zIndex: 50,
+          maxWidth: '500px'
+        }}>
+          {alert.type === 'error' ? (
+            <ErrorAlert
+              message={alert.message}
+              onDismiss={() => setAlert(null)}
+            />
+          ) : (
+            <SuccessAlert
+              message={alert.message}
+              onDismiss={() => setAlert(null)}
+            />
+          )}
+        </div>
+      )}
 
       <div className="room-container">
         {/* 左パネル：座席配置図 */}
