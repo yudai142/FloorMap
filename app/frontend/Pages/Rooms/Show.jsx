@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { usePage } from '@inertiajs/react'
-import { ErrorAlert, SuccessAlert } from '../components/Alert'
+import { ErrorAlert, SuccessAlert } from '../../components/Alert'
 
 // Suppress 422 console errors from check-in/check-out
 const originalError = console.error
