@@ -8,7 +8,7 @@
     </div>
 
     <!-- Error Messages -->
-    <% if resource.errors.any? %>
+    <% if flash[:alert].present? || resource.errors.any? %>
       <div class="rounded-lg bg-red-50 border border-red-200 p-4" data-turbo-temporary>
         <div class="flex gap-3">
           <div class="flex-shrink-0">
@@ -21,6 +21,12 @@
               入力に誤りがあります
             </h3>
             <ul class="mt-2 list-inside space-y-1 text-sm text-red-700">
+              <% if flash[:alert].present? %>
+                <li class="flex gap-2">
+                  <span class="text-red-400">•</span>
+                  <span><%= flash[:alert] %></span>
+                </li>
+              <% end %>
               <% resource.errors.each do |error| %>
                 <li class="flex gap-2">
                   <span class="text-red-400">•</span>
