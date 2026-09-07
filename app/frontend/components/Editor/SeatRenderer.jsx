@@ -9,8 +9,11 @@ export default function SeatRenderer({ seat, onDelete }) {
     [seat.id, onDelete]
   )
 
+  const x = seat.x ?? 0
+  const y = seat.y ?? 0
+
   return (
-    <g transform={`translate(${seat.x}, ${seat.y})`} onContextMenu={handleContextMenu} style={{ cursor: 'grab' }}>
+    <g transform={`translate(${x}, ${y})`} onContextMenu={handleContextMenu} style={{ cursor: 'grab' }}>
       <circle
         r="12"
         fill={seat.occupied ? '#f87171' : '#4ade80'}
