@@ -21,6 +21,10 @@ module FloorMap
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
     #
+    # Set default locale to Japanese
+    config.i18n.default_locale = :ja
+    config.i18n.load_path += Dir[Rails.root.join('config', 'locales', '**', '*.yml').to_s]
+
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
   end
