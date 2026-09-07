@@ -4,7 +4,9 @@ import { X, AlertCircle, CheckCircle2 } from 'lucide-react'
 export function ErrorAlert({ message, onDismiss, autoClose = true, duration = 5000 }) {
   useEffect(() => {
     if (autoClose && onDismiss) {
-      const timer = setTimeout(onDismiss, duration)
+      const timer = setTimeout(() => {
+        onDismiss()
+      }, duration)
       return () => clearTimeout(timer)
     }
   }, [autoClose, duration, onDismiss])
@@ -31,7 +33,9 @@ export function ErrorAlert({ message, onDismiss, autoClose = true, duration = 50
 export function SuccessAlert({ message, onDismiss, autoClose = true, duration = 5000 }) {
   useEffect(() => {
     if (autoClose && onDismiss) {
-      const timer = setTimeout(onDismiss, duration)
+      const timer = setTimeout(() => {
+        onDismiss()
+      }, duration)
       return () => clearTimeout(timer)
     }
   }, [autoClose, duration, onDismiss])

@@ -246,6 +246,8 @@ export default function RoomShow() {
       // response が 200 の場合は成功
       if (response.ok) {
         setAlert({ type: 'success', message: '着席しました' })
+        // 5秒後にアラートを自動消去
+        setTimeout(() => setAlert(null), 5000)
       }
 
       await fetchSessions()
@@ -256,6 +258,8 @@ export default function RoomShow() {
       }
     } catch (error) {
       setAlert({ type: 'error', message: 'チェックインに失敗しました。もう一度お試しください。' })
+      // 5秒後にアラートを自動消去
+      setTimeout(() => setAlert(null), 5000)
     }
   }
 
@@ -281,8 +285,12 @@ export default function RoomShow() {
       await fetchSessions()
 
       setAlert({ type: 'success', message: '離席しました' })
+      // 5秒後にアラートを自動消去
+      setTimeout(() => setAlert(null), 5000)
     } catch (error) {
       setAlert({ type: 'error', message: 'チェックアウトに失敗しました。もう一度お試しください。' })
+      // 5秒後にアラートを自動消去
+      setTimeout(() => setAlert(null), 5000)
     }
   }
 
