@@ -29,6 +29,7 @@ export default function RoomShow() {
   const [autoCheckoutEnabled, setAutoCheckoutEnabled] = useState(false)
   const [autoCheckoutTime, setAutoCheckoutTime] = useState('')
   const [deviceId, setDeviceId] = useState('')
+  const [prevUserSeatId, setPrevUserSeatId] = useState(null)
 
   // Canvas zoom and pan
   const [zoom, setZoom] = useState(1)
@@ -40,7 +41,7 @@ export default function RoomShow() {
   const [canvasSize, setCanvasSize] = useState({ width: room.width || 1000, height: room.height || 700 })
   const svgRef = useRef(null)
 
-  // Initialize device ID on mount
+  // Initialize device ID and previous seat on mount
   useEffect(() => {
     try {
       let id = localStorage.getItem('deviceId')
@@ -49,6 +50,11 @@ export default function RoomShow() {
         localStorage.setItem('deviceId', id)
       }
       setDeviceId(id)
+
+      // 初期座席を設定
+      if (initialSession?.seat_id) {
+        setPrevUserSeatId(initialSession.seat_id)
+      }
     } catch (error) {
       console.error('Failed to initialize device ID:', error)
     }
@@ -245,12 +251,36 @@ export default function RoomShow() {
 
       // response が 200 の場合は成功
       if (response.ok) {
-        setAlert({ type: 'success', message: '着席しました' })
-        // 5秒後にアラートを自動消去
-        setTimeout(() => setAlert(null), 5000)
-      }
+        // 5秒待機後に fetchSessions で最新データを取得
+        await fetchSessions()
 
-      await fetchSessions()
+        // 現在のユーザー座席を確認
+        const currentUserName = current_user ? current_user.name : userName
+        const currentSeat = seats.find(s => s.occupied && s.occupant_name === currentUserName)
+
+        // 座席移動か新規着席かを判定
+        if (currentSeat) {
+          if (prevUserSeatId && prevUserSeatId !== currentSeat.id) {
+            // 座席移動
+            const prevSeat = initialSeats.find(s => s.id === prevUserSeatId)
+            const prevSeatLabel = prevSeat?.label || `座席${prevUserSeatId}`
+            const currentSeatLabel = currentSeat.label || `座席${currentSeat.id}`
+            setAlert({ type: 'success', message: `${prevSeatLabel}から${currentSeatLabel}に移動しました` })
+          } else {
+            // 新規着席
+            const seatLabel = currentSeat.label || `座席${currentSeat.id}`
+            setAlert({ type: 'success', message: `${seatLabel}に着席しました` })
+          }
+
+          // 現在の座席 ID を保存
+          setPrevUserSeatId(currentSeat.id)
+
+          // 5秒後にアラートを自動消去
+          setTimeout(() => setAlert(null), 5000)
+        }
+      } else {
+        await fetchSessions()
+      }
 
       if (autoCheckoutEnabled && autoCheckoutTime) {
         const timeStr = new Date(autoCheckoutTime).toLocaleString('ja-JP')
