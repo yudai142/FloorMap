@@ -12,8 +12,7 @@
     "autoBuild": true
   },
   "production": {
-    "autoBuild": false,
-    "hmr": false
+    "autoBuild": false
   },
   "test": {
     "autoBuild": false,
