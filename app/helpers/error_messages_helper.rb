@@ -1,4 +1,19 @@
 module ErrorMessagesHelper
+  def convert_flash_alert(message)
+    case message
+    when /Invalid Email or password/, /invalid email or password/i
+      "メールアドレスまたはパスワードが正しくありません"
+    when /You need to sign in or sign up before continuing/, /unauthenticated/i
+      "ログインしてください"
+    when /confirmation instructions/, /confirm/i
+      "メールアドレスを確認してください"
+    when /already confirmed/i
+      "既に確認されています"
+    else
+      message
+    end
+  end
+
   def devise_error_message(error)
     case error.type
     when :invalid
