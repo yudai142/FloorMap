@@ -1,0 +1,42 @@
+ja:
+  hello: "こんにちは"
+
+  activerecord:
+    errors:
+      messages:
+        taken: "は既に存在します"
+        blank: "を入力してください"
+        too_short: "は%{count}文字以上で入力してください"
+        too_long: "は%{count}文字以下で入力してください"
+        invalid: "は無効です"
+        confirmation: "が一致しません"
+        not_a_number: "は数値で入力してください"
+        greater_than: "は%{count}より大きい値を入力してください"
+        less_than: "は%{count}より小さい値を入力してください"
+        equal_to: "は%{count}と等しい値を入力してください"
+        even: "は偶数で入力してください"
+        odd: "は奇数で入力してください"
+        exclusion: "は予約されています"
+        inclusion: "は有効な値ではありません"
+        accepted: "を承認してください"
+        present: "は空である必要があります"
+        attribute_present: "が既に存在します"
+
+    attributes:
+      user:
+        email: "メールアドレス"
+        password: "パスワード"
+        password_confirmation: "パスワード（確認）"
+        username: "ユーザー名"
+        role: "権限"
+      room:
+        name: "ルーム名"
+        description: "説明"
+        width: "幅"
+        height: "高さ"
+      seat:
+        row_number: "行番号"
+        column_number: "列番号"
+        position_x: "X位置"
+        position_y: "Y位置"
+        seat_type: "座席タイプ"
