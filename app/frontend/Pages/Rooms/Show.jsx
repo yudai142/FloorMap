@@ -230,11 +230,9 @@ export default function RoomShow() {
           const timeStr = new Date(autoCheckoutTime).toLocaleString('ja-JP')
           console.log(`${timeStr} に自動離席します`)
         }
-      } else {
-        console.error('チェックイン失敗:', response.status)
       }
     } catch (error) {
-      console.error('チェックインエラー:', error)
+      // Silent fail
     }
   }
 
@@ -258,11 +256,9 @@ export default function RoomShow() {
         // 5秒待機してからUIを更新
         await new Promise(resolve => setTimeout(resolve, 5000))
         await fetchSessions()
-      } else {
-        console.error('チェックアウト失敗:', response.status)
       }
     } catch (error) {
-      console.error('チェックアウトエラー:', error)
+      // Silent fail
     }
   }
 
