@@ -1,4 +1,17 @@
 module ErrorMessagesHelper
+  def devise_error_message(error)
+    case error.type
+    when :invalid
+      "メールアドレスまたはパスワードが正しくありません"
+    when :not_found_in_database
+      "メールアドレスまたはパスワードが正しくありません"
+    when :unauthenticated
+      "ログインしてください"
+    else
+      error.message
+    end
+  end
+
   def custom_error_message(error)
     case error.type
     when :taken
