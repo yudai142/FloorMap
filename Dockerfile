@@ -56,6 +56,9 @@ COPY . .
 # -j 1 disable parallel compilation to avoid a QEMU bug: https://github.com/rails/bootsnap/issues/495
 RUN bundle exec bootsnap precompile -j 1 app/ lib/
 
+# Build Vite assets for production
+RUN mkdir -p .vite && npm run build
+
 # Skip assets precompilation in Docker build (TailwindCSS v4 compatibility)
 # Assets will be compiled at runtime or served via CDN
 # RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
