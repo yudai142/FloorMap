@@ -254,30 +254,32 @@ export default function RoomShow() {
         // 5秒待機後に fetchSessions で最新データを取得
         await fetchSessions()
 
+        // seats state の更新を待つため、追加で待機
+        await new Promise(resolve => setTimeout(resolve, 500))
+
         // 現在のユーザー座席を確認
         const currentUserName = current_user ? current_user.name : userName
-        const currentSeat = seats.find(s => s.occupied && s.occupant_name === currentUserName)
+        const updatedSeats = seats.find(s => s.occupied && s.occupant_name === currentUserName)
 
-        // 座席移動か新規着席かを判定
-        if (currentSeat) {
-          if (prevUserSeatId && prevUserSeatId !== currentSeat.id) {
-            // 座席移動
-            const prevSeat = initialSeats.find(s => s.id === prevUserSeatId)
-            const prevSeatLabel = prevSeat?.label || `座席${prevUserSeatId}`
-            const currentSeatLabel = currentSeat.label || `座席${currentSeat.id}`
-            setAlert({ type: 'success', message: `${prevSeatLabel}から${currentSeatLabel}に移動しました` })
-          } else {
-            // 新規着席
-            const seatLabel = currentSeat.label || `座席${currentSeat.id}`
-            setAlert({ type: 'success', message: `${seatLabel}に着席しました` })
-          }
-
-          // 現在の座席 ID を保存
-          setPrevUserSeatId(currentSeat.id)
-
-          // 5秒後にアラートを自動消去
-          setTimeout(() => setAlert(null), 5000)
+        // 座席 ID が変わったかで判定（座席移動 or 新規着席）
+        if (prevUserSeatId && prevUserSeatId !== seatId) {
+          // 座席移動の場合
+          const prevSeat = initialSeats.find(s => s.id === prevUserSeatId)
+          const newSeat = initialSeats.find(s => s.id === seatId)
+          const prevSeatLabel = prevSeat?.label || `座席${prevUserSeatId}`
+          const newSeatLabel = newSeat?.label || `座席${seatId}`
+          setAlert({ type: 'success', message: `${prevSeatLabel}から${newSeatLabel}に移動しました` })
+          setPrevUserSeatId(seatId)
+        } else {
+          // 新規着席の場合
+          const newSeat = initialSeats.find(s => s.id === seatId)
+          const seatLabel = newSeat?.label || `座席${seatId}`
+          setAlert({ type: 'success', message: `${seatLabel}に着席しました` })
+          setPrevUserSeatId(seatId)
         }
+
+        // 5秒後にアラートを自動消去
+        setTimeout(() => setAlert(null), 5000)
       } else {
         await fetchSessions()
       }
@@ -442,7 +444,7 @@ export default function RoomShow() {
               fontSize: '13px',
               color: '#1e3a8a'
             }}>
-              下のボタンをクリックしてURLをコピーしたら、他の人に共有してください。リンクを開くだけで着席状況を確認できます。
+              ボタンをクリックしてURLをコピーしたら、他の人に共有してください。リンクを開くだけで着席状況を確認できます。
             </p>
           </div>
           <button
