@@ -4,7 +4,7 @@
     <div class="text-center">
       <h1 class="text-3xl font-bold text-slate-900">FloorMap</h1>
       <h2 class="mt-6 text-2xl font-semibold text-slate-800">アカウントを作成</h2>
-      <p class="mt-2 text-slate-600">オフィスの座席管理をはじめましょう</p>
+      <p class="mt-2 text-slate-600">座席管理をはじめましょう</p>
     </div>
 
     <!-- Error Messages -->
@@ -18,15 +18,13 @@
           </div>
           <div>
             <h3 class="text-sm font-medium text-red-800">
-              <%= I18n.t("errors.messages.not_saved",
-                         count: resource.errors.count,
-                         resource: resource.class.model_name.human.downcase) %>
+              入力に誤りがあります
             </h3>
             <ul class="mt-2 list-inside space-y-1 text-sm text-red-700">
-              <% resource.errors.full_messages.each do |message| %>
+              <% resource.errors.each do |error| %>
                 <li class="flex gap-2">
                   <span class="text-red-400">•</span>
-                  <span><%= message %></span>
+                  <span><%= custom_error_message(error) %></span>
                 </li>
               <% end %>
             </ul>

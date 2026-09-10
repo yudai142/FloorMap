@@ -1,14 +1,35 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { usePage } from '@inertiajs/react'
+import { ErrorAlert, SuccessAlert } from '../../components/Alert'
+
+// Suppress 422 console errors from check-in/check-out
+const originalError = console.error
+const originalWarn = console.warn
+const suppressMessages = (message) => {
+  const msg = String(message)
+  return msg.includes('422') && msg.includes('check_in')
+}
+console.error = function(...args) {
+  if (!suppressMessages(args.join(' '))) {
+    originalError.apply(console, args)
+  }
+}
+console.warn = function(...args) {
+  if (!suppressMessages(args.join(' '))) {
+    originalWarn.apply(console, args)
+  }
+}
 
 export default function RoomShow() {
   const { room, seats: initialSeats, current_user, current_session: initialSession, auth } = usePage().props
+  const [alert, setAlert] = useState(null)
   const [seats, setSeats] = useState(initialSeats || [])
   const [sessions, setSessions] = useState([])
   const [currentSession, setCurrentSession] = useState(initialSession)
   const [autoCheckoutEnabled, setAutoCheckoutEnabled] = useState(false)
   const [autoCheckoutTime, setAutoCheckoutTime] = useState('')
   const [deviceId, setDeviceId] = useState('')
+  const [prevUserSeatId, setPrevUserSeatId] = useState(null)
 
   // Canvas zoom and pan
   const [zoom, setZoom] = useState(1)
@@ -20,7 +41,7 @@ export default function RoomShow() {
   const [canvasSize, setCanvasSize] = useState({ width: room.width || 1000, height: room.height || 700 })
   const svgRef = useRef(null)
 
-  // Initialize device ID on mount
+  // Initialize device ID and previous seat on mount
   useEffect(() => {
     try {
       let id = localStorage.getItem('deviceId')
@@ -29,6 +50,11 @@ export default function RoomShow() {
         localStorage.setItem('deviceId', id)
       }
       setDeviceId(id)
+
+      // 初期座席を設定
+      if (initialSession?.seat_id) {
+        setPrevUserSeatId(initialSession.seat_id)
+      }
     } catch (error) {
       console.error('Failed to initialize device ID:', error)
     }
@@ -120,7 +146,6 @@ export default function RoomShow() {
 
       if (!response.ok) {
         const error = await response.json()
-        console.error('Failed to save auto checkout enabled setting:', error)
         const errorMsg = error.errors ? error.errors.join(', ') : error.message
         alert(`エラー: ${errorMsg}`)
         setAutoCheckoutEnabled(!checked)
@@ -129,7 +154,6 @@ export default function RoomShow() {
         await fetchSessions()
       }
     } catch (error) {
-      console.error('Failed to save auto checkout enabled setting:', error)
       setAutoCheckoutEnabled(!checked)
     }
   }
@@ -164,13 +188,13 @@ export default function RoomShow() {
         alert('離席日時の保存に失敗しました')
       }
     } catch (error) {
-      console.error('Failed to save auto checkout time:', error)
       alert('離席日時の保存に失敗しました')
     }
   }
 
   const handleCheckIn = async (seatId) => {
     try {
+      setAlert(null)
       let checkoutTimer = 60
 
       // 自動離席が有効な場合、日時から分数を計算
@@ -180,7 +204,7 @@ export default function RoomShow() {
         checkoutTimer = Math.round((checkoutTime - now) / 60000) // 分に変換
 
         if (checkoutTimer <= 0) {
-          alert('離席日時は現在時刻より後に設定してください')
+          setAlert({ type: 'error', message: '離席日時は現在時刻より後に設定してください' })
           return
         }
       }
@@ -190,7 +214,7 @@ export default function RoomShow() {
       if (!current_user) {
         userName = prompt('お名前を入力してください:')
         if (!userName || !userName.trim()) {
-          alert('お名前を入力してください')
+          setAlert({ type: 'error', message: 'お名前を入力してください' })
           return
         }
       }
@@ -222,24 +246,58 @@ export default function RoomShow() {
 
       clearTimeout(timeoutId)
 
+      // 5秒待機してからUIを更新（status code に関わらず always refresh）
+      await new Promise(resolve => setTimeout(resolve, 5000))
+
+      // response が 200 の場合は成功
       if (response.ok) {
-        // 5秒待機してからUIを更新
-        await new Promise(resolve => setTimeout(resolve, 5000))
+        // 5秒待機後に fetchSessions で最新データを取得
         await fetchSessions()
-        if (autoCheckoutEnabled && autoCheckoutTime) {
-          const timeStr = new Date(autoCheckoutTime).toLocaleString('ja-JP')
-          console.log(`${timeStr} に自動離席します`)
+
+        // seats state の更新を待つため、追加で待機
+        await new Promise(resolve => setTimeout(resolve, 500))
+
+        // 現在のユーザー座席を確認
+        const currentUserName = current_user ? current_user.name : userName
+        const updatedSeats = seats.find(s => s.occupied && s.occupant_name === currentUserName)
+
+        // 座席 ID が変わったかで判定（座席移動 or 新規着席）
+        if (prevUserSeatId && prevUserSeatId !== seatId) {
+          // 座席移動の場合
+          const prevSeat = initialSeats.find(s => s.id === prevUserSeatId)
+          const newSeat = initialSeats.find(s => s.id === seatId)
+          const prevSeatLabel = prevSeat?.label || `座席${prevUserSeatId}`
+          const newSeatLabel = newSeat?.label || `座席${seatId}`
+          setAlert({ type: 'success', message: `${prevSeatLabel}から${newSeatLabel}に移動しました` })
+          setPrevUserSeatId(seatId)
+        } else {
+          // 新規着席の場合
+          const newSeat = initialSeats.find(s => s.id === seatId)
+          const seatLabel = newSeat?.label || `座席${seatId}`
+          setAlert({ type: 'success', message: `${seatLabel}に着席しました` })
+          setPrevUserSeatId(seatId)
         }
+
+        // 5秒後にアラートを自動消去
+        setTimeout(() => setAlert(null), 5000)
       } else {
-        console.error('チェックイン失敗:', response.status)
+        await fetchSessions()
+      }
+
+      if (autoCheckoutEnabled && autoCheckoutTime) {
+        const timeStr = new Date(autoCheckoutTime).toLocaleString('ja-JP')
+        console.log(`${timeStr} に自動離席します`)
       }
     } catch (error) {
-      console.error('チェックインエラー:', error)
+      setAlert({ type: 'error', message: 'チェックインに失敗しました。もう一度お試しください。' })
+      // 5秒後にアラートを自動消去
+      setTimeout(() => setAlert(null), 5000)
     }
   }
 
   const handleCheckOut = async (sessionId) => {
     try {
+      setAlert(null)
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 30000)
 
@@ -254,15 +312,17 @@ export default function RoomShow() {
 
       clearTimeout(timeoutId)
 
-      if (response.ok) {
-        // 5秒待機してからUIを更新
-        await new Promise(resolve => setTimeout(resolve, 5000))
-        await fetchSessions()
-      } else {
-        console.error('チェックアウト失敗:', response.status)
-      }
+      // 5秒待機してからUIを更新（status code に関わらず always refresh）
+      await new Promise(resolve => setTimeout(resolve, 5000))
+      await fetchSessions()
+
+      setAlert({ type: 'success', message: '離席しました' })
+      // 5秒後にアラートを自動消去
+      setTimeout(() => setAlert(null), 5000)
     } catch (error) {
-      console.error('チェックアウトエラー:', error)
+      setAlert({ type: 'error', message: 'チェックアウトに失敗しました。もう一度お試しください。' })
+      // 5秒後にアラートを自動消去
+      setTimeout(() => setAlert(null), 5000)
     }
   }
 
@@ -416,6 +476,34 @@ export default function RoomShow() {
           </button>
         </div>
       </div>
+
+      {/* アラート表示 */}
+      {alert && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          left: '20px',
+          right: '20px',
+          zIndex: 50,
+          maxWidth: '500px'
+        }}>
+          {alert.type === 'error' ? (
+            <ErrorAlert
+              message={alert.message}
+              onDismiss={() => setAlert(null)}
+              autoClose={true}
+              duration={5000}
+            />
+          ) : (
+            <SuccessAlert
+              message={alert.message}
+              onDismiss={() => setAlert(null)}
+              autoClose={true}
+              duration={5000}
+            />
+          )}
+        </div>
+      )}
 
       <div className="room-container">
         {/* 左パネル：座席配置図 */}

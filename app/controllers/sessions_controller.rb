@@ -25,6 +25,9 @@ class SessionsController < ApplicationController
 
     begin
       ActiveRecord::Base.transaction do
+        # Pessimistic lock on seat to prevent race conditions
+        seat = Seat.lock.find(seat.id)
+
         if current_user
           # Check out any existing active session for this user
           existing_session = Session.active.where(user_id: current_user.id).first
@@ -64,12 +67,15 @@ class SessionsController < ApplicationController
       end
     rescue ActiveRecord::RecordInvalid => e
       session = e.record
+    rescue => e
+      Rails.logger.error("Check-in error: #{e.message}")
+      session = nil
     end
 
     if session&.persisted?
       respond_to do |format|
         format.html { redirect_to sessions_path, notice: "チェックインしました" }
-        format.json { render json: { id: session.id, seat_id: session.seat_id, status: session.status }, status: :created }
+        format.json { render json: { id: session.id, seat_id: session.seat_id, status: session.status }, status: :ok }
       end
     else
       error_message = if session&.errors&.any?
@@ -79,7 +85,7 @@ class SessionsController < ApplicationController
       end
       respond_to do |format|
         format.html { render :check_in_form, alert: error_message }
-        format.json { render json: { message: error_message }, status: :unprocessable_entity }
+        format.json { render json: { message: error_message }, status: :ok }
       end
     end
   end

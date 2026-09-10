@@ -11,11 +11,13 @@
     </a>
   <% end %>
 
-  <%- if devise_mapping.recoverable? && controller_name != 'passwords' && controller_name != 'registrations' %>
-    <a href="<%= new_password_path(resource_name) %>" class="block w-full text-center text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors">
-      パスワードをお忘れですか？
-    </a>
-  <% end %>
+  <%##
+    <% if devise_mapping.recoverable? && controller_name != 'passwords' && controller_name != 'registrations' %>
+      <%# <a href="<%= new_password_path(resource_name) %>" class="block w-full text-center text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"> %>
+        <%# パスワードをお忘れですか？ %>
+      <%# </a> %>
+    <%# <% end %> %>
+  %>
 
   <%- if devise_mapping.confirmable? && controller_name != 'confirmations' %>
     <a href="<%= new_confirmation_path(resource_name) %>" class="block w-full text-center text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors">

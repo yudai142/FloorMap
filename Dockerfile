@@ -52,9 +52,15 @@ RUN bundle install && \
 # Copy application code
 COPY . .
 
+# Install JavaScript dependencies
+RUN npm ci --legacy-peer-deps
+
 # Precompile bootsnap code for faster boot times.
 # -j 1 disable parallel compilation to avoid a QEMU bug: https://github.com/rails/bootsnap/issues/495
 RUN bundle exec bootsnap precompile -j 1 app/ lib/
+
+# Build Vite assets for production
+RUN mkdir -p .vite && npm run build
 
 # Skip assets precompilation in Docker build (TailwindCSS v4 compatibility)
 # Assets will be compiled at runtime or served via CDN

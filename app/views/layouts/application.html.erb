@@ -28,8 +28,8 @@
 
     <%# Vite entrypoint with CSS and JS %>
     <% unless Rails.env.test? %>
-      <%= vite_javascript_tag "application.jsx", "data-turbo-track": "reload" %>
-      <%= vite_stylesheet_tag "application.jsx", "data-turbo-track": "reload" %>
+      <%= vite_javascript_tag "entrypoints/application.jsx", "data-turbo-track": "reload" %>
+      <%= vite_stylesheet_tag "entrypoints/application.jsx", "data-turbo-track": "reload" %>
     <% end %>
   </head>
 
