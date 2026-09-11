@@ -477,6 +477,43 @@ export default function RoomShow() {
         </div>
       </div>
 
+      {/* 全員離席設定セクション */}
+      {room.auto_checkout_enabled && room.auto_checkout_time && (
+        <div style={{
+          backgroundColor: '#fef3c7',
+          borderBottom: '1px solid #fcd34d',
+          padding: '16px 24px',
+          margin: '0 0 20px 0'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+          }}>
+            <span style={{
+              fontSize: '24px'
+            }}>⏰</span>
+            <div style={{ flex: 1 }}>
+              <p style={{
+                margin: '0 0 4px 0',
+                fontSize: '14px',
+                fontWeight: '600',
+                color: '#92400e'
+              }}>
+                全員離席設定が有効です
+              </p>
+              <p style={{
+                margin: '0',
+                fontSize: '13px',
+                color: '#b45309'
+              }}>
+                {new Date(room.auto_checkout_time).toLocaleString('ja-JP')} に全員が自動的に離席されます
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* アラート表示 */}
       {alert && (
         <div style={{
