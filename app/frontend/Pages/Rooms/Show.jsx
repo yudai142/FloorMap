@@ -495,14 +495,6 @@ export default function RoomShow() {
             }}>⏰</span>
             <div style={{ flex: 1 }}>
               <p style={{
-                margin: '0 0 4px 0',
-                fontSize: '14px',
-                fontWeight: '600',
-                color: '#92400e'
-              }}>
-                全員離席設定が有効です
-              </p>
-              <p style={{
                 margin: '0',
                 fontSize: '13px',
                 color: '#b45309'
