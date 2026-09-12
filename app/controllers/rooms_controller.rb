@@ -30,7 +30,9 @@ class RoomsController < ApplicationController
           occupied_count: @room.occupied_seat_count,
           occupancy_rate: @room.occupancy_rate,
           created_at: @room.created_at,
-          floor_plan_data: @room.floor_plan_data || []
+          floor_plan_data: @room.floor_plan_data || [],
+          auto_checkout_enabled: @room.auto_checkout_enabled || false,
+          auto_checkout_time: @room.auto_checkout_time
         },
         seats: @room.seats.map { |s| seat_canvas_json(s) },
         current_user: current_user ? {
