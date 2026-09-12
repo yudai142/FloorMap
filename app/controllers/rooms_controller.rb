@@ -32,7 +32,7 @@ class RoomsController < ApplicationController
           created_at: @room.created_at,
           floor_plan_data: @room.floor_plan_data || [],
           auto_checkout_enabled: @room.auto_checkout_enabled || false,
-          auto_checkout_time: @room.auto_checkout_time
+          auto_checkout_time: @room.auto_checkout_time ? Time.parse(@room.auto_checkout_time).to_i * 1000 : nil
         },
         seats: @room.seats.map { |s| seat_canvas_json(s) },
         current_user: current_user ? {

@@ -507,7 +507,7 @@ export default function RoomShow() {
                 fontSize: '13px',
                 color: '#b45309'
               }}>
-                {new Date(room.auto_checkout_time).toLocaleString('ja-JP')} に全員が自動的に離席されます
+                {room.auto_checkout_time ? new Date(room.auto_checkout_time).toLocaleString('ja-JP') : '設定時刻'} に全員が自動的に離席されます
               </p>
             </div>
           </div>
