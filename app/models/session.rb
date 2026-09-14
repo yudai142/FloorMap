@@ -25,6 +25,7 @@ class Session < ApplicationRecord
   after_update_commit :clear_seat_caches, if: :saved_change_to_status?
   after_update_commit :broadcast_seat_updated, if: :saved_change_to_status?
   after_update_commit :schedule_user_auto_checkout, if: :saved_change_to_user_auto_checkout_time?
+  after_update_commit :broadcast_user_auto_checkout_updated, if: :saved_change_to_user_auto_checkout_time?
 
   def duration
     end_time = check_out_time || Time.current
@@ -75,6 +76,25 @@ class Session < ApplicationRecord
       Rails.logger.warn("Failed to broadcast seat update from session: #{e.message}")
     rescue => e
       Rails.logger.warn("Failed to broadcast seat update from session: #{e.class} - #{e.message}")
+    end
+  end
+
+  def broadcast_user_auto_checkout_updated
+    begin
+      Timeout.timeout(5) do
+        RoomsChannel.broadcast_to(room,
+          type: "user_auto_checkout_updated",
+          session_id: id,
+          user_auto_checkout_enabled: user_auto_checkout_enabled,
+          user_auto_checkout_time: user_auto_checkout_time ? user_auto_checkout_time.to_i * 1000 : nil
+        )
+      end
+    rescue Timeout::Error => e
+      Rails.logger.warn("Broadcast user auto checkout update timeout from session: #{e.message}")
+    rescue Redis::CannotConnectError, Errno::ECONNREFUSED => e
+      Rails.logger.warn("Failed to broadcast user auto checkout update from session: #{e.message}")
+    rescue => e
+      Rails.logger.warn("Failed to broadcast user auto checkout update from session: #{e.class} - #{e.message}")
     end
   end
 

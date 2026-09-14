@@ -10,6 +10,7 @@ class Room < ApplicationRecord
 
   before_validation :generate_share_token, on: :create
   after_update_commit :broadcast_floor_plan_updated, if: :saved_change_to_floor_plan_data?
+  after_update_commit :broadcast_room_auto_checkout_updated, if: :saved_change_to_auto_checkout_time?
 
   scope :search, ->(query) {
     return all if query.blank?
@@ -96,6 +97,22 @@ class Room < ApplicationRecord
       Rails.logger.warn("Broadcast floor plan timeout: #{e.message}")
     rescue => e
       Rails.logger.warn("Failed to broadcast floor plan update: #{e.class} - #{e.message}")
+    end
+  end
+
+  def broadcast_room_auto_checkout_updated
+    begin
+      Timeout.timeout(5) do
+        RoomsChannel.broadcast_to(self,
+          type: "room_auto_checkout_updated",
+          auto_checkout_enabled: auto_checkout_enabled,
+          auto_checkout_time: auto_checkout_time ? Time.parse(auto_checkout_time).to_i * 1000 : nil
+        )
+      end
+    rescue Timeout::Error => e
+      Rails.logger.warn("Broadcast room auto checkout update timeout: #{e.message}")
+    rescue => e
+      Rails.logger.warn("Failed to broadcast room auto checkout update: #{e.class} - #{e.message}")
     end
   end
 
