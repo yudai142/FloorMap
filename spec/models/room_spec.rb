@@ -302,24 +302,24 @@ RSpec.describe Room, type: :model do
       end
     end
 
-    describe 'ルーム全体の自動離席とセッション' do
-      it 'ルーム内のすべてのアクティブセッションを取得できる' do
+    describe "ルーム全体の自動離席とセッション" do
+      it "ルーム内のすべてのアクティブセッションを取得できる" do
         seat1 = create(:seat, room: room)
         seat2 = create(:seat, room: room)
         user1 = create(:user)
         user2 = create(:user)
 
-        session1 = create(:session, user: user1, seat: seat1, status: 'active')
-        session2 = create(:session, user: user2, seat: seat2, status: 'active')
+        session1 = create(:session, user: user1, seat: seat1, status: "active")
+        session2 = create(:session, user: user2, seat: seat2, status: "active")
 
         active_sessions = Session.active.joins(:seat).where(seats: { room_id: room.id })
         expect(active_sessions.count).to eq(2)
       end
 
-      it 'チェックアウト後はアクティブセッションから除外される' do
+      it "チェックアウト後はアクティブセッションから除外される" do
         seat = create(:seat, room: room)
         user = create(:user)
-        session = create(:session, user: user, seat: seat, status: 'active')
+        session = create(:session, user: user, seat: seat, status: "active")
 
         expect(Session.active.joins(:seat).where(seats: { room_id: room.id }).count).to eq(1)
 
