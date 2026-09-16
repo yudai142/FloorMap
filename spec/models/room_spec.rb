@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe Room, type: :model do
+RSpec.describe Room, type: :model, transactional: false do
   describe "associations" do
     it "belongs to user" do
       room = build(:room)

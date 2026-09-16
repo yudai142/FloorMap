@@ -1,6 +1,6 @@
 require "rails_helper"
 
-RSpec.describe Session, type: :model do
+RSpec.describe Session, type: :model, transactional: false do
   let(:user) { create(:user) }
   let(:room) { create(:room, user: user) }
   let(:seat) { create(:seat, room: room) }
