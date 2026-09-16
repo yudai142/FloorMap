@@ -5,11 +5,6 @@ RSpec.describe Session, type: :model do
   let(:room) { create(:room, user: user) }
   let(:seat) { create(:seat, room: room) }
 
-  before do
-    # ActionCable broadcast をテスト用に設定
-    allow(RoomsChannel).to receive(:broadcast_to)
-  end
-
   describe "自動離席機能" do
     describe "個人の自動離席 (user_auto_checkout_time)" do
       it "user_auto_checkout_time に指定された時刻にジョブがスケジュールされる" do

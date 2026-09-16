@@ -1,11 +1,6 @@
 require "rails_helper"
 
 RSpec.describe Room, type: :model do
-  before do
-    # ActionCable broadcast をテスト用に設定
-    allow(RoomsChannel).to receive(:broadcast_to)
-  end
-
   describe "associations" do
     it "belongs to user" do
       room = build(:room)
