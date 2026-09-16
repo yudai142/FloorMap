@@ -128,7 +128,7 @@ RSpec.describe RoomsChannel, type: :channel do
 
     it "broadcasts user_auto_checkout_updated when session user_auto_checkout_time changes" do
       seat = create(:seat, room: room)
-      session = create(:session, seat: seat, user: manager, status: 'active')
+      session = create(:session, seat: seat, user: manager, status: "active")
       future_time = 1.hour.from_now
 
       expect {
@@ -163,7 +163,7 @@ RSpec.describe RoomsChannel, type: :channel do
     it "broadcasts with correct auto_checkout_time format in milliseconds" do
       future_time = 1.hour.from_now
       seat = create(:seat, room: room)
-      session = create(:session, seat: seat, user: manager, status: 'active')
+      session = create(:session, seat: seat, user: manager, status: "active")
 
       expect {
         session.update(user_auto_checkout_time: future_time)

@@ -233,26 +233,26 @@ RSpec.describe Room, type: :model do
     end
 
     describe '#auto_checkout_time' do
-      it '有効な HH:MM 形式の時刻を保存できる' do
-        ["00:00", "12:30", "23:59"].each do |time|
+      it "有効な HH:MM 形式の時刻を保存できる" do
+        [ "00:00", "12:30", "23:59" ].each do |time|
           room.update(auto_checkout_enabled: true, auto_checkout_time: time)
           expect(room.auto_checkout_time).to eq(time)
           expect(room.errors).to be_empty
         end
       end
 
-      it '無効な形式の時刻は保存できない' do
+      it "無効な形式の時刻は保存できない" do
         room.update(auto_checkout_enabled: true, auto_checkout_time: "25:00")
         expect(room.errors[:auto_checkout_time]).to be_present
       end
 
-      it 'nil を設定できる' do
+      it "nil を設定できる" do
         room.update(auto_checkout_time: nil)
         expect(room.auto_checkout_time).to be_nil
       end
 
-      it '24時間形式の時刻のみ有効' do
-        invalid_times = ["1:30", "13:60", "ab:cd", ""]
+      it "24時間形式の時刻のみ有効" do
+        invalid_times = [ "1:30", "13:60", "ab:cd", "" ]
         invalid_times.each do |time|
           room.update(auto_checkout_enabled: true, auto_checkout_time: time)
           if time.empty?
@@ -264,12 +264,12 @@ RSpec.describe Room, type: :model do
       end
     end
 
-    describe 'ブロードキャスト機能' do
-      it 'auto_checkout_time が更新されると broadcast される' do
+    describe "ブロードキャスト機能" do
+      it "auto_checkout_time が更新されると broadcast される" do
         expect(RoomsChannel).to receive(:broadcast_to).with(
           room,
           hash_including(
-            type: 'room_auto_checkout_updated',
+            type: "room_auto_checkout_updated",
             auto_checkout_enabled: true,
             auto_checkout_time: be_present
           )
@@ -278,16 +278,16 @@ RSpec.describe Room, type: :model do
         room.update(auto_checkout_enabled: true, auto_checkout_time: "18:00")
       end
 
-      it 'floor_plan_data の変更は別の broadcast' do
+      it "floor_plan_data の変更は別の broadcast" do
         expect(RoomsChannel).to receive(:broadcast_to).with(
           room,
-          hash_including(type: 'floor_plan_updated')
+          hash_including(type: "floor_plan_updated")
         ).at_least(:once)
 
-        room.update(floor_plan_data: [{ id: 1, type: 'rect' }])
+        room.update(floor_plan_data: [ { id: 1, type: "rect" } ])
       end
 
-      it 'auto_checkout_time が更新されない場合は broadcast されない' do
+      it "auto_checkout_time が更新されない場合は broadcast されない" do
         room.update(auto_checkout_enabled: true, auto_checkout_time: "18:00")
         # RoomsChannel をリセット
         allow(RoomsChannel).to receive(:broadcast_to).and_call_original
@@ -297,7 +297,7 @@ RSpec.describe Room, type: :model do
 
         expect(RoomsChannel).not_to have_received(:broadcast_to).with(
           room,
-          hash_including(type: 'room_auto_checkout_updated')
+          hash_including(type: "room_auto_checkout_updated")
         )
       end
     end
