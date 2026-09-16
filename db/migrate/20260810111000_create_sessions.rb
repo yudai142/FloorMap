@@ -6,13 +6,7 @@ class CreateSessions < ActiveRecord::Migration[8.1]
       t.references :seat, null: false, foreign_key: true, index: { name: "index_sessions_on_seat_id" }
       t.datetime :check_in_time, null: false
       t.datetime :check_out_time
-      t.integer :checkout_timer_minutes, default: 60
       t.string :status, default: "active", null: false
-      t.datetime :auto_checkout_at
-      t.string :device_identifier
-      t.string :user_name
-      t.boolean :user_auto_checkout_enabled, default: false
-      t.datetime :user_auto_checkout_time
 
       t.timestamps
     end
