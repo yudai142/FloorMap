@@ -28,6 +28,7 @@ RSpec.describe Session, type: :model do
             seat: seat,
             user_auto_checkout_enabled: false,
             user_auto_checkout_time: nil,
+            checkout_timer_minutes: nil,
             status: "active"
           )
         }.not_to have_enqueued_job(AutoCheckoutJob)
