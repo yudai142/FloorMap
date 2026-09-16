@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_06_000006) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_07_091400) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -147,6 +147,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_06_000006) do
   end
 
   create_table "rooms", force: :cascade do |t|
+    t.boolean "auto_checkout_enabled", default: false, null: false
+    t.string "auto_checkout_time"
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.text "description"
     t.jsonb "floor_plan_data", default: [], null: false

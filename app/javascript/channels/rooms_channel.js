@@ -33,6 +33,14 @@ export function subscribeToRoom(roomId, callbacks = {}) {
             callbacks.onUpdate?.(data) // Legacy support
             break
 
+          case "user_auto_checkout_updated":
+            callbacks.onUserAutoCheckoutUpdated?.(data)
+            break
+
+          case "room_auto_checkout_updated":
+            callbacks.onRoomAutoCheckoutUpdated?.(data)
+            break
+
           default:
             console.warn(`[ActionCable] Unknown broadcast type: ${data.type}`)
         }

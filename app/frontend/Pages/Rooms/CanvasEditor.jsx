@@ -5,6 +5,8 @@ import Canvas from '../../components/Editor/Canvas'
 export default function CanvasEditor({ room, shapes_data, seats, current_user }) {
   const { auth } = usePage().props
   const [canvasSize, setCanvasSize] = useState({ width: room.width, height: room.height })
+  const [autoCheckoutEnabled, setAutoCheckoutEnabled] = useState(room.auto_checkout_enabled || false)
+  const [autoCheckoutTime, setAutoCheckoutTime] = useState(room.auto_checkout_time || '')
 
   const handleSave = async (shapes) => {
     // Save is handled in Canvas component
@@ -13,25 +15,27 @@ export default function CanvasEditor({ room, shapes_data, seats, current_user })
   }
 
   const handleSaveCanvas = async (shapes) => {
-    // Save room size if changed
-    if (canvasSize.width !== room.width || canvasSize.height !== room.height) {
-      try {
-        await fetch(`/rooms/${room.share_token}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
-          },
-          body: JSON.stringify({
-            room: {
-              width: canvasSize.width,
-              height: canvasSize.height
-            }
-          })
+    // Save room settings (size, auto checkout)
+    const roomUpdates = {
+      width: canvasSize.width,
+      height: canvasSize.height,
+      auto_checkout_enabled: autoCheckoutEnabled,
+      auto_checkout_time: autoCheckoutTime
+    }
+
+    try {
+      await fetch(`/rooms/${room.share_token}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
+        },
+        body: JSON.stringify({
+          room: roomUpdates
         })
-      } catch (error) {
-        console.error('Error updating canvas size:', error)
-      }
+      })
+    } catch (error) {
+      console.error('Error updating room settings:', error)
     }
     handleSave(shapes)
   }
@@ -80,6 +84,34 @@ export default function CanvasEditor({ room, shapes_data, seats, current_user })
               <span className="text-sm text-slate-600">px</span>
             </div>
           </div>
+
+          {/* 全員離席設定 */}
+          <div className="flex items-center gap-4 mt-3 p-3 bg-blue-50 rounded border border-blue-200">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={autoCheckoutEnabled}
+                onChange={(e) => setAutoCheckoutEnabled(e.target.checked)}
+                className="w-4 h-4"
+              />
+              <span className="text-sm font-medium text-slate-700">全員離席設定を有効にする</span>
+            </label>
+            {autoCheckoutEnabled && (
+              <div className="flex items-center gap-2">
+                <label htmlFor="auto-checkout-time" className="text-sm text-slate-600">
+                  離席時刻:
+                </label>
+                <input
+                  id="auto-checkout-time"
+                  type="time"
+                  value={autoCheckoutTime}
+                  onChange={(e) => setAutoCheckoutTime(e.target.value)}
+                  className="px-2 py-1 border border-slate-300 rounded text-sm"
+                />
+              </div>
+            )}
+          </div>
+
           <p className="text-sm text-slate-600 mt-1">
             座席配置図エディタ - ツールを選択して、キャンバスをクリック・ドラッグして描画
           </p>

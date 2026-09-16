@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { usePage } from '@inertiajs/react'
 import { ErrorAlert, SuccessAlert } from '../../components/Alert'
+import { subscribeToRoom, unsubscribeFromRoom } from '../../channels/rooms_channel'
 
 // Suppress 422 console errors from check-in/check-out
 const originalError = console.error
@@ -105,6 +106,38 @@ export default function RoomShow() {
     const interval = setInterval(fetchSessions, 3000)
     return () => clearInterval(interval)
   }, [room.id, deviceId, current_user])
+
+  // ActionCable subscription for real-time updates
+  const subscriptionRef = useRef(null)
+  useEffect(() => {
+    subscriptionRef.current = subscribeToRoom(room.share_token, {
+      onUserAutoCheckoutUpdated: (data) => {
+        if (currentSession && data.session_id === currentSession.id) {
+          setCurrentSession(prev => ({
+            ...prev,
+            user_auto_checkout_enabled: data.user_auto_checkout_enabled,
+            user_auto_checkout_time: data.user_auto_checkout_time
+          }))
+          setAutoCheckoutEnabled(data.user_auto_checkout_enabled)
+          if (data.user_auto_checkout_time) {
+            const dateTime = new Date(data.user_auto_checkout_time)
+            const isoString = dateTime.toISOString().slice(0, 16)
+            setAutoCheckoutTime(isoString)
+          }
+        }
+      },
+      onRoomAutoCheckoutUpdated: (data) => {
+        // ルーム全体の自動離席時刻が更新された
+        console.log('Room auto checkout updated:', data)
+        // Optionally refresh sessions to get latest data
+        fetchSessions()
+      }
+    })
+
+    return () => {
+      unsubscribeFromRoom(subscriptionRef.current)
+    }
+  }, [room.share_token, currentSession])
 
   // 初期化時に props から設定を復元
   useEffect(() => {
@@ -476,6 +509,35 @@ export default function RoomShow() {
           </button>
         </div>
       </div>
+
+      {/* 全員離席設定セクション */}
+      {room.auto_checkout_enabled && room.auto_checkout_time && (
+        <div style={{
+          backgroundColor: '#fef3c7',
+          borderBottom: '1px solid #fcd34d',
+          padding: '16px 24px',
+          margin: '0 0 20px 0'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+          }}>
+            <span style={{
+              fontSize: '24px'
+            }}>⏰</span>
+            <div style={{ flex: 1 }}>
+              <p style={{
+                margin: '0',
+                fontSize: '13px',
+                color: '#b45309'
+              }}>
+                {room.auto_checkout_time ? new Date(room.auto_checkout_time).toLocaleString('ja-JP') : '設定時刻'} に全員が自動的に離席されます
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* アラート表示 */}
       {alert && (

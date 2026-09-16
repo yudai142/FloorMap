@@ -6,9 +6,12 @@ class Room < ApplicationRecord
 
   validates :name, presence: true
   validates :share_token, presence: true, uniqueness: true
+  validates :auto_checkout_time, format: { with: /\A([0-1][0-9]|2[0-3]):[0-5][0-9]\z/, message: "must be in HH:MM format" }, allow_blank: true
 
   before_validation :generate_share_token, on: :create
+  before_validation :normalize_auto_checkout_time
   after_update_commit :broadcast_floor_plan_updated, if: :saved_change_to_floor_plan_data?
+  after_update_commit :broadcast_room_auto_checkout_updated, if: :saved_change_to_auto_checkout_time?
 
   scope :search, ->(query) {
     return all if query.blank?
@@ -98,7 +101,27 @@ class Room < ApplicationRecord
     end
   end
 
+  def broadcast_room_auto_checkout_updated
+    begin
+      Timeout.timeout(5) do
+        RoomsChannel.broadcast_to(self,
+          type: "room_auto_checkout_updated",
+          auto_checkout_enabled: auto_checkout_enabled,
+          auto_checkout_time: auto_checkout_time ? Time.parse(auto_checkout_time).to_i * 1000 : nil
+        )
+      end
+    rescue Timeout::Error => e
+      Rails.logger.warn("Broadcast room auto checkout update timeout: #{e.message}")
+    rescue => e
+      Rails.logger.warn("Failed to broadcast room auto checkout update: #{e.class} - #{e.message}")
+    end
+  end
+
   private
+
+  def normalize_auto_checkout_time
+    self.auto_checkout_time = nil if auto_checkout_time.blank?
+  end
 
   def generate_share_token
     self.share_token = loop do

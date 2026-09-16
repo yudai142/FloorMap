@@ -8,3 +8,7 @@ cron:
     class: CheckDailyAutoCheckoutJob
     cron: '59 23 * * *'
     timezone: Asia/Tokyo
+  check_room_auto_checkout:
+    class: CheckRoomAutoCheckoutJob
+    cron: '* * * * *'
+    timezone: Asia/Tokyo
