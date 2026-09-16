@@ -3,7 +3,7 @@ class CreateSessions < ActiveRecord::Migration[8.1]
     create_table :sessions do |t|
       t.references :user, foreign_key: true
       t.references :visitor, foreign_key: true
-      t.references :seat, null: false, foreign_key: true
+      t.references :seat, null: false, foreign_key: true, index: { name: "index_sessions_on_seat_id" }
       t.datetime :check_in_time, null: false
       t.datetime :check_out_time
       t.integer :checkout_timer_minutes, default: 60
@@ -17,11 +17,8 @@ class CreateSessions < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :sessions, :seat_id
-    add_index :sessions, [:seat_id, :status]
-    add_index :sessions, :user_id
-    add_index :sessions, [:user_id, :status]
-    add_index :sessions, :visitor_id
+    add_index :sessions, [:seat_id, :status], name: "index_sessions_on_seat_id_and_status"
+    add_index :sessions, [:user_id, :status], name: "index_sessions_on_user_id_and_status"
     add_index :sessions, :status
     add_index :sessions, :device_identifier
   end
