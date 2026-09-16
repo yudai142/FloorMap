@@ -1,39 +1,39 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe JobLog, type: :model do
-  describe 'validations' do
-    it 'is valid with all required attributes' do
+  describe "validations" do
+    it "is valid with all required attributes" do
       job_log = build(:job_log)
       expect(job_log).to be_valid
     end
 
-    it 'is invalid without job_type' do
+    it "is invalid without job_type" do
       job_log = build(:job_log, job_type: nil)
       expect(job_log).not_to be_valid
     end
 
-    it 'is invalid without status' do
+    it "is invalid without status" do
       job_log = build(:job_log, status: nil)
       expect(job_log).not_to be_valid
     end
   end
 
-  describe 'scopes' do
+  describe "scopes" do
     before do
-      @success_log = create(:job_log, job_type: 'CheckDailyAutoCheckoutJob', status: :success)
-      @failure_log = create(:job_log, job_type: 'CheckDailyAutoCheckoutJob', status: :failure)
-      @error_log = create(:job_log, job_type: 'CheckDailyAutoCheckoutJob', status: :error)
+      @success_log = create(:job_log, job_type: "CheckDailyAutoCheckoutJob", status: :success)
+      @failure_log = create(:job_log, job_type: "CheckDailyAutoCheckoutJob", status: :failure)
+      @error_log = create(:job_log, job_type: "CheckDailyAutoCheckoutJob", status: :error)
     end
 
-    describe '.by_job_type' do
-      it 'filters by job_type' do
-        logs = JobLog.by_job_type('CheckDailyAutoCheckoutJob')
+    describe ".by_job_type" do
+      it "filters by job_type" do
+        logs = JobLog.by_job_type("CheckDailyAutoCheckoutJob")
         expect(logs.count).to eq(3)
       end
     end
 
-    describe '.successful' do
-      it 'returns only successful logs' do
+    describe ".successful" do
+      it "returns only successful logs" do
         logs = JobLog.successful
         expect(logs).to include(@success_log)
         expect(logs).not_to include(@failure_log)
@@ -41,8 +41,8 @@ RSpec.describe JobLog, type: :model do
       end
     end
 
-    describe '.failed' do
-      it 'returns logs with failure or error status' do
+    describe ".failed" do
+      it "returns logs with failure or error status" do
         logs = JobLog.failed
         expect(logs).to include(@failure_log)
         expect(logs).to include(@error_log)
@@ -50,8 +50,8 @@ RSpec.describe JobLog, type: :model do
       end
     end
 
-    describe '.recent' do
-      it 'returns logs ordered by created_at desc' do
+    describe ".recent" do
+      it "returns logs ordered by created_at desc" do
         new_log = create(:job_log)
         logs = JobLog.recent.limit(1)
         expect(logs.first).to eq(new_log)
@@ -59,8 +59,8 @@ RSpec.describe JobLog, type: :model do
     end
   end
 
-  describe '#execution_time' do
-    it 'calculates execution time' do
+  describe "#execution_time" do
+    it "calculates execution time" do
       start_time = Time.current
       end_time = start_time + 2.seconds
       job_log = create(:job_log, started_at: start_time, ended_at: end_time)
@@ -68,7 +68,7 @@ RSpec.describe JobLog, type: :model do
       expect(job_log.execution_time).to be_within(0.1).of(2.0)
     end
 
-    it 'returns nil when ended_at is nil' do
+    it "returns nil when ended_at is nil" do
       job_log = create(:job_log, ended_at: nil)
       expect(job_log.execution_time).to be_nil
     end

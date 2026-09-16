@@ -1,4 +1,4 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe RoomsChannel, type: :channel do
   let(:manager) { create(:user, :manager) }
@@ -110,7 +110,7 @@ RSpec.describe RoomsChannel, type: :channel do
     end
 
     it "broadcasts floor_plan_updated when floor plan changes" do
-      floor_plan = [ { type: 'rectangle', x: 0, y: 0, width: 100, height: 100 } ]
+      floor_plan = [ { type: "rectangle", x: 0, y: 0, width: 100, height: 100 } ]
 
       expect {
         room.update(floor_plan_data: floor_plan)

@@ -1,21 +1,21 @@
-require 'rails_helper'
+require "rails_helper"
 
 RSpec.describe RoomsChannel, type: :channel do
   let(:user) { create(:user, :manager) }
   let(:room) { create(:room, user: user) }
   let(:seat) { create(:seat, room: room, position_x: 100, position_y: 100) }
 
-  describe 'Canvas Editor Subscriptions' do
+  describe "Canvas Editor Subscriptions" do
     before do
       stub_connection(current_user: user)
     end
 
-    it 'subscribes to room channel' do
+    it "subscribes to room channel" do
       subscribe(room_id: room.id)
       expect(subscription).to be_confirmed
     end
 
-    it 'denies subscription for unauthorized user' do
+    it "denies subscription for unauthorized user" do
       other_user = create(:user)
       stub_connection(current_user: other_user)
       subscribe(room_id: room.id)
@@ -23,108 +23,108 @@ RSpec.describe RoomsChannel, type: :channel do
     end
   end
 
-  describe 'Seat Updates Broadcasting' do
+  describe "Seat Updates Broadcasting" do
     before do
       stub_connection(current_user: user)
       subscribe(room_id: room.id)
     end
 
-    it 'broadcasts seat created event' do
+    it "broadcasts seat created event" do
       expect {
         create(:seat, room: room)
-      }.to have_broadcasted_to(room).with(hash_including(type: 'seat_updated'))
+      }.to have_broadcasted_to(room).with(hash_including(type: "seat_updated"))
     end
 
-    it 'broadcasts seat position update' do
+    it "broadcasts seat position update" do
       expect {
         seat.update(position_x: 200, position_y: 200)
-      }.to have_broadcasted_to(room).with(hash_including(type: 'seat_updated'))
+      }.to have_broadcasted_to(room).with(hash_including(type: "seat_updated"))
     end
 
-    it 'broadcasts seat deleted event' do
+    it "broadcasts seat deleted event" do
       expect {
         seat.destroy
-      }.to have_broadcasted_to(room).with(hash_including(type: 'seat_removed'))
+      }.to have_broadcasted_to(room).with(hash_including(type: "seat_removed"))
     end
 
-    it 'includes seat data in seat_updated event' do
+    it "includes seat data in seat_updated event" do
       expect {
         create(:seat, room: room)
       }.to have_broadcasted_to(room).with(hash_including(
-        type: 'seat_updated',
-        seat: hash_including('id', 'position_x', 'position_y')
+        type: "seat_updated",
+        seat: hash_including("id", "position_x", "position_y")
       ))
     end
   end
 
-  describe 'Floor Plan Updates Broadcasting' do
+  describe "Floor Plan Updates Broadcasting" do
     before do
       stub_connection(current_user: user)
       subscribe(room_id: room.id)
     end
 
-    it 'broadcasts floor plan updated event' do
-      floor_plan = [ { type: 'rectangle', x: 0, y: 0, width: 100, height: 100 } ]
+    it "broadcasts floor plan updated event" do
+      floor_plan = [ { type: "rectangle", x: 0, y: 0, width: 100, height: 100 } ]
       expect {
         room.update(floor_plan_data: floor_plan)
-      }.to have_broadcasted_to(room).with(hash_including(type: 'floor_plan_updated'))
+      }.to have_broadcasted_to(room).with(hash_including(type: "floor_plan_updated"))
     end
 
-    it 'includes floor plan data in broadcast' do
-      floor_plan = [ { type: 'rectangle', x: 0, y: 0 } ]
+    it "includes floor plan data in broadcast" do
+      floor_plan = [ { type: "rectangle", x: 0, y: 0 } ]
       expect {
         room.update(floor_plan_data: floor_plan)
       }.to have_broadcasted_to(room).with(hash_including(
-        type: 'floor_plan_updated',
+        type: "floor_plan_updated",
         floor_plan_data: floor_plan.map(&:stringify_keys)
       ))
     end
   end
 
-  describe 'Session Updates Broadcasting' do
+  describe "Session Updates Broadcasting" do
     before do
       stub_connection(current_user: user)
       subscribe(room_id: room.id)
     end
 
-    it 'broadcasts seat updated on check-in' do
+    it "broadcasts seat updated on check-in" do
       expect {
         create(:session, user: user, seat: seat)
       }.to have_broadcasted_to(room).with(hash_including(
-        type: 'seat_updated'
+        type: "seat_updated"
       ))
     end
 
-    it 'includes occupancy info in broadcast' do
+    it "includes occupancy info in broadcast" do
       expect {
         session = create(:session, user: user, seat: seat)
       }.to have_broadcasted_to(room).with(hash_including(
-        type: 'seat_updated',
-        seat: hash_including('occupied', 'occupant_name')
+        type: "seat_updated",
+        seat: hash_including("occupied", "occupant_name")
       ))
     end
 
-    it 'broadcasts seat updated on check-out' do
+    it "broadcasts seat updated on check-out" do
       session = create(:session, user: user, seat: seat)
       expect {
         session.check_out!
       }.to have_broadcasted_to(room).with(hash_including(
-        type: 'seat_updated'
+        type: "seat_updated"
       ))
     end
   end
 
-  describe 'Canvas Data Consistency' do
+  describe "Canvas Data Consistency" do
     before do
       stub_connection(current_user: user)
       subscribe(room_id: room.id)
     end
 
-    it 'broadcasts fresh seat data after position update' do
+    it "broadcasts fresh seat data after position update" do
       expect {
         seat.update(position_x: 250, position_y: 250)
       }.to have_broadcasted_to(room).with(hash_including(
-        type: 'seat_updated',
+        type: "seat_updated",
         seat: hash_including(
           position_x: 250,
           position_y: 250
@@ -132,24 +132,24 @@ RSpec.describe RoomsChannel, type: :channel do
       ))
     end
 
-    it 'broadcasts with all required canvas fields' do
+    it "broadcasts with all required canvas fields" do
       expect {
         seat.update(position_x: 300)
       }.to have_broadcasted_to(room).with(hash_including(
-        type: 'seat_updated',
+        type: "seat_updated",
         seat: hash_including(
-          'id',
-          'seat_identifier',
-          'position_x',
-          'position_y',
-          'seat_type',
-          'occupied'
+          "id",
+          "seat_identifier",
+          "position_x",
+          "position_y",
+          "seat_type",
+          "occupied"
         )
       ))
     end
   end
 
-  describe 'Multiple User Synchronization' do
+  describe "Multiple User Synchronization" do
     let(:user2) { create(:user, :manager) }
 
     before do
@@ -157,16 +157,16 @@ RSpec.describe RoomsChannel, type: :channel do
       subscribe(room_id: room.id)
     end
 
-    it 'broadcasts to all subscribers in room' do
+    it "broadcasts to all subscribers in room" do
       expect {
         seat.update(position_x: 300, position_y: 300)
       }.to have_broadcasted_to(room)
     end
 
-    it 'broadcasts data includes timestamp' do
+    it "broadcasts data includes timestamp" do
       expect {
         seat.update(position_x: 300, position_y: 300)
-      }.to have_broadcasted_to(room).with(hash_including(type: 'seat_updated'))
+      }.to have_broadcasted_to(room).with(hash_including(type: "seat_updated"))
     end
   end
 end
