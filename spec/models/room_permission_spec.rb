@@ -98,14 +98,14 @@ RSpec.describe RoomPermission, type: :model do
     let(:room) { create(:room) }
 
     it "finds user by email and sets user_id" do
-      user = create(:user, email: "test@example.com")
-      permission = RoomPermission.new(room_id: room.id, permission_type: :view, user_email: "test@example.com")
+      user = create(:user, email: 'test@example.com')
+      permission = RoomPermission.new(room_id: room.id, permission_type: :view, user_email: 'test@example.com')
       permission.valid?
       expect(permission.user_id).to eq(user.id)
     end
 
     it "validates presence of user with that email" do
-      permission = RoomPermission.new(room_id: room.id, permission_type: :view, user_email: "nonexistent@example.com")
+      permission = RoomPermission.new(room_id: room.id, permission_type: :view, user_email: 'nonexistent@example.com')
       expect(permission).not_to be_valid
       expect(permission.errors[:user_email]).to include("メールアドレスが見つかりません")
     end

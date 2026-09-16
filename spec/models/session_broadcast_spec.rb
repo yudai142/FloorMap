@@ -1,4 +1,4 @@
-require "rails_helper"
+require 'rails_helper'
 
 RSpec.describe Session, type: :model do
   let(:user) { create(:user) }
@@ -6,26 +6,26 @@ RSpec.describe Session, type: :model do
   let(:room) { create(:room, user: manager) }
   let(:seat) { create(:seat, room: room) }
 
-  describe "broadcasting" do
-    skip "broadcasts seat_updated when session is created" do
+  describe 'broadcasting' do
+    skip 'broadcasts seat_updated when session is created' do
       expect {
         create(:session, user: user, seat: seat)
       }.to have_broadcasted_to(room).from_channel(RoomsChannel).with(hash_including(
-        type: "seat_updated"
+        type: 'seat_updated'
       ))
     end
 
-    skip "broadcasts seat_updated when session status changes" do
+    skip 'broadcasts seat_updated when session status changes' do
       session = create(:session, user: user, seat: seat)
 
       expect {
         session.check_out!
       }.to have_broadcasted_to(room).from_channel(RoomsChannel).with(hash_including(
-        type: "seat_updated"
+        type: 'seat_updated'
       ))
     end
 
-    it "includes active user session in canvas_data" do
+    it 'includes active user session in canvas_data' do
       session = create(:session, user: user, seat: seat)
 
       expect(seat.canvas_data[:session]).to eq({
@@ -35,7 +35,7 @@ RSpec.describe Session, type: :model do
       })
     end
 
-    it "includes active visitor session in canvas_data" do
+    it 'includes active visitor session in canvas_data' do
       visitor = create(:visitor)
       session = create(:session, visitor: visitor, user_id: nil, seat: seat)
 
@@ -47,7 +47,7 @@ RSpec.describe Session, type: :model do
       })
     end
 
-    it "returns nil session when no active session" do
+    it 'returns nil session when no active session' do
       seat_without_session = create(:seat, room: room)
 
       expect(seat_without_session.canvas_data[:session]).to be_nil

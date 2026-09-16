@@ -1,4 +1,4 @@
-require "rails_helper"
+require 'rails_helper'
 
 RSpec.describe CheckDailyAutoCheckoutJob, type: :job do
   let(:user) { create(:user) }
@@ -6,18 +6,18 @@ RSpec.describe CheckDailyAutoCheckoutJob, type: :job do
   let(:room) { create(:room, user: manager) }
   let(:seat) { create(:seat, room: room) }
 
-  describe "#perform" do
-    context "with active sessions that exceeded timeout" do
-      skip "checks out expired sessions" do
+  describe '#perform' do
+    context 'with active sessions that exceeded timeout' do
+      skip 'checks out expired sessions' do
         # Create an active session that exceeded the timeout threshold
         session = create(:session, user: user, seat: seat, status: :active, check_in_time: 25.hours.ago)
 
         expect {
           CheckDailyAutoCheckoutJob.perform_now
-        }.to change { session.reload.status }.from("active").to("timed_out")
+        }.to change { session.reload.status }.from('active').to('timed_out')
       end
 
-      skip "sets check_out_time when checking out" do
+      skip 'sets check_out_time when checking out' do
         session = create(:session, user: user, seat: seat, status: :active, check_in_time: 25.hours.ago)
 
         CheckDailyAutoCheckoutJob.perform_now
@@ -25,7 +25,7 @@ RSpec.describe CheckDailyAutoCheckoutJob, type: :job do
         expect(session.reload.check_out_time).not_to be_nil
       end
 
-      skip "handles multiple expired sessions" do
+      skip 'handles multiple expired sessions' do
         session1 = create(:session, user: user, seat: seat, status: :active, check_in_time: 25.hours.ago)
         session2 = create(:session, user: user, seat: create(:seat, room: room), status: :active, check_in_time: 30.hours.ago)
 
@@ -35,8 +35,8 @@ RSpec.describe CheckDailyAutoCheckoutJob, type: :job do
       end
     end
 
-    context "with active sessions that have not exceeded timeout" do
-      it "does not check out recent sessions" do
+    context 'with active sessions that have not exceeded timeout' do
+      it 'does not check out recent sessions' do
         session = create(:session, user: user, seat: seat, status: :active, check_in_time: 5.hours.ago)
 
         expect {
@@ -45,8 +45,8 @@ RSpec.describe CheckDailyAutoCheckoutJob, type: :job do
       end
     end
 
-    context "with already completed sessions" do
-      it "ignores completed sessions" do
+    context 'with already completed sessions' do
+      it 'ignores completed sessions' do
         session = create(:session, user: user, seat: seat, status: :checked_out, check_in_time: 25.hours.ago)
 
         expect {
@@ -55,21 +55,21 @@ RSpec.describe CheckDailyAutoCheckoutJob, type: :job do
       end
     end
 
-    context "job execution logging" do
-      it "creates a job log record" do
+    context 'job execution logging' do
+      it 'creates a job log record' do
         expect {
           CheckDailyAutoCheckoutJob.perform_now
-        }.to change { JobLog.where(job_type: "CheckDailyAutoCheckoutJob").count }
+        }.to change { JobLog.where(job_type: 'CheckDailyAutoCheckoutJob').count }
       end
 
-      it "records the number of checked out sessions" do
+      it 'records the number of checked out sessions' do
         create(:session, user: user, seat: seat, status: :active, check_in_time: 25.hours.ago)
         create(:session, user: user, seat: create(:seat, room: room), status: :active, check_in_time: 30.hours.ago)
 
         CheckDailyAutoCheckoutJob.perform_now
 
-        log = JobLog.where(job_type: "CheckDailyAutoCheckoutJob").last
-        expect(log.metadata["checked_out_count"]).to eq(2)
+        log = JobLog.where(job_type: 'CheckDailyAutoCheckoutJob').last
+        expect(log.metadata['checked_out_count']).to eq(2)
       end
     end
   end
