@@ -11,8 +11,8 @@ class CreateSessions < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :sessions, [:seat_id, :status], name: "index_sessions_on_seat_id_and_status"
-    add_index :sessions, [:user_id, :status], name: "index_sessions_on_user_id_and_status"
+    add_index :sessions, [ :seat_id, :status ], name: "index_sessions_on_seat_id_and_status"
+    add_index :sessions, [ :user_id, :status ], name: "index_sessions_on_user_id_and_status"
     add_index :sessions, :status
   end
 end
