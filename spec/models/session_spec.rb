@@ -5,6 +5,11 @@ RSpec.describe Session, type: :model do
   let(:room) { create(:room, user: user) }
   let(:seat) { create(:seat, room: room) }
 
+  before do
+    # ActionCable broadcast をテスト用に設定
+    allow(RoomsChannel).to receive(:broadcast_to)
+  end
+
   describe '自動離席機能' do
     describe '個人の自動離席 (user_auto_checkout_time)' do
       it 'user_auto_checkout_time に指定された時刻にジョブがスケジュールされる' do
@@ -149,6 +154,32 @@ RSpec.describe Session, type: :model do
 
         expect(Session.active.count).to eq(0)
         expect(Session.completed.count).to eq(2)
+      end
+    end
+
+    describe 'ブロードキャスト' do
+      it 'user_auto_checkout_time が更新されると RoomsChannel にブロードキャストされる' do
+        session = create(:session, user: user, seat: seat, status: 'active')
+        future_time = 1.hour.from_now
+
+        expect(RoomsChannel).to receive(:broadcast_to).with(
+          room,
+          hash_including(
+            type: 'user_auto_checkout_updated',
+            session_id: session.id
+          )
+        )
+
+        session.update(user_auto_checkout_time: future_time)
+      end
+
+      it 'session 作成時に座席更新情報がブロードキャストされる' do
+        expect(RoomsChannel).to receive(:broadcast_to).with(
+          room,
+          hash_including(type: 'seat_updated')
+        )
+
+        create(:session, user: user, seat: seat, status: 'active')
       end
     end
   end

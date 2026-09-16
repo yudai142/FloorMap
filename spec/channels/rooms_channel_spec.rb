@@ -119,4 +119,59 @@ RSpec.describe RoomsChannel, type: :channel do
       )
     end
   end
+
+  describe "Auto checkout broadcasting" do
+    before do
+      stub_connection(current_user: manager)
+      subscribe(room_id: room.id)
+    end
+
+    it "broadcasts user_auto_checkout_updated when session user_auto_checkout_time changes" do
+      seat = create(:seat, room: room)
+      session = create(:session, seat: seat, user: manager, status: 'active')
+      future_time = 1.hour.from_now
+
+      expect {
+        session.update(user_auto_checkout_time: future_time)
+      }.to have_broadcasted_to(room).with(
+        hash_including(
+          type: "user_auto_checkout_updated",
+          session_id: session.id
+        )
+      )
+    end
+
+    it "broadcasts room_auto_checkout_updated when room auto_checkout_time changes" do
+      expect {
+        room.update(auto_checkout_enabled: true, auto_checkout_time: "18:00")
+      }.to have_broadcasted_to(room).with(
+        hash_including(
+          type: "room_auto_checkout_updated",
+          auto_checkout_enabled: true
+        )
+      )
+    end
+
+    it "does not broadcast room_auto_checkout_updated when other room attributes change" do
+      expect {
+        room.update(name: "New Name")
+      }.not_to have_broadcasted_to(room).with(
+        hash_including(type: "room_auto_checkout_updated")
+      )
+    end
+
+    it "broadcasts with correct auto_checkout_time format in milliseconds" do
+      future_time = 1.hour.from_now
+      seat = create(:seat, room: room)
+      session = create(:session, seat: seat, user: manager, status: 'active')
+
+      expect {
+        session.update(user_auto_checkout_time: future_time)
+      }.to have_broadcasted_to(room).with(
+        hash_including(
+          user_auto_checkout_time: (future_time.to_i * 1000)
+        )
+      )
+    end
+  end
 end

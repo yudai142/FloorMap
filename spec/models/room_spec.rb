@@ -1,6 +1,11 @@
 require 'rails_helper'
 
 RSpec.describe Room, type: :model do
+  before do
+    # ActionCable broadcast をテスト用に設定
+    allow(RoomsChannel).to receive(:broadcast_to)
+  end
+
   describe 'associations' do
     it "belongs to user" do
       room = build(:room)
@@ -208,6 +213,119 @@ RSpec.describe Room, type: :model do
 
         regular_count = room.seats.where(seat_type: 'regular').count
         expect(regular_count).to eq(2)
+      end
+    end
+  end
+
+  describe '自動離席機能' do
+    let(:manager) { create(:user, :manager) }
+    let(:room) { create(:room, user: manager) }
+
+    describe '#auto_checkout_enabled' do
+      it 'デフォルトは false' do
+        expect(room.auto_checkout_enabled).to be false
+      end
+
+      it 'true に設定できる' do
+        room.update(auto_checkout_enabled: true)
+        expect(room.auto_checkout_enabled).to be true
+      end
+    end
+
+    describe '#auto_checkout_time' do
+      it '有効な HH:MM 形式の時刻を保存できる' do
+        ["00:00", "12:30", "23:59"].each do |time|
+          room.update(auto_checkout_enabled: true, auto_checkout_time: time)
+          expect(room.auto_checkout_time).to eq(time)
+          expect(room.errors).to be_empty
+        end
+      end
+
+      it '無効な形式の時刻は保存できない' do
+        room.update(auto_checkout_enabled: true, auto_checkout_time: "25:00")
+        expect(room.errors[:auto_checkout_time]).to be_present
+      end
+
+      it 'nil を設定できる' do
+        room.update(auto_checkout_time: nil)
+        expect(room.auto_checkout_time).to be_nil
+      end
+
+      it '24時間形式の時刻のみ有効' do
+        invalid_times = ["1:30", "13:60", "ab:cd", ""]
+        invalid_times.each do |time|
+          room.update(auto_checkout_enabled: true, auto_checkout_time: time)
+          if time.empty?
+            expect(room.auto_checkout_time).to be_nil
+          else
+            expect(room.errors[:auto_checkout_time]).to be_present
+          end
+        end
+      end
+    end
+
+    describe 'ブロードキャスト機能' do
+      it 'auto_checkout_time が更新されると broadcast される' do
+        expect(RoomsChannel).to receive(:broadcast_to).with(
+          room,
+          hash_including(
+            type: 'room_auto_checkout_updated',
+            auto_checkout_enabled: true,
+            auto_checkout_time: be_present
+          )
+        )
+
+        room.update(auto_checkout_enabled: true, auto_checkout_time: "18:00")
+      end
+
+      it 'floor_plan_data の変更は別の broadcast' do
+        expect(RoomsChannel).to receive(:broadcast_to).with(
+          room,
+          hash_including(type: 'floor_plan_updated')
+        ).at_least(:once)
+
+        room.update(floor_plan_data: [{ id: 1, type: 'rect' }])
+      end
+
+      it 'auto_checkout_time が更新されない場合は broadcast されない' do
+        room.update(auto_checkout_enabled: true, auto_checkout_time: "18:00")
+        # RoomsChannel をリセット
+        allow(RoomsChannel).to receive(:broadcast_to).and_call_original
+
+        # auto_checkout_time を変更しない更新
+        room.update(name: "New Name")
+
+        expect(RoomsChannel).not_to have_received(:broadcast_to).with(
+          room,
+          hash_including(type: 'room_auto_checkout_updated')
+        )
+      end
+    end
+
+    describe 'ルーム全体の自動離席とセッション' do
+      it 'ルーム内のすべてのアクティブセッションを取得できる' do
+        seat1 = create(:seat, room: room)
+        seat2 = create(:seat, room: room)
+        user1 = create(:user)
+        user2 = create(:user)
+
+        session1 = create(:session, user: user1, seat: seat1, status: 'active')
+        session2 = create(:session, user: user2, seat: seat2, status: 'active')
+
+        active_sessions = Session.active.joins(:seat).where(seats: { room_id: room.id })
+        expect(active_sessions.count).to eq(2)
+      end
+
+      it 'チェックアウト後はアクティブセッションから除外される' do
+        seat = create(:seat, room: room)
+        user = create(:user)
+        session = create(:session, user: user, seat: seat, status: 'active')
+
+        expect(Session.active.joins(:seat).where(seats: { room_id: room.id }).count).to eq(1)
+
+        session.check_out!
+
+        expect(Session.active.joins(:seat).where(seats: { room_id: room.id }).count).to eq(0)
       end
     end
   end
