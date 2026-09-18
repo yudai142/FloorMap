@@ -11,8 +11,8 @@ class CreateFloorPlanTemplates < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :floor_plan_templates, :user_id
-    add_index :floor_plan_templates, :is_public
-    add_index :floor_plan_templates, [:user_id, :is_public]
+    add_index :floor_plan_templates, :user_id, if_not_exists: true
+    add_index :floor_plan_templates, :is_public, if_not_exists: true
+    add_index :floor_plan_templates, [:user_id, :is_public], if_not_exists: true
   end
 end

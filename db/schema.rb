@@ -10,9 +10,23 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_07_091400) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_17_145212) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "floor_plan_templates", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.jsonb "floor_plan_data", default: [], null: false
+    t.boolean "is_public", default: false, null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.integer "usage_count", default: 0
+    t.bigint "user_id", null: false
+    t.index ["is_public"], name: "index_floor_plan_templates_on_is_public"
+    t.index ["user_id", "is_public"], name: "index_floor_plan_templates_on_user_id_and_is_public"
+    t.index ["user_id"], name: "index_floor_plan_templates_on_user_id"
+  end
 
   create_table "good_job_batches", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.integer "callback_priority"
@@ -152,12 +166,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_07_091400) do
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.text "description"
     t.jsonb "floor_plan_data", default: [], null: false
+    t.bigint "floor_plan_template_id"
     t.integer "height", default: 700
     t.string "name", null: false
     t.string "share_token"
     t.datetime "updated_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.bigint "user_id", null: false
     t.integer "width", default: 1000
+    t.index ["floor_plan_template_id"], name: "index_rooms_on_floor_plan_template_id"
     t.index ["share_token"], name: "index_rooms_on_share_token", unique: true
     t.index ["user_id"], name: "index_rooms_on_user_id"
   end
@@ -241,10 +257,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_07_091400) do
     t.index ["session_id"], name: "index_visitors_on_session_id", unique: true
   end
 
+  add_foreign_key "floor_plan_templates", "users"
   add_foreign_key "notifications", "rooms"
   add_foreign_key "notifications", "users"
   add_foreign_key "room_permissions", "rooms"
   add_foreign_key "room_permissions", "users"
+  add_foreign_key "rooms", "floor_plan_templates"
   add_foreign_key "rooms", "users"
   add_foreign_key "seats", "rooms"
   add_foreign_key "sessions", "seats"
