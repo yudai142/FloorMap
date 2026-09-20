@@ -6,9 +6,17 @@ class FloorPlanTemplatesController < ApplicationController
   def index
     @my_templates = current_user.floor_plan_templates.recent
     @public_templates = FloorPlanTemplate.public_templates.recent
+
+    render inertia: "FloorPlanTemplates/Index", props: {
+      my_templates: @my_templates.map { |t| template_json(t) },
+      public_templates: @public_templates.map { |t| template_json(t) }
+    }
   end
 
   def show
+    render inertia: "FloorPlanTemplates/Show", props: {
+      template: template_json(@template)
+    }
   end
 
   def create
@@ -38,5 +46,17 @@ class FloorPlanTemplatesController < ApplicationController
 
   def template_params
     params.require(:floor_plan_template).permit(:name, :description, :floor_plan_data, :is_public)
+  end
+
+  def template_json(template)
+    {
+      id: template.id,
+      name: template.name,
+      description: template.description,
+      is_public: template.is_public,
+      usage_count: template.usage_count,
+      user: { id: template.user.id, username: template.user.username },
+      created_at: template.created_at.iso8601
+    }
   end
 end
