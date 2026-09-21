@@ -16,6 +16,7 @@ export default defineConfig({
   },
   define: {
     __HMR__: false,
+    'globalThis.__VITE_HMR__': 'false',
   },
   build: {
     rollupOptions: {
