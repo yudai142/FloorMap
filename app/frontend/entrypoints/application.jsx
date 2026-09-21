@@ -14,6 +14,27 @@ if (import.meta.hot) {
 }
 globalThis.__VITE_HMR__ = false
 
+// Suppress WebSocket and HMR-related console errors
+const originalError = console.error
+const originalWarn = console.warn
+const shouldSuppressMessage = (message) => {
+  const msg = String(message).toLowerCase()
+  return msg.includes('websocket') || msg.includes('upgrade') || msg.includes('hmr') ||
+         msg.includes('vite') || msg.includes('err_connection_refused')
+}
+
+console.error = function(...args) {
+  if (!shouldSuppressMessage(args.join(' '))) {
+    originalError.apply(console, args)
+  }
+}
+
+console.warn = function(...args) {
+  if (!shouldSuppressMessage(args.join(' '))) {
+    originalWarn.apply(console, args)
+  }
+}
+
 import Home from '../Pages/Home'
 import RoomsIndex from '../Pages/Rooms/Index'
 import RoomsNew from '../Pages/Rooms/New'
