@@ -43,6 +43,7 @@ import RoomsCanvasEditor from '../Pages/Rooms/CanvasEditor'
 import FloorPlanTemplatesIndex from '../Pages/FloorPlanTemplates/Index'
 import FloorPlanTemplatesNew from '../Pages/FloorPlanTemplates/New'
 import FloorPlanTemplatesShow from '../Pages/FloorPlanTemplates/Show'
+import FloorPlanTemplatesCanvasEditor from '../Pages/FloorPlanTemplates/CanvasEditor'
 
 const pageMap = {
   'Home': Home,
@@ -53,6 +54,7 @@ const pageMap = {
   'FloorPlanTemplates/Index': FloorPlanTemplatesIndex,
   'FloorPlanTemplates/New': FloorPlanTemplatesNew,
   'FloorPlanTemplates/Show': FloorPlanTemplatesShow,
+  'FloorPlanTemplates/CanvasEditor': FloorPlanTemplatesCanvasEditor,
 }
 
 createInertiaApp({

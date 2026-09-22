@@ -7,8 +7,7 @@ export default function FloorPlanTemplatesNew() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    is_public: false,
-    floor_plan_data: []
+    is_public: false
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -31,19 +30,21 @@ export default function FloorPlanTemplatesNew() {
       const response = await fetch('/floor_plan_templates', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded',
           'X-CSRF-Token': csrfToken,
         },
-        body: JSON.stringify({
-          floor_plan_template: formData
+        body: new URLSearchParams({
+          'name': formData.name,
+          'description': formData.description,
+          'is_public': formData.is_public
         })
       })
 
-      if (response.ok) {
-        window.location.href = '/floor_plan_templates'
+      if (response.ok || response.status === 302) {
+        // リダイレクト後、最新のテンプレートをキャンバスエディターで開く
+        window.location.href = response.url || '/floor_plan_templates'
       } else {
-        const data = await response.json()
-        setError(data.error || 'テンプレート作成に失敗しました')
+        setError('テンプレート作成に失敗しました')
       }
     } catch (err) {
       setError('エラーが発生しました: ' + err.message)
@@ -63,6 +64,10 @@ export default function FloorPlanTemplatesNew() {
               {error}
             </div>
           )}
+
+          <p className="text-gray-600 mb-6">
+            テンプレート名と説明を入力した後、上面図エディターで上面図を設計・保存できます。
+          </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
@@ -90,7 +95,7 @@ export default function FloorPlanTemplatesNew() {
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                rows="4"
+                rows="3"
                 placeholder="このテンプレートの説明を入力してください"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
@@ -116,7 +121,7 @@ export default function FloorPlanTemplatesNew() {
                 disabled={loading}
                 className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold disabled:bg-gray-400"
               >
-                {loading ? '作成中...' : 'テンプレート作成'}
+                {loading ? '作成中...' : '次へ（上面図エディター）'}
               </button>
               <a
                 href="/floor_plan_templates"

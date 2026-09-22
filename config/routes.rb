@@ -26,7 +26,12 @@ Rails.application.routes.draw do
 
   get "/" => "pages#home", as: :root
 
-  resources :floor_plan_templates, only: [ :index, :new, :show, :create, :destroy ]
+  resources :floor_plan_templates, only: [ :index, :new, :show, :create, :destroy, :edit ] do
+    member do
+      get :canvas_editor, action: :edit
+      patch :save_floor_plan
+    end
+  end
 
   resources :rooms, param: :share_token do
     resources :room_permissions, only: [ :create, :destroy ]

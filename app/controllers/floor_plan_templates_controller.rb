@@ -1,7 +1,7 @@
 class FloorPlanTemplatesController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_template, only: [ :show, :destroy ]
-  before_action :authorize_user, only: [ :destroy ]
+  before_action :set_template, only: [ :show, :destroy, :edit, :save_floor_plan ]
+  before_action :authorize_user, only: [ :destroy, :edit, :save_floor_plan ]
 
   def index
     @my_templates = current_user.floor_plan_templates.recent
@@ -14,9 +14,12 @@ class FloorPlanTemplatesController < ApplicationController
   end
 
   def new
-    @template = FloorPlanTemplate.new
-    render inertia: "FloorPlanTemplates/New", props: {
-      template: {}
+    render inertia: "FloorPlanTemplates/New", props: {}
+  end
+
+  def edit
+    render inertia: "FloorPlanTemplates/CanvasEditor", props: {
+      template: template_json(@template)
     }
   end
 
@@ -27,12 +30,28 @@ class FloorPlanTemplatesController < ApplicationController
   end
 
   def create
-    @template = current_user.floor_plan_templates.build(template_params)
+    @template = current_user.floor_plan_templates.build(
+      name: params[:name],
+      description: params[:description],
+      is_public: params[:is_public] == 'true',
+      floor_plan_data: []
+    )
 
     if @template.save
-      redirect_to floor_plan_templates_path, notice: "テンプレートが作成されました"
+      redirect_to edit_floor_plan_template_path(@template)
     else
-      redirect_to floor_plan_templates_path, alert: @template.errors.full_messages.join(", ")
+      redirect_to new_floor_plan_template_path, alert: @template.errors.full_messages.join(", ")
+    end
+  end
+
+  def save_floor_plan
+    if @template.update(floor_plan_params)
+      redirect_to floor_plan_templates_path, notice: "テンプレートが保存されました"
+    else
+      render inertia: "FloorPlanTemplates/CanvasEditor", props: {
+        template: template_json(@template),
+        errors: @template.errors.messages
+      }, status: :unprocessable_entity
     end
   end
 
