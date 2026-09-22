@@ -14,12 +14,31 @@ class FloorPlanTemplatesController < ApplicationController
   end
 
   def new
-    render inertia: "FloorPlanTemplates/New", props: {}
+    @template = current_user.floor_plan_templates.build(
+      name: "新規テンプレート",
+      floor_plan_data: []
+    )
+
+    if @template.save
+      render inertia: "FloorPlanTemplates/CanvasEditor", props: {
+        template: {
+          id: @template.id,
+          name: @template.name,
+          description: @template.description,
+          is_public: @template.is_public,
+          floor_plan_data: @template.floor_plan_data
+        },
+        is_new: true
+      }
+    else
+      redirect_to floor_plan_templates_path, alert: @template.errors.full_messages.join(", ")
+    end
   end
 
   def edit
     render inertia: "FloorPlanTemplates/CanvasEditor", props: {
-      template: template_json(@template)
+      template: template_json(@template),
+      is_new: false
     }
   end
 
@@ -30,29 +49,33 @@ class FloorPlanTemplatesController < ApplicationController
   end
 
   def create
-    @template = current_user.floor_plan_templates.build(
-      name: params[:name],
-      description: params[:description],
-      is_public: params[:is_public] == 'true',
-      floor_plan_data: []
-    )
-
-    if @template.save
-      redirect_to edit_floor_plan_template_path(@template)
+    # テンプレート詳細フォームから呼び出される
+    if @template.update(template_params)
+      redirect_to floor_plan_templates_path, notice: "テンプレートが保存されました"
     else
-      redirect_to new_floor_plan_template_path, alert: @template.errors.full_messages.join(", ")
+      render inertia: "FloorPlanTemplates/Details", props: {
+        template: template_json(@template),
+        errors: @template.errors.messages
+      }, status: :unprocessable_entity
     end
   end
 
   def save_floor_plan
-    if @template.update(floor_plan_params)
-      redirect_to floor_plan_templates_path, notice: "テンプレートが保存されました"
+    if @template.update(floor_plan_data: params.dig(:floor_plan_template, :floor_plan_data) || [])
+      # 上面図保存後、詳細入力ページへリダイレクト
+      redirect_to floor_plan_template_details_path(@template)
     else
       render inertia: "FloorPlanTemplates/CanvasEditor", props: {
         template: template_json(@template),
         errors: @template.errors.messages
       }, status: :unprocessable_entity
     end
+  end
+
+  def details
+    render inertia: "FloorPlanTemplates/Details", props: {
+      template: template_json(@template)
+    }
   end
 
   def destroy

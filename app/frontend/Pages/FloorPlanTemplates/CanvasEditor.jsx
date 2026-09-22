@@ -34,9 +34,10 @@ export default function FloorPlanTemplatesCanvasEditor({ template }) {
       })
 
       if (response.ok || response.status === 302) {
-        window.location.href = '/floor_plan_templates'
+        // テンプレート詳細フォームへリダイレクト
+        window.location.href = `/floor_plan_templates/${template.id}/details`
       } else {
-        setError('テンプレート保存に失敗しました')
+        setError('上面図保存に失敗しました')
       }
     } catch (err) {
       setError('エラーが発生しました: ' + err.message)
