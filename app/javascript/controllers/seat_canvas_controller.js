@@ -3,7 +3,8 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = ["canvas"]
   static values = {
-    roomId: String,
+    roomId: { type: String, default: "" },
+    templateId: { type: String, default: "" },
     gridSize: { type: Number, default: 40 },
     context: { type: String, default: "view" },
     currentUserId: { type: Number, default: 0 },
@@ -287,18 +288,31 @@ export default class extends Controller {
   save() {
     if (this.contextValue !== "editor") return
 
-    fetch(`/rooms/${this.roomIdValue}/floor_plan.json`, {
+    const url = this.roomIdValue
+      ? `/rooms/${this.roomIdValue}/floor_plan.json`
+      : `/floor_plan_templates/${this.templateIdValue}/canvas_editor`
+
+    const body = this.roomIdValue
+      ? { room: { floor_plan_data: this.drawings } }
+      : { floor_plan_template: { floor_plan_data: this.drawings } }
+
+    fetch(url, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
         "X-CSRF-Token": this.csrfToken()
       },
-      body: JSON.stringify({ room: { floor_plan_data: this.drawings } })
+      body: JSON.stringify(body)
     })
       .then(res => res.json())
       .then(data => {
-        if (data.floor_plan_data !== undefined) {
-          alert("床面図を保存しました")
+        if (this.roomIdValue) {
+          if (data.floor_plan_data !== undefined) {
+            alert("床面図を保存しました")
+          }
+        } else {
+          // テンプレートの場合はリダイレクト
+          window.location.href = `/floor_plan_templates/${this.templateIdValue}/details`
         }
       })
       .catch(err => console.error("Floor plan save failed:", err))
@@ -327,6 +341,15 @@ export default class extends Controller {
   }
 
   loadCanvasData() {
+    // テンプレートの場合はスキップ（canvas_data endpoint がない）
+    if (!this.roomIdValue) {
+      this.seats = []
+      this.room = {}
+      this.drawings = []
+      this.draw()
+      return
+    }
+
     fetch(`/rooms/${this.roomIdValue}/canvas_data`)
       .then(response => response.json())
       .then(data => {
@@ -339,6 +362,9 @@ export default class extends Controller {
   }
 
   setupActionCable() {
+    // ルームの場合のみ ActionCable を設定（テンプレートは不要）
+    if (!this.roomIdValue) return
+
     import("channels/rooms_channel").then(module => {
       module.subscribeToRoom(this.roomIdValue, (data) => {
         if (data.type === "seat_updated") {

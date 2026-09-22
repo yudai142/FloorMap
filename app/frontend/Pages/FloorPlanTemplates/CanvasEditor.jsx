@@ -7,141 +7,34 @@ export default function FloorPlanTemplatesCanvasEditor({ template, is_new }) {
   const canvasRef = useRef(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [mode, setMode] = useState('draw')
-  const [drawings, setDrawings] = useState([])
-  const [isDrawing, setIsDrawing] = useState(false)
-  const [startPos, setStartPos] = useState(null)
+  const [currentMode, setCurrentMode] = useState('select')
 
+  // Stimulus controller を初期化
   useEffect(() => {
-    if (template?.floor_plan_data && Array.isArray(template.floor_plan_data)) {
-      setDrawings(template.floor_plan_data)
-    } else if (template?.floor_plan_data && typeof template.floor_plan_data === 'object') {
-      // floor_plan_data がオブジェクトの場合、空配列を使用
-      setDrawings([])
-    }
-  }, [template])
+    if (!canvasRef.current) return
 
-  // Canvas の初期化と描画
-  useEffect(() => {
+    // グローバル変数を設定（seat-canvas controller が使用）
+    window.currentEditMode = 'select'
+
+    // canvas 要素に Stimulus controller を紐付け
+    // Stimulus is automatically initialized on page load
+    // Here we just need to ensure the canvas element exists and is properly configured
+  }, [canvasRef])
+
+  const setEditMode = (mode) => {
+    window.currentEditMode = mode
+    setCurrentMode(mode)
+
+    // Canvas カーソルを変更
     const canvas = canvasRef.current
-    if (!canvas) return
-
-    const ctx = canvas.getContext('2d')
-    const rect = canvas.getBoundingClientRect()
-
-    // Canvas サイズを設定
-    canvas.width = rect.width
-    canvas.height = rect.height
-
-    // Canvas をクリア
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-    // 既存の drawing を描画
-    if (drawings && Array.isArray(drawings)) {
-      drawings.forEach(drawing => {
-        drawRectangle(ctx, drawing)
-      })
-    }
-  }, [drawings])
-
-  const drawRectangle = (ctx, drawing) => {
-    if (!drawing.x || !drawing.y || !drawing.width || !drawing.height) return
-
-    ctx.strokeStyle = '#3b82f6'
-    ctx.lineWidth = 2
-    ctx.fillStyle = 'rgba(59, 130, 246, 0.1)'
-
-    ctx.fillRect(drawing.x, drawing.y, drawing.width, drawing.height)
-    ctx.strokeRect(drawing.x, drawing.y, drawing.width, drawing.height)
-  }
-
-  const handleMouseDown = (e) => {
-    if (mode === 'select') return
-
-    const rect = canvasRef.current.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-
-    setIsDrawing(true)
-    setStartPos({ x, y })
-  }
-
-  const handleMouseMove = (e) => {
-    if (!isDrawing || !startPos) return
-
-    const rect = canvasRef.current.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-
-    // Canvas を再描画
-    const canvas = canvasRef.current
-    const ctx = canvas.getContext('2d')
-
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-    ctx.strokeStyle = '#666'
-    ctx.lineWidth = 1
-
-    // グリッドを描画（オプション）
-    for (let i = 0; i < canvas.width; i += 40) {
-      ctx.beginPath()
-      ctx.moveTo(i, 0)
-      ctx.lineTo(i, canvas.height)
-      ctx.strokeStyle = '#f0f0f0'
-      ctx.stroke()
-    }
-    for (let i = 0; i < canvas.height; i += 40) {
-      ctx.beginPath()
-      ctx.moveTo(0, i)
-      ctx.lineTo(canvas.width, i)
-      ctx.strokeStyle = '#f0f0f0'
-      ctx.stroke()
-    }
-
-    // 既存の drawing を描画
-    drawings.forEach(drawing => {
-      drawRectangle(ctx, drawing)
-    })
-
-    // 現在のドラッグを描画
-    const width = x - startPos.x
-    const height = y - startPos.y
-
-    ctx.fillStyle = 'rgba(59, 130, 246, 0.1)'
-    ctx.strokeStyle = '#3b82f6'
-    ctx.lineWidth = 2
-    ctx.fillRect(startPos.x, startPos.y, width, height)
-    ctx.strokeRect(startPos.x, startPos.y, width, height)
-  }
-
-  const handleMouseUp = (e) => {
-    if (!isDrawing || !startPos) {
-      setIsDrawing(false)
-      return
-    }
-
-    const rect = canvasRef.current.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-
-    const width = x - startPos.x
-    const height = y - startPos.y
-
-    // 最小サイズチェック
-    if (Math.abs(width) > 10 && Math.abs(height) > 10) {
-      const newDrawing = {
-        x: Math.min(startPos.x, x),
-        y: Math.min(startPos.y, y),
-        width: Math.abs(width),
-        height: Math.abs(height)
+    if (canvas) {
+      canvas.classList.remove('draw-mode', 'delete-mode')
+      if (mode === 'draw') {
+        canvas.classList.add('draw-mode')
+      } else if (mode === 'delete') {
+        canvas.classList.add('delete-mode')
       }
-
-      setDrawings([...drawings, newDrawing])
     }
-
-    setIsDrawing(false)
-    setStartPos(null)
   }
 
   const handleSave = async () => {
@@ -158,13 +51,12 @@ export default function FloorPlanTemplatesCanvasEditor({ template, is_new }) {
         },
         body: JSON.stringify({
           floor_plan_template: {
-            floor_plan_data: drawings
+            floor_plan_data: {}
           }
         })
       })
 
       if (response.ok || response.status === 302) {
-        // 上面図保存後、詳細フォームへリダイレクト
         window.location.href = `/floor_plan_templates/${template.id}/details`
       } else {
         setError('上面図保存に失敗しました')
@@ -176,84 +68,196 @@ export default function FloorPlanTemplatesCanvasEditor({ template, is_new }) {
     }
   }
 
-  const setEditMode = (newMode) => {
-    setMode(newMode)
-    if (canvasRef.current) {
-      if (newMode === 'draw') {
-        canvasRef.current.style.cursor = 'crosshair'
-      } else {
-        canvasRef.current.style.cursor = 'default'
-      }
-    }
-  }
-
   return (
     <Layout auth={auth}>
-      <div className="flex flex-col h-screen bg-gray-100">
-        {/* ヘッダー */}
-        <div className="bg-white border-b p-4 flex justify-between items-center">
+      <style>{`
+        .editor-container {
+          background-color: #f8fafc;
+          min-height: calc(100vh - 64px);
+          padding: 32px 64px;
+        }
+
+        .editor-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 24px;
+        }
+
+        .editor-title {
+          font-size: 28px;
+          font-weight: bold;
+          color: #0f172a;
+        }
+
+        .back-link {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          color: #64748b;
+          text-decoration: none;
+          font-size: 14px;
+          font-weight: 500;
+        }
+
+        .back-link:hover {
+          color: #334155;
+        }
+
+        .editor-toolbar {
+          background: white;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          padding: 12px 16px;
+          display: flex;
+          gap: 8px;
+          align-items: center;
+          margin-bottom: 16px;
+        }
+
+        .toolbar-group {
+          display: flex;
+          gap: 8px;
+          align-items: center;
+        }
+
+        .toolbar-divider {
+          width: 1px;
+          height: 24px;
+          background-color: #e2e8f0;
+        }
+
+        .toolbar-button {
+          background: white;
+          border: 1px solid #e2e8f0;
+          padding: 6px 12px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-weight: 500;
+          font-size: 13px;
+          color: #475569;
+          display: flex;
+          gap: 4px;
+          align-items: center;
+          transition: all 0.2s;
+        }
+
+        .toolbar-button:hover {
+          background-color: #f8fafc;
+          border-color: #cbd5e1;
+        }
+
+        .toolbar-button.active {
+          background-color: #3b82f6;
+          color: white;
+          border-color: #3b82f6;
+        }
+
+        .canvas-wrapper {
+          background: white;
+          border: 1px solid #e2e8f0;
+          border-radius: 16px;
+          padding: 32px;
+          min-height: calc(100vh - 280px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        canvas {
+          border: 1px solid #cbd5e1;
+          border-radius: 12px;
+          background-color: #ffffff;
+          width: 100%;
+          height: 100%;
+          display: block;
+          cursor: default;
+        }
+
+        canvas.draw-mode {
+          cursor: crosshair;
+        }
+
+        canvas.delete-mode {
+          cursor: not-allowed;
+        }
+      `}</style>
+
+      <div className="editor-container">
+        <div className="editor-header">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">上面図エディター</h1>
-            <p className="text-gray-600 text-sm mt-1">{template.name || '新規テンプレート'}</p>
+            <a href="/floor_plan_templates" className="back-link">← 戻る</a>
           </div>
-          <div className="flex gap-3">
-            <button
-              onClick={handleSave}
-              disabled={loading}
-              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold disabled:bg-gray-400"
-            >
-              {loading ? '保存中...' : '💾 保存'}
-            </button>
-            <a
-              href="/floor_plan_templates"
-              className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition font-semibold"
-            >
-              キャンセル
-            </a>
-          </div>
+          <h1 className="editor-title">上面図エディター</h1>
         </div>
 
         {error && (
-          <div className="p-4 bg-red-100 text-red-700">
+          <div className="p-4 bg-red-100 text-red-700 rounded mb-4">
             {error}
           </div>
         )}
 
-        {/* ツールバー */}
-        <div className="bg-white border-b p-3 flex gap-2 items-center mx-4 mt-4 rounded-lg">
-          <div className="flex gap-2">
+        {/* Editor Toolbar */}
+        <div className="editor-toolbar">
+          <div className="toolbar-group">
+            <span style={{ fontSize: '12px', color: '#64748b', fontWeight: '600' }}>モード:</span>
             <button
+              className={`toolbar-button ${currentMode === 'select' ? 'active' : ''}`}
               onClick={() => setEditMode('select')}
-              className={`px-4 py-2 rounded ${mode === 'select' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+              title="選択モード (S)"
             >
               ✓ 選択
             </button>
             <button
+              className={`toolbar-button ${currentMode === 'draw' ? 'active' : ''}`}
               onClick={() => setEditMode('draw')}
-              className={`px-4 py-2 rounded ${mode === 'draw' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+              title="描画モード (D)"
             >
               ✏️ 描画
             </button>
+            <button
+              className={`toolbar-button ${currentMode === 'delete' ? 'active' : ''}`}
+              onClick={() => setEditMode('delete')}
+              title="削除モード (Del)"
+            >
+              🗑️ 削除
+            </button>
           </div>
-          <div className="flex-1"></div>
-          <span className="text-sm text-gray-600">
-            {drawings.length} 個のパターン
-          </span>
+          <div className="toolbar-divider"></div>
+          <div style={{ flex: 1 }}></div>
+          <div className="toolbar-group">
+            <button
+              className="toolbar-button"
+              onClick={handleSave}
+              disabled={loading}
+              style={{
+                backgroundColor: '#10b981',
+                color: 'white',
+                borderColor: '#10b981',
+                opacity: loading ? 0.6 : 1
+              }}
+            >
+              💾 {loading ? '保存中...' : '保存'}
+            </button>
+          </div>
         </div>
 
-        {/* Canvas */}
-        <div className="flex-1 p-4 overflow-auto">
-          <div className="bg-white rounded-lg shadow-lg p-4 h-full">
-            <canvas
-              ref={canvasRef}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
-              className="w-full h-full border border-gray-300 rounded"
-              style={{ display: 'block', background: 'white' }}
-            />
-          </div>
+        <div className="canvas-wrapper">
+          <canvas
+            ref={canvasRef}
+            id="floor-canvas"
+            data-controller="seat-canvas"
+            data-seat-canvas-target="canvas"
+            data-seat-canvas-template-id-value={template.id}
+            data-seat-canvas-context-value="editor"
+            data-seat-canvas-current-user-id-value={auth?.user?.id || 0}
+            data-seat-canvas-can-manage-value="true"
+            style={{
+              border: '1px solid #e2e8f0',
+              borderRadius: '12px',
+              backgroundColor: '#ffffff'
+            }}
+          ></canvas>
         </div>
       </div>
     </Layout>
