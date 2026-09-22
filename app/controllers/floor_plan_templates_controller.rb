@@ -9,7 +9,8 @@ class FloorPlanTemplatesController < ApplicationController
 
     render inertia: "FloorPlanTemplates/Index", props: {
       my_templates: @my_templates.map { |t| template_json(t) },
-      public_templates: @public_templates.map { |t| template_json(t) }
+      public_templates: @public_templates.map { |t| template_json(t) },
+      **default_inertia_props
     }
   end
 
@@ -27,7 +28,8 @@ class FloorPlanTemplatesController < ApplicationController
       Rails.logger.info("Template created successfully: #{@template.id}")
       render inertia: "FloorPlanTemplates/CanvasEditor", props: {
         template: template_json(@template),
-        is_new: true
+        is_new: true,
+        **default_inertia_props
       }
     else
       Rails.logger.error("Failed to create template: #{@template.errors.full_messages.inspect}")
@@ -42,7 +44,8 @@ class FloorPlanTemplatesController < ApplicationController
 
   def show
     render inertia: "FloorPlanTemplates/Show", props: {
-      template: template_json(@template)
+      template: template_json(@template),
+      **default_inertia_props
     }
   end
 
@@ -58,7 +61,8 @@ class FloorPlanTemplatesController < ApplicationController
     else
       render inertia: "FloorPlanTemplates/Details", props: {
         template: template_json(@template),
-        errors: @template.errors.messages
+        errors: @template.errors.messages,
+        **default_inertia_props
       }, status: :unprocessable_entity
     end
   end
@@ -70,14 +74,16 @@ class FloorPlanTemplatesController < ApplicationController
     else
       render inertia: "FloorPlanTemplates/CanvasEditor", props: {
         template: template_json(@template),
-        errors: @template.errors.messages
+        errors: @template.errors.messages,
+        **default_inertia_props
       }, status: :unprocessable_entity
     end
   end
 
   def details
     render inertia: "FloorPlanTemplates/Details", props: {
-      template: template_json(@template)
+      template: template_json(@template),
+      **default_inertia_props
     }
   end
 
