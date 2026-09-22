@@ -16,21 +16,18 @@ class FloorPlanTemplatesController < ApplicationController
   def new
     @template = current_user.floor_plan_templates.build(
       name: "新規テンプレート",
-      floor_plan_data: []
+      description: "",
+      is_public: false,
+      floor_plan_data: {}
     )
 
     if @template.save
       render inertia: "FloorPlanTemplates/CanvasEditor", props: {
-        template: {
-          id: @template.id,
-          name: @template.name,
-          description: @template.description,
-          is_public: @template.is_public,
-          floor_plan_data: @template.floor_plan_data
-        },
+        template: template_json(@template),
         is_new: true
       }
     else
+      Rails.logger.error("Failed to create template: #{@template.errors.full_messages}")
       redirect_to floor_plan_templates_path, alert: @template.errors.full_messages.join(", ")
     end
   end
