@@ -1,7 +1,7 @@
 class FloorPlanTemplatesController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_template, only: [ :show, :destroy, :edit, :save_floor_plan ]
-  before_action :authorize_user, only: [ :destroy, :edit, :save_floor_plan ]
+  before_action :set_template, only: [ :show, :destroy, :edit, :update, :save_floor_plan ]
+  before_action :authorize_user, only: [ :destroy, :edit, :update, :save_floor_plan ]
 
   def index
     @my_templates = current_user.floor_plan_templates.recent
@@ -49,6 +49,11 @@ class FloorPlanTemplatesController < ApplicationController
   end
 
   def create
+    # 他の create アクションは不要（new で自動作成）
+    head :no_content
+  end
+
+  def update
     # テンプレート詳細フォームから呼び出される
     if @template.update(template_params)
       redirect_to floor_plan_templates_path, notice: "テンプレートが保存されました"

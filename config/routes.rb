@@ -26,15 +26,13 @@ Rails.application.routes.draw do
 
   get "/" => "pages#home", as: :root
 
-  resources :floor_plan_templates, only: [ :index, :show, :create, :destroy, :edit ] do
+  resources :floor_plan_templates, only: [ :index, :show, :create, :destroy, :edit, :update ] do
     collection do
       get :new
     end
     member do
-      get :canvas_editor, action: :edit
-      patch :save_floor_plan
+      patch :canvas_editor, action: :save_floor_plan
       get :details
-      post :save_details, action: :create
     end
   end
 

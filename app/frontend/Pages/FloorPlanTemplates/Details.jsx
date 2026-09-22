@@ -37,17 +37,18 @@ export default function FloorPlanTemplatesDetails({ template }) {
 
     try {
       const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
-      const response = await fetch(`/floor_plan_templates/${template.id}/save_details`, {
-        method: 'POST',
+      const response = await fetch(`/floor_plan_templates/${template.id}`, {
+        method: 'PATCH',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
           'X-CSRF-Token': csrfToken,
         },
-        body: new URLSearchParams({
-          'name': formData.name,
-          'description': formData.description,
-          'is_public': formData.is_public,
-          '_method': 'PATCH'
+        body: JSON.stringify({
+          floor_plan_template: {
+            name: formData.name,
+            description: formData.description,
+            is_public: formData.is_public
+          }
         })
       })
 
