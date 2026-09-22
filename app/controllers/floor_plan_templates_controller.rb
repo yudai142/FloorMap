@@ -36,10 +36,8 @@ class FloorPlanTemplatesController < ApplicationController
   end
 
   def edit
-    render inertia: "FloorPlanTemplates/CanvasEditor", props: {
-      template: template_json(@template),
-      is_new: false
-    }
+    # テンプレート編集ページは ERB テンプレートで実装
+    render :edit
   end
 
   def show
