@@ -3,7 +3,6 @@ class FloorPlanTemplate < ApplicationRecord
   has_many :rooms, dependent: :nullify
 
   validates :name, presence: true, length: { minimum: 1, maximum: 255 }
-  validates :floor_plan_data, presence: true
   validate :floor_plan_data_is_valid_jsonb
 
   scope :public_templates, -> { where(is_public: true) }

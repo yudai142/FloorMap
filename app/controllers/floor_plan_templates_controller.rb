@@ -21,14 +21,17 @@ class FloorPlanTemplatesController < ApplicationController
       floor_plan_data: {}
     )
 
+    Rails.logger.info("Creating new template: #{@template.inspect}")
+
     if @template.save
+      Rails.logger.info("Template created successfully: #{@template.id}")
       render inertia: "FloorPlanTemplates/CanvasEditor", props: {
         template: template_json(@template),
         is_new: true
       }
     else
-      Rails.logger.error("Failed to create template: #{@template.errors.full_messages}")
-      redirect_to floor_plan_templates_path, alert: @template.errors.full_messages.join(", ")
+      Rails.logger.error("Failed to create template: #{@template.errors.full_messages.inspect}")
+      redirect_to floor_plan_templates_path, alert: "テンプレート作成に失敗しました: #{@template.errors.full_messages.join(", ")}"
     end
   end
 
