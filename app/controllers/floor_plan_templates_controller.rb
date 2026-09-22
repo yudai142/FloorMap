@@ -36,8 +36,8 @@ class FloorPlanTemplatesController < ApplicationController
   end
 
   def edit
-    # テンプレート編集ページは ERB テンプレートで実装
-    render :edit
+    # テンプレート編集ページは canvas_editor で実装（ルームと同じ構成）
+    render :canvas_editor
   end
 
   def show
