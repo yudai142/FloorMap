@@ -13,6 +13,13 @@ class FloorPlanTemplatesController < ApplicationController
     }
   end
 
+  def new
+    @template = FloorPlanTemplate.new
+    render inertia: "FloorPlanTemplates/New", props: {
+      template: {}
+    }
+  end
+
   def show
     render inertia: "FloorPlanTemplates/Show", props: {
       template: template_json(@template)

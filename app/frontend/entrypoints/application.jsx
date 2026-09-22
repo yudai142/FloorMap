@@ -41,6 +41,7 @@ import RoomsNew from '../Pages/Rooms/New'
 import RoomsShow from '../Pages/Rooms/Show'
 import RoomsCanvasEditor from '../Pages/Rooms/CanvasEditor'
 import FloorPlanTemplatesIndex from '../Pages/FloorPlanTemplates/Index'
+import FloorPlanTemplatesNew from '../Pages/FloorPlanTemplates/New'
 import FloorPlanTemplatesShow from '../Pages/FloorPlanTemplates/Show'
 
 const pageMap = {
@@ -50,6 +51,7 @@ const pageMap = {
   'Rooms/Show': RoomsShow,
   'Rooms/CanvasEditor': RoomsCanvasEditor,
   'FloorPlanTemplates/Index': FloorPlanTemplatesIndex,
+  'FloorPlanTemplates/New': FloorPlanTemplatesNew,
   'FloorPlanTemplates/Show': FloorPlanTemplatesShow,
 }
 
