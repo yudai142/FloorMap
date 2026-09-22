@@ -1,12 +1,10 @@
 import React from 'react'
 import { usePage } from '@inertiajs/react'
-import Layout from '../../components/Layout'
 
 export default function FloorPlanTemplatesIndex({ my_templates, public_templates }) {
   const { auth } = usePage().props
 
   return (
-    <Layout auth={auth}>
       <div className="space-y-8">
         <h1 className="text-3xl font-bold text-gray-900">上面図テンプレート</h1>
 
@@ -109,6 +107,5 @@ export default function FloorPlanTemplatesIndex({ my_templates, public_templates
           </a>
         </div>
       </div>
-    </Layout>
-  )
-}
+    )
+  }

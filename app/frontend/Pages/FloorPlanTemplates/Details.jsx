@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import { usePage } from '@inertiajs/react'
-import Layout from '../../components/Layout'
 
 export default function FloorPlanTemplatesDetails({ template }) {
   const { auth } = usePage().props
@@ -65,8 +64,7 @@ export default function FloorPlanTemplatesDetails({ template }) {
   }
 
   return (
-    <Layout auth={auth}>
-      <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">テンプレート情報を入力</h1>
         <p className="text-gray-600 mb-6">上面図が保存されました。テンプレートの名前と説明を入力して完了します。</p>
 
@@ -142,6 +140,5 @@ export default function FloorPlanTemplatesDetails({ template }) {
           </form>
         </div>
       </div>
-    </Layout>
-  )
-}
+    )
+  }

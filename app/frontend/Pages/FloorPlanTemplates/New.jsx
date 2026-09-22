@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { usePage } from '@inertiajs/react'
-import Layout from '../../components/Layout'
 
 export default function FloorPlanTemplatesNew() {
   const { auth } = usePage().props
@@ -54,8 +53,7 @@ export default function FloorPlanTemplatesNew() {
   }
 
   return (
-    <Layout auth={auth}>
-      <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-900 mb-6">新規テンプレート作成</h1>
 
         <div className="bg-white rounded-lg shadow-lg p-8">
@@ -133,6 +131,5 @@ export default function FloorPlanTemplatesNew() {
           </form>
         </div>
       </div>
-    </Layout>
-  )
-}
+    )
+  }

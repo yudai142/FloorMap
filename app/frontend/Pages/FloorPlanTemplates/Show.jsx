@@ -1,6 +1,5 @@
 import React from 'react'
 import { usePage } from '@inertiajs/react'
-import Layout from '../../components/Layout'
 
 export default function FloorPlanTemplatesShow({ template }) {
   const { auth } = usePage().props
@@ -12,7 +11,6 @@ export default function FloorPlanTemplatesShow({ template }) {
   }
 
   return (
-    <Layout auth={auth}>
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="bg-white rounded-lg shadow-lg p-8">
           <div className="mb-6">
@@ -82,6 +80,5 @@ export default function FloorPlanTemplatesShow({ template }) {
           </div>
         </div>
       </div>
-    </Layout>
-  )
-}
+    )
+  }

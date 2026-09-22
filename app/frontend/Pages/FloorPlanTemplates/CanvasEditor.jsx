@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { usePage } from '@inertiajs/react'
-import Layout from '../../components/Layout'
 
 export default function FloorPlanTemplatesCanvasEditor({ template, is_new }) {
   const { auth } = usePage().props
@@ -69,7 +68,7 @@ export default function FloorPlanTemplatesCanvasEditor({ template, is_new }) {
   }
 
   return (
-    <Layout auth={auth}>
+    <div>
       <style>{`
         .editor-container {
           background-color: #f8fafc;
@@ -260,6 +259,6 @@ export default function FloorPlanTemplatesCanvasEditor({ template, is_new }) {
           ></canvas>
         </div>
       </div>
-    </Layout>
+    </div>
   )
 }
