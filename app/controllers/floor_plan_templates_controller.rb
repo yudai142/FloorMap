@@ -39,7 +39,7 @@ class FloorPlanTemplatesController < ApplicationController
 
   def edit
     # テンプレート編集ページは canvas_editor で実装（ルームと同じ構成）
-    render action: :canvas_editor, layout: "application"
+    render :canvas_editor
   end
 
   def show
