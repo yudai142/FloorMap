@@ -1,12 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 
 export default function Layout({ children, auth = {} }) {
-  const [csrfToken, setCsrfToken] = useState('')
-
-  useEffect(() => {
-    const token = document.querySelector('meta[name="csrf-token"]')?.content || ''
-    setCsrfToken(token)
-  }, [])
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || ''
 
   const handleLogout = (e) => {
     e.preventDefault()
