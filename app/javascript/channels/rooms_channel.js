@@ -1,4 +1,4 @@
-import consumer from "./consumer"
+import consumer from "channels/consumer"
 
 export function subscribeToRoom(roomId, callbacks = {}) {
   const subscription = consumer.subscriptions.create(
