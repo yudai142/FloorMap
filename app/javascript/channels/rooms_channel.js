@@ -1,7 +1,16 @@
-import consumer from "channels/consumer"
+let consumer = null
 
-export function subscribeToRoom(roomId, callbacks = {}) {
-  const subscription = consumer.subscriptions.create(
+async function getConsumer() {
+  if (!consumer) {
+    const module = await import("./consumer.js")
+    consumer = module.default
+  }
+  return consumer
+}
+
+export async function subscribeToRoom(roomId, callbacks = {}) {
+  const c = await getConsumer()
+  const subscription = c.subscriptions.create(
     { channel: "RoomsChannel", room_id: roomId },
     {
       connected() {

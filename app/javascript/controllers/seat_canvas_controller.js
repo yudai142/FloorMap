@@ -365,12 +365,14 @@ export default class extends Controller {
     // ルームの場合のみ ActionCable を設定（テンプレートは不要）
     if (!this.roomIdValue) return
 
-    import("channels/rooms_channel").then(module => {
-      module.subscribeToRoom(this.roomIdValue, (data) => {
-        if (data.type === "seat_updated") {
-          this.mergeSeat(data.seat)
-        } else if (data.type === "seat_removed") {
-          this.removeSeatById(data.seat_id)
+    import("channels/rooms_channel").then(async module => {
+      await module.subscribeToRoom(this.roomIdValue, {
+        onUpdate: (data) => {
+          if (data.type === "seat_updated") {
+            this.mergeSeat(data.seat)
+          } else if (data.type === "seat_removed") {
+            this.removeSeatById(data.seat_id)
+          }
         }
       })
     })
