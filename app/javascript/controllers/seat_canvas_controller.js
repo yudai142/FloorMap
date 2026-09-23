@@ -58,7 +58,8 @@ export default class extends Controller {
           this.draggedSeat = seat
           this.dragOffset = { x: x - (seat.position_x || x), y: y - (seat.position_y || y) }
         }
-      } else if (mode === 'draw') {
+      } else if (mode === 'draw' && this.roomIdValue) {
+        // 矩形描画はルームのみ対応（テンプレートは図形と座席配置のみ）
         this.isDrawing = true
         this.drawingStart = { x, y }
       } else if (mode === 'delete') {
@@ -97,7 +98,7 @@ export default class extends Controller {
       return
     }
 
-    if (!this.isDrawing || mode !== 'draw') return
+    if (!this.isDrawing || mode !== 'draw' || !this.roomIdValue) return
 
     this.draw()
     const width = x - this.drawingStart.x
