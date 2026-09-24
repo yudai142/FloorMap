@@ -81,6 +81,106 @@
     border-color: #3b82f6;
   }
 
+  .editor-tool-btn {
+    padding: 6px 12px;
+    border: 2px solid #cbd5e1;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 13px;
+    color: #475569;
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+    transition: all 0.2s;
+  }
+
+  .editor-tool-btn:hover {
+    border-color: #60a5fa;
+    background-color: #dbeafe;
+  }
+
+  .editor-tool-btn.active {
+    background-color: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+  }
+
+  .editor-btn {
+    padding: 6px 12px;
+    border: 2px solid #cbd5e1;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 13px;
+    color: #475569;
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+    transition: all 0.2s;
+  }
+
+  .editor-btn:hover {
+    background-color: #fef3c7;
+    border-color: #fbbf24;
+  }
+
+  .editor-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .zoom-btn {
+    padding: 4px 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s;
+  }
+
+  .zoom-btn:hover {
+    background-color: #cffafe;
+    border-color: #06b6d4;
+  }
+
+  .color-btn {
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .color-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+  }
+
+  .color-btn.active {
+    box-shadow: 0 0 0 3px #22c55e, 0 0 8px rgba(34, 197, 94, 0.4);
+    transform: scale(1.15);
+  }
+
+  .save-btn {
+    padding: 12px 24px;
+    background-color: #84cc16;
+    color: #0f172a;
+    border: 2px solid #65a30d;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    transition: all 0.2s;
+  }
+
+  .save-btn:hover {
+    background-color: #a3e635;
+  }
+
   .canvas-wrapper {
     background: white;
     border: 1px solid #e2e8f0;
@@ -112,22 +212,42 @@
 </style>
 
 <script>
-  window.currentEditMode = 'select';
+  window.currentEditMode = 'seat';
+  window.currentColor = '#3b82f6';
+  window.zoomLevel = 100;
+  window.gridEnabled = false;
+
+  // ツール選択
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.editor-tool-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tool = btn.dataset.tool;
+        document.querySelectorAll('.editor-tool-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        setEditMode(tool);
+      });
+    });
+
+    // 色選択
+    document.querySelectorAll('.color-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const color = btn.dataset.color;
+        document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        window.currentColor = color;
+      });
+    });
+
+    // 最初の色を選択
+    document.querySelector('[data-color="#3b82f6"]')?.classList.add('active');
+  });
 
   function setEditMode(mode) {
     window.currentEditMode = mode;
-
-    // ボタン状態を更新
-    document.querySelectorAll('.toolbar-button').forEach(btn => {
-      btn.classList.remove('active');
-    });
-    document.getElementById(`mode-${mode}`)?.classList.add('active');
-
-    // Canvas カーソルを変更
     const canvas = document.querySelector('canvas');
     if (canvas) {
       canvas.classList.remove('draw-mode', 'delete-mode');
-      if (mode === 'draw') {
+      if (mode === 'line' || mode === 'rectangle' || mode === 'circle' || mode === 'arrow') {
         canvas.classList.add('draw-mode');
       } else if (mode === 'delete') {
         canvas.classList.add('delete-mode');
@@ -137,25 +257,48 @@
 
   function undoAction() {
     console.log('Undo triggered');
-    alert('Undo 機能は準備中です');
   }
 
   function redoAction() {
     console.log('Redo triggered');
-    alert('Redo 機能は準備中です');
   }
 
-  function resetCanvas() {
-    if (confirm('座席配置図をリセットしますか？')) {
-      console.log('Canvas reset triggered');
-      // TODO: リセット機能の実装
+  function toggleGrid() {
+    window.gridEnabled = !window.gridEnabled;
+    const btn = event.target.closest('button');
+    btn.style.opacity = window.gridEnabled ? '1' : '0.6';
+  }
+
+  function zoomOut() {
+    if (window.zoomLevel > 50) {
+      window.zoomLevel -= 10;
+      updateZoomDisplay();
+    }
+  }
+
+  function zoomIn() {
+    if (window.zoomLevel < 200) {
+      window.zoomLevel += 10;
+      updateZoomDisplay();
+    }
+  }
+
+  function resetZoom() {
+    window.zoomLevel = 100;
+    updateZoomDisplay();
+  }
+
+  function updateZoomDisplay() {
+    document.getElementById('zoom-level').textContent = window.zoomLevel + '%';
+    const canvas = document.querySelector('canvas');
+    if (canvas) {
+      canvas.style.transform = `scale(${window.zoomLevel / 100})`;
+      canvas.style.transformOrigin = 'top center';
     }
   }
 
   // キーボードショートカット
   document.addEventListener('keydown', (e) => {
-    if (e.key === 's' || e.key === 'S') setEditMode('select');
-    if (e.key === 'd' || e.key === 'D') setEditMode('draw');
     if (e.key === 'Delete') setEditMode('delete');
   });
 </script>
@@ -168,42 +311,91 @@
     <h1 class="editor-title">上面図エディター</h1>
   </div>
 
-  <!-- Editor Toolbar -->
-  <div class="editor-toolbar">
-    <div class="toolbar-group">
-      <span style="font-size: 12px; color: #64748b; font-weight: 600;">モード:</span>
-      <button class="toolbar-button active" onclick="setEditMode('select')" id="mode-select" title="選択モード (S)">
-        ✓ 選択
-      </button>
-      <button class="toolbar-button" onclick="setEditMode('draw')" id="mode-draw" title="描画モード (D)">
-        ✏️ 描画
-      </button>
-      <button class="toolbar-button" onclick="setEditMode('delete')" id="mode-delete" title="削除モード (Del)">
-        🗑️ 削除
-      </button>
-      <button class="toolbar-button" onclick="setEditMode('seat')" id="mode-seat" title="座席配置モード (C)">
-        🪑 座席
-      </button>
-    </div>
-    <div class="toolbar-divider"></div>
-    <div class="toolbar-group">
-      <button class="toolbar-button" onclick="undoAction()" title="やり直す (Ctrl+Z)">
-        ↶ やり直す
-      </button>
-      <button class="toolbar-button" onclick="redoAction()" title="再実行 (Ctrl+Y)">
-        ↷ 再実行
-      </button>
-    </div>
-    <div class="toolbar-divider"></div>
-    <div class="toolbar-group">
-      <button class="toolbar-button" onclick="resetCanvas()" title="リセット">
-        🔄 リセット
-      </button>
-    </div>
-    <div style="flex: 1;"></div>
-    <div class="toolbar-group">
-      <button class="toolbar-button" data-action="click->seat-canvas#save" style="background-color: #10b981; color: white; border-color: #10b981;">
-        💾 保存
+  <!-- Advanced Editor Toolbar -->
+  <div class="editor-toolbar bg-gray-100 border-b border-gray-300 shadow-sm">
+    <div class="flex gap-3 p-4 flex-wrap">
+      <!-- ツール選択パレット -->
+      <div class="border-2 border-blue-300 rounded-lg p-3 bg-blue-50 shadow-sm">
+        <div class="flex gap-1 flex-wrap">
+          <button class="editor-tool-btn active" data-tool="seat" title="座席">
+            <span class="text-lg">🪑</span><span class="hidden sm:inline text-sm">座席</span>
+          </button>
+          <button class="editor-tool-btn" data-tool="line" title="直線">
+            <span class="text-lg">—</span><span class="hidden sm:inline text-sm">直線</span>
+          </button>
+          <button class="editor-tool-btn" data-tool="rectangle" title="四角形">
+            <span class="text-lg">▭</span><span class="hidden sm:inline text-sm">四角形</span>
+          </button>
+          <button class="editor-tool-btn" data-tool="circle" title="円">
+            <span class="text-lg">●</span><span class="hidden sm:inline text-sm">円</span>
+          </button>
+          <button class="editor-tool-btn" data-tool="arrow" title="矢印">
+            <span class="text-lg">→</span><span class="hidden sm:inline text-sm">矢印</span>
+          </button>
+          <button class="editor-tool-btn" data-tool="text" title="テキスト">
+            <span class="text-lg">T</span><span class="hidden sm:inline text-sm">テキスト</span>
+          </button>
+          <button class="editor-tool-btn" data-tool="polygon" title="ポリゴン">
+            <span class="text-lg">▲</span><span class="hidden sm:inline text-sm">ポリゴン</span>
+          </button>
+          <button class="editor-tool-btn" data-tool="fill" title="塗りつぶし">
+            <span class="text-lg">🪣</span><span class="hidden sm:inline text-sm">塗りつぶし</span>
+          </button>
+          <button class="editor-tool-btn" data-tool="delete" title="削除">
+            <span class="text-lg">🗑️</span><span class="hidden sm:inline text-sm">削除</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 編集機能 -->
+      <div class="border-2 border-orange-300 rounded-lg p-3 bg-orange-50 shadow-sm">
+        <div class="flex gap-2 items-center">
+          <span class="text-xs font-bold text-orange-700">編集:</span>
+          <button class="editor-btn" onclick="undoAction()" title="戻す (Ctrl+Z)">
+            <span class="text-lg">↶</span><span class="hidden sm:inline">戻す</span>
+          </button>
+          <button class="editor-btn" onclick="redoAction()" title="やり直す (Ctrl+Y)">
+            <span class="text-lg">↷</span><span class="hidden sm:inline">やり直す</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 色選択パレット -->
+      <div class="border-2 border-green-300 rounded-lg p-3 bg-green-50 shadow-sm">
+        <div class="flex gap-2 items-center flex-wrap">
+          <span class="text-xs font-bold text-green-700 hidden sm:inline">色:</span>
+          <div class="flex gap-2">
+            <button class="color-btn" data-color="#3b82f6" title="青" style="background-color: #3b82f6; border: 3px solid #0f172a; border-radius: 8px; width: 32px; height: 32px; cursor: pointer; transition: all 0.2s;"></button>
+            <button class="color-btn" data-color="#ef4444" title="赤" style="background-color: #ef4444; border: 3px solid #64748b; border-radius: 8px; width: 32px; height: 32px; cursor: pointer; transition: all 0.2s;"></button>
+            <button class="color-btn" data-color="#22c55e" title="緑" style="background-color: #22c55e; border: 3px solid #64748b; border-radius: 8px; width: 32px; height: 32px; cursor: pointer; transition: all 0.2s;"></button>
+            <button class="color-btn" data-color="#eab308" title="黄" style="background-color: #eab308; border: 3px solid #64748b; border-radius: 8px; width: 32px; height: 32px; cursor: pointer; transition: all 0.2s;"></button>
+            <button class="color-btn" data-color="#a855f7" title="紫" style="background-color: #a855f7; border: 3px solid #64748b; border-radius: 8px; width: 32px; height: 32px; cursor: pointer; transition: all 0.2s;"></button>
+            <button class="color-btn" data-color="#f97316" title="オレンジ" style="background-color: #f97316; border: 3px solid #64748b; border-radius: 8px; width: 32px; height: 32px; cursor: pointer; transition: all 0.2s;"></button>
+            <button class="color-btn" data-color="#1f2937" title="黒" style="background-color: #1f2937; border: 3px solid #64748b; border-radius: 8px; width: 32px; height: 32px; cursor: pointer; transition: all 0.2s;"></button>
+            <button class="color-btn" data-color="#6b7280" title="グレー" style="background-color: #6b7280; border: 3px solid #64748b; border-radius: 8px; width: 32px; height: 32px; cursor: pointer; transition: all 0.2s;"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- グリッド・ズーム -->
+      <div class="border-2 border-cyan-300 rounded-lg p-3 bg-cyan-50 shadow-sm">
+        <div class="flex gap-2 items-center flex-wrap">
+          <button class="editor-btn" onclick="toggleGrid()" title="グリッド表示">
+            <span class="text-lg">⊞</span><span class="hidden sm:inline">グリッド</span>
+          </button>
+          <span class="text-xs font-bold text-cyan-700 hidden sm:inline">ズーム:</span>
+          <button class="zoom-btn" onclick="zoomOut()">−</button>
+          <span id="zoom-level" class="text-sm font-bold w-12 text-center text-cyan-700 bg-white rounded px-1 py-0.5">100%</span>
+          <button class="zoom-btn" onclick="zoomIn()">+</button>
+          <button class="zoom-btn" onclick="resetZoom()">リセット</button>
+        </div>
+      </div>
+
+      <div style="flex: 1;"></div>
+
+      <!-- 保存ボタン -->
+      <button class="save-btn" data-action="click->seat-canvas#save" title="保存">
+        <span class="text-2xl">💾</span><span class="hidden sm:inline">保存</span>
       </button>
     </div>
   </div>
