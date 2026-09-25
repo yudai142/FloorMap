@@ -8,6 +8,11 @@ export default defineConfig({
     RubyPlugin({ skipCompatibilityCheck: true, port: 5173, autoBuild: false, hmr: false }),
     react(),
   ],
+  resolve: {
+    alias: {
+      channels: path.resolve(__dirname, 'app/javascript/channels'),
+    }
+  },
   server: {
     host: '0.0.0.0',
     port: 5173,
@@ -16,6 +21,7 @@ export default defineConfig({
   },
   define: {
     __HMR__: false,
+    'globalThis.__VITE_HMR__': 'false',
   },
   build: {
     rollupOptions: {
