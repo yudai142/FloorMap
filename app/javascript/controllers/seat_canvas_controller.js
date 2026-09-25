@@ -25,8 +25,14 @@ export default class extends Controller {
     this.draggedSeat = null
     this.dragOffset = null
 
+    // ポリゴン描画用の状態管理
+    this.polygonPoints = []
+    this.isDrawingText = false
+    this.textPosition = null
+
     this.resizeCanvas()
     window.addEventListener("resize", () => this.resizeCanvas())
+    window.addEventListener("keydown", (e) => this.handleKeyDown(e))
 
     this.setupEventListeners()
     this.loadCanvasData()
@@ -58,10 +64,53 @@ export default class extends Controller {
           this.draggedSeat = seat
           this.dragOffset = { x: x - (seat.position_x || x), y: y - (seat.position_y || y) }
         }
-      } else if (mode === 'draw' && this.roomIdValue) {
-        // 矩形描画はルームのみ対応（テンプレートは図形と座席配置のみ）
+      } else if (mode === 'draw') {
+        // 矩形描画
         this.isDrawing = true
         this.drawingStart = { x, y }
+      } else if (mode === 'line') {
+        // 直線描画
+        this.isDrawing = true
+        this.drawingStart = { x, y }
+      } else if (mode === 'circle') {
+        // 円描画
+        this.isDrawing = true
+        this.drawingStart = { x, y }
+      } else if (mode === 'arrow') {
+        // 矢印描画
+        this.isDrawing = true
+        this.drawingStart = { x, y }
+      } else if (mode === 'polygon') {
+        // ポリゴン描画（クリックで点を追加）
+        this.polygonPoints.push({ x, y })
+        this.draw()
+      } else if (mode === 'text') {
+        // テキスト配置
+        this.isDrawingText = true
+        this.textPosition = { x, y }
+        const text = prompt("入力するテキスト:")
+        if (text) {
+          this.drawings.push({
+            type: "text",
+            x: x,
+            y: y,
+            text: text,
+            color: window.currentColor || "#000000",
+            fontSize: 16,
+            fontFamily: "sans-serif"
+          })
+          this.isDrawingText = false
+          this.textPosition = null
+          this.draw()
+        }
+      } else if (mode === 'fill') {
+        // 塗りつぶし（図形を指定色で塗りつぶし）
+        const drawing = this.getDrawingAtPoint(x, y)
+        if (drawing) {
+          drawing.fillColor = window.currentColor || "#000000"
+          drawing.filled = true
+          this.draw()
+        }
       } else if (mode === 'delete') {
         const seat = this.getSeatAtPoint(x, y)
         if (seat) {
@@ -98,15 +147,40 @@ export default class extends Controller {
       return
     }
 
-    if (!this.isDrawing || mode !== 'draw' || !this.roomIdValue) return
+    if (!this.isDrawing || !this.drawingStart) return
 
     this.draw()
-    const width = x - this.drawingStart.x
-    const height = y - this.drawingStart.y
     this.ctx.strokeStyle = "#fbbf24"
     this.ctx.lineWidth = 2
     this.ctx.setLineDash([5, 5])
-    this.ctx.strokeRect(this.drawingStart.x, this.drawingStart.y, width, height)
+
+    if (mode === 'draw') {
+      // 矩形プレビュー
+      const width = x - this.drawingStart.x
+      const height = y - this.drawingStart.y
+      this.ctx.strokeRect(this.drawingStart.x, this.drawingStart.y, width, height)
+    } else if (mode === 'line') {
+      // 直線プレビュー
+      this.ctx.beginPath()
+      this.ctx.moveTo(this.drawingStart.x, this.drawingStart.y)
+      this.ctx.lineTo(x, y)
+      this.ctx.stroke()
+    } else if (mode === 'circle') {
+      // 円プレビュー
+      const radius = Math.sqrt(Math.pow(x - this.drawingStart.x, 2) + Math.pow(y - this.drawingStart.y, 2))
+      this.ctx.beginPath()
+      this.ctx.arc(this.drawingStart.x, this.drawingStart.y, radius, 0, Math.PI * 2)
+      this.ctx.stroke()
+    } else if (mode === 'arrow') {
+      // 矢印プレビュー
+      this.ctx.beginPath()
+      this.ctx.moveTo(this.drawingStart.x, this.drawingStart.y)
+      this.ctx.lineTo(x, y)
+      this.ctx.stroke()
+      // 矢印の先端
+      this.drawArrowHead(this.drawingStart.x, this.drawingStart.y, x, y)
+    }
+
     this.ctx.setLineDash([])
   }
 
@@ -114,6 +188,7 @@ export default class extends Controller {
     const rect = this.canvas.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
+    const mode = window.currentEditMode || 'select'
 
     if (this.draggedSeat) {
       const newX = x - this.dragOffset.x
@@ -124,21 +199,65 @@ export default class extends Controller {
       return
     }
 
-    if (!this.isDrawing) return
+    if (!this.isDrawing || !this.drawingStart) return
 
-    const width = x - this.drawingStart.x
-    const height = y - this.drawingStart.y
+    const color = window.currentColor || "#3b82f6"
 
-    if (Math.abs(width) > 5 && Math.abs(height) > 5) {
-      this.drawings.push({
-        type: "rectangle",
-        x: this.drawingStart.x,
-        y: this.drawingStart.y,
-        width: width,
-        height: height,
-        color: "#ef4444",
-        lineWidth: 2
-      })
+    if (mode === 'draw') {
+      // 矩形描画
+      const width = x - this.drawingStart.x
+      const height = y - this.drawingStart.y
+
+      if (Math.abs(width) > 5 && Math.abs(height) > 5) {
+        this.drawings.push({
+          type: "rectangle",
+          x: this.drawingStart.x,
+          y: this.drawingStart.y,
+          width: width,
+          height: height,
+          color: color,
+          lineWidth: 2
+        })
+      }
+    } else if (mode === 'line') {
+      // 直線描画
+      if (Math.abs(x - this.drawingStart.x) > 5 || Math.abs(y - this.drawingStart.y) > 5) {
+        this.drawings.push({
+          type: "line",
+          x1: this.drawingStart.x,
+          y1: this.drawingStart.y,
+          x2: x,
+          y2: y,
+          color: color,
+          lineWidth: 2
+        })
+      }
+    } else if (mode === 'circle') {
+      // 円描画
+      const radius = Math.sqrt(Math.pow(x - this.drawingStart.x, 2) + Math.pow(y - this.drawingStart.y, 2))
+      if (radius > 5) {
+        this.drawings.push({
+          type: "circle",
+          cx: this.drawingStart.x,
+          cy: this.drawingStart.y,
+          radius: radius,
+          color: color,
+          lineWidth: 2
+        })
+      }
+    } else if (mode === 'arrow') {
+      // 矢印描画
+      if (Math.abs(x - this.drawingStart.x) > 5 || Math.abs(y - this.drawingStart.y) > 5) {
+        this.drawings.push({
+          type: "arrow",
+          x1: this.drawingStart.x,
+          y1: this.drawingStart.y,
+          x2: x,
+          y2: y,
+          color: color,
+          lineWidth: 2
+        })
+      }
     }
 
     this.isDrawing = false
@@ -150,6 +269,28 @@ export default class extends Controller {
     this.isDrawing = false
     this.drawingStart = null
     this.draggedSeat = null
+  }
+
+  handleKeyDown(e) {
+    const mode = window.currentEditMode || 'select'
+
+    if (mode === 'polygon' && e.key === 'Enter') {
+      // ポリゴンを確定
+      if (this.polygonPoints.length >= 3) {
+        this.drawings.push({
+          type: "polygon",
+          points: [...this.polygonPoints],
+          color: window.currentColor || "#3b82f6",
+          lineWidth: 2
+        })
+        this.polygonPoints = []
+        this.draw()
+      }
+    } else if (mode === 'polygon' && e.key === 'Escape') {
+      // ポリゴン描画をキャンセル
+      this.polygonPoints = []
+      this.draw()
+    }
   }
 
   handleSeatClick(seat) {
@@ -326,8 +467,67 @@ export default class extends Controller {
       const minY = Math.min(shape.y, shape.y + shape.height)
       const maxY = Math.max(shape.y, shape.y + shape.height)
       return x >= minX && x <= maxX && y >= minY && y <= maxY
+    } else if (shape.type === "circle") {
+      const distance = Math.sqrt(Math.pow(x - shape.cx, 2) + Math.pow(y - shape.cy, 2))
+      return distance <= shape.radius
+    } else if (shape.type === "line") {
+      // 直線の近くかチェック（5px以内）
+      const distance = this.distanceFromPointToLine(x, y, shape.x1, shape.y1, shape.x2, shape.y2)
+      return distance <= 5
+    } else if (shape.type === "arrow") {
+      // 矢印の近くかチェック（5px以内）
+      const distance = this.distanceFromPointToLine(x, y, shape.x1, shape.y1, shape.x2, shape.y2)
+      return distance <= 5
+    } else if (shape.type === "polygon") {
+      return this.isPointInPolygon(x, y, shape.points)
+    } else if (shape.type === "text") {
+      // テキストの領域かチェック（簡易的）
+      const approximateWidth = shape.text.length * 8
+      const approximateHeight = 20
+      return x >= shape.x && x <= shape.x + approximateWidth &&
+             y >= shape.y && y <= shape.y + approximateHeight
     }
     return false
+  }
+
+  distanceFromPointToLine(px, py, x1, y1, x2, y2) {
+    const numerator = Math.abs((y2 - y1) * px - (x2 - x1) * py + x2 * y1 - y2 * x1)
+    const denominator = Math.sqrt(Math.pow(y2 - y1, 2) + Math.pow(x2 - x1, 2))
+    return numerator / denominator
+  }
+
+  isPointInPolygon(x, y, points) {
+    if (!points || points.length < 3) return false
+    let inside = false
+    for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+      const xi = points[i].x, yi = points[i].y
+      const xj = points[j].x, yj = points[j].y
+      const intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)
+      if (intersect) inside = !inside
+    }
+    return inside
+  }
+
+  getDrawingAtPoint(x, y) {
+    for (let i = this.drawings.length - 1; i >= 0; i--) {
+      if (this.isPointInShape(x, y, this.drawings[i])) {
+        return this.drawings[i]
+      }
+    }
+    return null
+  }
+
+  drawArrowHead(fromX, fromY, toX, toY, color = "#000000") {
+    const headlen = 15
+    const angle = Math.atan2(toY - fromY, toX - fromX)
+
+    this.ctx.fillStyle = color
+    this.ctx.beginPath()
+    this.ctx.moveTo(toX, toY)
+    this.ctx.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6))
+    this.ctx.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6))
+    this.ctx.closePath()
+    this.ctx.fill()
   }
 
   csrfToken() {
@@ -385,7 +585,37 @@ export default class extends Controller {
 
     this.drawGrid()
     this.drawShapes()
+    this.drawPolygonPreview()
     this.drawSeats()
+  }
+
+  drawPolygonPreview() {
+    const mode = window.currentEditMode || 'select'
+    if (mode !== 'polygon' || this.polygonPoints.length === 0) return
+
+    // ポリゴンの点をプレビュー表示
+    this.ctx.strokeStyle = "#fbbf24"
+    this.ctx.lineWidth = 2
+    this.ctx.setLineDash([5, 5])
+
+    if (this.polygonPoints.length > 1) {
+      this.ctx.beginPath()
+      this.ctx.moveTo(this.polygonPoints[0].x, this.polygonPoints[0].y)
+      for (let i = 1; i < this.polygonPoints.length; i++) {
+        this.ctx.lineTo(this.polygonPoints[i].x, this.polygonPoints[i].y)
+      }
+      this.ctx.stroke()
+    }
+
+    // 点を描画
+    this.ctx.fillStyle = "#fbbf24"
+    this.polygonPoints.forEach(point => {
+      this.ctx.beginPath()
+      this.ctx.arc(point.x, point.y, 4, 0, Math.PI * 2)
+      this.ctx.fill()
+    })
+
+    this.ctx.setLineDash([])
   }
 
   drawShapes() {
@@ -393,7 +623,66 @@ export default class extends Controller {
       if (drawing.type === "rectangle") {
         this.ctx.strokeStyle = drawing.color
         this.ctx.lineWidth = drawing.lineWidth
+        if (drawing.filled && drawing.fillColor) {
+          this.ctx.fillStyle = drawing.fillColor
+          this.ctx.fillRect(drawing.x, drawing.y, drawing.width, drawing.height)
+        }
         this.ctx.strokeRect(drawing.x, drawing.y, drawing.width, drawing.height)
+      } else if (drawing.type === "line") {
+        this.ctx.strokeStyle = drawing.color
+        this.ctx.lineWidth = drawing.lineWidth
+        this.ctx.beginPath()
+        this.ctx.moveTo(drawing.x1, drawing.y1)
+        this.ctx.lineTo(drawing.x2, drawing.y2)
+        this.ctx.stroke()
+      } else if (drawing.type === "circle") {
+        this.ctx.strokeStyle = drawing.color
+        this.ctx.lineWidth = drawing.lineWidth
+        if (drawing.filled && drawing.fillColor) {
+          this.ctx.fillStyle = drawing.fillColor
+          this.ctx.beginPath()
+          this.ctx.arc(drawing.cx, drawing.cy, drawing.radius, 0, Math.PI * 2)
+          this.ctx.fill()
+        }
+        this.ctx.beginPath()
+        this.ctx.arc(drawing.cx, drawing.cy, drawing.radius, 0, Math.PI * 2)
+        this.ctx.stroke()
+      } else if (drawing.type === "arrow") {
+        this.ctx.strokeStyle = drawing.color
+        this.ctx.lineWidth = drawing.lineWidth
+        this.ctx.beginPath()
+        this.ctx.moveTo(drawing.x1, drawing.y1)
+        this.ctx.lineTo(drawing.x2, drawing.y2)
+        this.ctx.stroke()
+        this.drawArrowHead(drawing.x1, drawing.y1, drawing.x2, drawing.y2, drawing.color)
+      } else if (drawing.type === "text") {
+        this.ctx.fillStyle = drawing.color
+        this.ctx.font = `${drawing.fontSize}px ${drawing.fontFamily}`
+        this.ctx.textAlign = "left"
+        this.ctx.textBaseline = "top"
+        this.ctx.fillText(drawing.text, drawing.x, drawing.y)
+      } else if (drawing.type === "polygon") {
+        if (drawing.points && drawing.points.length > 0) {
+          this.ctx.strokeStyle = drawing.color
+          this.ctx.lineWidth = drawing.lineWidth
+          if (drawing.filled && drawing.fillColor) {
+            this.ctx.fillStyle = drawing.fillColor
+            this.ctx.beginPath()
+            this.ctx.moveTo(drawing.points[0].x, drawing.points[0].y)
+            for (let i = 1; i < drawing.points.length; i++) {
+              this.ctx.lineTo(drawing.points[i].x, drawing.points[i].y)
+            }
+            this.ctx.closePath()
+            this.ctx.fill()
+          }
+          this.ctx.beginPath()
+          this.ctx.moveTo(drawing.points[0].x, drawing.points[0].y)
+          for (let i = 1; i < drawing.points.length; i++) {
+            this.ctx.lineTo(drawing.points[i].x, drawing.points[i].y)
+          }
+          this.ctx.closePath()
+          this.ctx.stroke()
+        }
       }
     })
   }
