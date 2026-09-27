@@ -12,6 +12,12 @@ export default class extends Controller {
   }
 
   connect() {
+    console.log('[seat-canvas] Controller connected', {
+      roomId: this.roomIdValue,
+      templateId: this.templateIdValue,
+      context: this.contextValue
+    })
+
     this.canvas = this.canvasTarget
     this.ctx = this.canvas.getContext("2d")
     this.seats = []
@@ -51,6 +57,8 @@ export default class extends Controller {
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
     const mode = window.currentEditMode || 'select'
+
+    console.log('[seat-canvas] handleMouseDown', { x, y, mode, context: this.contextValue })
 
     if (this.contextValue === "editor") {
       if (mode === 'seat') {
