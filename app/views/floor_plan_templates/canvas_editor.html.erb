@@ -217,8 +217,11 @@
   window.zoomLevel = 100;
   window.gridEnabled = false;
 
+  console.log('[Canvas Editor] Initialized - Mode:', window.currentEditMode);
+
   // ツール選択
   document.addEventListener('DOMContentLoaded', () => {
+    console.log('[Canvas Editor] DOMContentLoaded - Setting up tool buttons');
     document.querySelectorAll('.editor-tool-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const tool = btn.dataset.tool;
@@ -244,6 +247,7 @@
 
   function setEditMode(mode) {
     window.currentEditMode = mode;
+    console.log('[Canvas Editor] Mode changed to:', mode);
     const canvas = document.querySelector('canvas');
     if (canvas) {
       canvas.classList.remove('draw-mode', 'delete-mode');
