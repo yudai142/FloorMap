@@ -59,22 +59,26 @@ const pageMap = {
   'FloorPlanTemplates/Details': FloorPlanTemplatesDetails,
 }
 
-createInertiaApp({
-  resolve: async name => {
-    const component = pageMap[name]
-    if (!component) {
-      throw new Error(`Page not found: ${name}`)
-    }
-    return { default: component }
-  },
-  setup({ el, App, props }) {
-    const root = createRoot(el)
-    const auth = props.initialPage?.props?.auth || {}
+// ERB テンプレート（canvas_editor）では Inertia を初期化しない
+const initialProps = document.querySelector('[data-inertia]')
+if (initialProps) {
+  createInertiaApp({
+    resolve: async name => {
+      const component = pageMap[name]
+      if (!component) {
+        throw new Error(`Page not found: ${name}`)
+      }
+      return { default: component }
+    },
+    setup({ el, App, props }) {
+      const root = createRoot(el)
+      const auth = props.initialPage?.props?.auth || {}
 
-    root.render(
-      <Layout auth={auth}>
-        <App {...props} />
-      </Layout>
-    )
-  },
-})
+      root.render(
+        <Layout auth={auth}>
+          <App {...props} />
+        </Layout>
+      )
+    },
+  })
+}
