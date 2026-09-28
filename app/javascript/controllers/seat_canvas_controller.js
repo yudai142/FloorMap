@@ -630,6 +630,9 @@ export default class extends Controller {
   }
 
   drawShapes() {
+    if (this.drawings.length > 0) {
+      console.log('[seat-canvas] drawShapes', { count: this.drawings.length, drawings: this.drawings })
+    }
     this.drawings.forEach(drawing => {
       if (drawing.type === "rectangle") {
         this.ctx.strokeStyle = drawing.color
