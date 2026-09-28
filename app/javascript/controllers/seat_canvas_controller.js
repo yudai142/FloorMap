@@ -61,12 +61,13 @@ export default class extends Controller {
     console.log('[seat-canvas] handleMouseDown', { x, y, mode, context: this.contextValue })
 
     if (this.contextValue === "editor") {
-      if (mode === 'seat') {
+      // テンプレートエディタでは座席配置なし（図形描画のみ）
+      if (mode === 'seat' && this.roomIdValue) {
         const seat = this.getSeatAtPoint(x, y)
         if (!seat) {
           this.createSeat(x, y)
         }
-      } else if (mode === 'select') {
+      } else if (mode === 'select' && this.roomIdValue) {
         const seat = this.getSeatAtPoint(x, y)
         if (seat) {
           this.draggedSeat = seat
