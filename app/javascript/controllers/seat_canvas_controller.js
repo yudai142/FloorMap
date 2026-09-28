@@ -199,6 +199,8 @@ export default class extends Controller {
     const y = e.clientY - rect.top
     const mode = window.currentEditMode || 'select'
 
+    console.log('[seat-canvas] handleMouseUp', { x, y, mode, isDrawing: this.isDrawing })
+
     if (this.draggedSeat) {
       const newX = x - this.dragOffset.x
       const newY = y - this.dragOffset.y
