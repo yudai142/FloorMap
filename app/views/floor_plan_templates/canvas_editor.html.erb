@@ -154,7 +154,7 @@
     min-width: 160px;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
     padding: 8px 0;
-    z-index: 1;
+    z-index: 100;
     border: 1px solid #e2e8f0;
     border-radius: 6px;
     top: 100%;
@@ -176,13 +176,15 @@
     font-size: 13px;
     text-align: left;
     transition: background-color 0.2s;
+    white-space: nowrap;
   }
 
   .dropdown-content button:hover {
     background-color: #f8fafc;
   }
 
-  .draw-menu:hover .dropdown-content {
+  .draw-menu:hover .dropdown-content,
+  .dropdown-content:hover {
     display: block;
   }
 
