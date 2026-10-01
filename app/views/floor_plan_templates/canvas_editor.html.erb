@@ -136,57 +136,6 @@
     background-color: #059669;
   }
 
-  .draw-menu {
-    position: relative;
-    display: inline-block;
-  }
-
-  .draw-menu-button {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-  }
-
-  .dropdown-content {
-    display: none;
-    position: absolute;
-    background-color: white;
-    min-width: 160px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-    padding: 8px 0;
-    z-index: 100;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    top: 100%;
-    left: 0;
-    margin-top: 4px;
-  }
-
-  .dropdown-content button {
-    color: #475569;
-    padding: 8px 16px;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    border: none;
-    background: none;
-    cursor: pointer;
-    font-size: 13px;
-    text-align: left;
-    transition: background-color 0.2s;
-    white-space: nowrap;
-  }
-
-  .dropdown-content button:hover {
-    background-color: #f8fafc;
-  }
-
-  .draw-menu:hover .dropdown-content,
-  .dropdown-content:hover {
-    display: block;
-  }
 
   .canvas-wrapper {
     background: white;
@@ -248,10 +197,14 @@
   function setDrawMode(figureType) {
     window.currentEditMode = figureType;
 
-    // 描画モードボタンをアクティブに
-    document.getElementById('mode-draw').classList.add('active');
-    document.getElementById('mode-select').classList.remove('active');
-    document.getElementById('mode-delete').classList.remove('active');
+    // 全てのボタンをアクティブから削除
+    document.querySelectorAll('.toolbar-button').forEach(btn => {
+      btn.classList.remove('active');
+    });
+
+    // 選択した図形ボタンをアクティブに
+    const buttonId = `mode-${figureType}`;
+    document.getElementById(buttonId)?.classList.add('active');
 
     // Canvas カーソルを変更
     const canvas = document.querySelector('canvas');
@@ -344,37 +297,38 @@
         ✓ 選択
       </button>
 
-      <!-- 描画モード（ドロップダウン） -->
-      <div class="draw-menu">
-        <button class="toolbar-button draw-menu-button" id="mode-draw" title="描画モード (D)">
-          <span>✏️ 描画</span>
-          <span style="font-size: 10px;">▼</span>
-        </button>
-        <div class="dropdown-content">
-          <button onclick="setDrawMode('rectangle')" title="矩形描画">
-            <span>▭</span><span>矩形</span>
-          </button>
-          <button onclick="setDrawMode('line')" title="直線描画">
-            <span>—</span><span>直線</span>
-          </button>
-          <button onclick="setDrawMode('circle')" title="円描画">
-            <span>●</span><span>円</span>
-          </button>
-          <button onclick="setDrawMode('arrow')" title="矢印描画">
-            <span>→</span><span>矢印</span>
-          </button>
-          <button onclick="setDrawMode('text')" title="テキスト配置">
-            <span>T</span><span>テキスト</span>
-          </button>
-          <button onclick="setDrawMode('polygon')" title="ポリゴン描画">
-            <span>▲</span><span>ポリゴン</span>
-          </button>
-          <button onclick="setDrawMode('fill')" title="塗りつぶし">
-            <span>🪣</span><span>塗りつぶし</span>
-          </button>
-        </div>
-      </div>
+    </div>
 
+    <!-- 図形ツール -->
+    <div class="toolbar-group">
+      <span style="font-size: 12px; color: #64748b; font-weight: 600;">図形:</span>
+      <button class="toolbar-button" onclick="setDrawMode('rectangle')" id="mode-rectangle" title="矩形描画">
+        ▭ 矩形
+      </button>
+      <button class="toolbar-button" onclick="setDrawMode('line')" id="mode-line" title="直線描画">
+        — 直線
+      </button>
+      <button class="toolbar-button" onclick="setDrawMode('circle')" id="mode-circle" title="円描画">
+        ● 円
+      </button>
+      <button class="toolbar-button" onclick="setDrawMode('arrow')" id="mode-arrow" title="矢印描画">
+        → 矢印
+      </button>
+      <button class="toolbar-button" onclick="setDrawMode('text')" id="mode-text" title="テキスト配置">
+        T テキスト
+      </button>
+      <button class="toolbar-button" onclick="setDrawMode('polygon')" id="mode-polygon" title="ポリゴン描画">
+        ▲ ポリゴン
+      </button>
+      <button class="toolbar-button" onclick="setDrawMode('fill')" id="mode-fill" title="塗りつぶし">
+        🪣 塗りつぶし
+      </button>
+    </div>
+
+    <div class="toolbar-divider"></div>
+
+    <!-- 削除モード -->
+    <div class="toolbar-group">
       <button class="toolbar-button" onclick="setEditMode('delete')" id="mode-delete" title="削除モード (Del)">
         🗑️ 削除
       </button>
