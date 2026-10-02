@@ -169,6 +169,7 @@
 
 <script>
   window.currentEditMode = 'select';
+  window.currentFigureType = 'rectangle';
   window.currentColor = '#3b82f6';
   window.zoomLevel = 100;
   window.gridEnabled = false;
@@ -195,7 +196,8 @@
   }
 
   function setDrawMode(figureType) {
-    window.currentEditMode = figureType;
+    window.currentEditMode = 'draw';
+    window.currentFigureType = figureType;
 
     // 全てのボタンをアクティブから削除
     document.querySelectorAll('.toolbar-button').forEach(btn => {
