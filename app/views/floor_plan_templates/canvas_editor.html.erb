@@ -199,6 +199,8 @@
     window.currentEditMode = 'draw';
     window.currentFigureType = figureType;
 
+    console.log('[Canvas Editor] Figure selected:', figureType);
+
     // 全てのボタンをアクティブから削除
     document.querySelectorAll('.toolbar-button').forEach(btn => {
       btn.classList.remove('active');
