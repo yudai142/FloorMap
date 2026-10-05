@@ -5,7 +5,7 @@ import Layout from '../components/Layout'
 
 // Stimulus controllers
 import { Application } from '@hotwired/stimulus'
-import SeatCanvasController from '../controllers/seat_canvas_controller'
+import SeatCanvasController from '../../javascript/controllers/seat_canvas_controller'
 
 // Initialize Stimulus
 const application = Application.start()
