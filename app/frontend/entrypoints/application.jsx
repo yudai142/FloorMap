@@ -3,13 +3,21 @@ import { createInertiaApp } from '@inertiajs/react'
 import { createRoot } from 'react-dom/client'
 import Layout from '../components/Layout'
 
-// Stimulus controllers
+// Stimulus
 import { Application } from '@hotwired/stimulus'
-import SeatCanvasController from '../../javascript/controllers/seat_canvas_controller'
 
-// Initialize Stimulus
-const application = Application.start()
-application.register('seat-canvas', SeatCanvasController)
+// Initialize Stimulus manually for Vite environment
+const app = Application.start()
+
+// Dynamically load Stimulus controllers
+const controllerModules = import.meta.glob('../../javascript/controllers/**/*_controller.js', { eager: true })
+for (const [path, module] of Object.entries(controllerModules)) {
+  const matches = path.match(/\/(\w+)_controller\.js$/)
+  if (matches) {
+    const controllerName = matches[1]
+    app.register(controllerName, module.default)
+  }
+}
 
 // Disable HMR completely
 if (import.meta.hot) {
