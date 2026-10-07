@@ -3,13 +3,6 @@ import { createInertiaApp } from '@inertiajs/react'
 import { createRoot } from 'react-dom/client'
 import Layout from '../components/Layout'
 
-// Stimulus - Initialize from app/javascript/controllers
-import { Application } from '@hotwired/stimulus'
-import SeatCanvasController from '../../javascript/controllers/seat_canvas_controller'
-
-const app = Application.start()
-app.register('seat-canvas', SeatCanvasController)
-
 // Disable HMR completely
 if (import.meta.hot) {
   import.meta.hot.dispose?.(() => {})
