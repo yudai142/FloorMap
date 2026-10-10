@@ -51,12 +51,18 @@ class RoomsController < ApplicationController
   def new
     authorize Room, :create?
     @room = Room.new
+    @my_templates = current_user.floor_plan_templates
+    @public_templates = FloorPlanTemplate.public_templates
 
     render inertia: "Rooms/New", props: {
       room: {
         id: nil,
         name: "",
         description: ""
+      },
+      floor_plan_templates: {
+        mine: @my_templates.map { |t| { id: t.id, name: t.name, description: t.description } },
+        public: @public_templates.map { |t| { id: t.id, name: t.name, user_name: t.user.email } }
       },
       auth: auth_props
     }
@@ -65,6 +71,13 @@ class RoomsController < ApplicationController
   def create
     @room = current_user.rooms.build(room_params)
     authorize @room
+
+    # テンプレートから floor_plan_data をコピー
+    if params[:room][:floor_plan_template_id].present?
+      template = FloorPlanTemplate.find(params[:room][:floor_plan_template_id])
+      @room.floor_plan_data = template.floor_plan_data
+      template.increment_usage!
+    end
 
     if @room.save
       respond_to do |format|
@@ -321,7 +334,7 @@ class RoomsController < ApplicationController
   end
 
   def room_params
-    params.require(:room).permit(:name, :description, :width, :height, :auto_checkout_enabled, :auto_checkout_time)
+    params.require(:room).permit(:name, :description, :width, :height, :auto_checkout_enabled, :auto_checkout_time, :floor_plan_template_id)
   end
 
   def seat_canvas_json(seat)

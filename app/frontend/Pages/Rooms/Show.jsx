@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { usePage } from '@inertiajs/react'
 import { ErrorAlert, SuccessAlert } from '../../components/Alert'
-import { subscribeToRoom, unsubscribeFromRoom } from '../../channels/rooms_channel'
+import { subscribeToRoom, unsubscribeFromRoom } from '../../../javascript/channels/rooms_channel'
 
 // Suppress 422 console errors from check-in/check-out
 const originalError = console.error
