@@ -25,6 +25,43 @@ RSpec.describe FloorPlanTemplatesController, type: :request do
     end
   end
 
+  describe "GET /floor_plan_templates/:id/edit" do
+    let(:template) { create(:floor_plan_template, user: user) }
+
+    it "renders the canvas editor page used by rooms" do
+      get edit_floor_plan_template_path(template)
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("FloorPlanTemplates/CanvasEditor")
+    end
+  end
+
+  describe "PATCH /floor_plan_templates/:id/canvas_editor" do
+    let(:template) { create(:floor_plan_template, user: user) }
+    let(:shapes) do
+      [ { id: "rect-1", type: "rectangle", x: 10, y: 20, width: 100, height: 50, color: "#3b82f6", lineWidth: 2 } ]
+    end
+
+    it "saves the shapes and returns them as JSON" do
+      patch canvas_editor_floor_plan_template_path(template),
+            params: { floor_plan_template: { floor_plan_data: shapes } }.to_json,
+            headers: { "Content-Type" => "application/json", "Accept" => "application/json" }
+
+      expect(response).to have_http_status(:ok)
+      expect(template.reload.floor_plan_data.first).to include("type" => "rectangle", "x" => 10)
+      expect(response.parsed_body["floor_plan_data"].first).to include("type" => "rectangle")
+    end
+
+    it "denies saving another user's template" do
+      other = create(:floor_plan_template, user: other_user)
+      patch canvas_editor_floor_plan_template_path(other),
+            params: { floor_plan_template: { floor_plan_data: shapes } }.to_json,
+            headers: { "Content-Type" => "application/json", "Accept" => "application/json" }
+
+      expect(response).to redirect_to(root_path)
+      expect(other.reload.floor_plan_data).to eq([])
+    end
+  end
+
   describe "GET /floor_plan_templates/:id" do
     let(:template) { create(:floor_plan_template, user: user) }
 
