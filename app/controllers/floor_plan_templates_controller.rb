@@ -26,11 +26,7 @@ class FloorPlanTemplatesController < ApplicationController
 
     if @template.save
       Rails.logger.info("Template created successfully: #{@template.id}")
-      render inertia: "FloorPlanTemplates/CanvasEditor", props: {
-        template: template_json(@template),
-        is_new: true,
-        **default_inertia_props
-      }
+      render inertia: "FloorPlanTemplates/CanvasEditor", props: canvas_editor_props(@template).merge(is_new: true)
     else
       Rails.logger.error("Failed to create template: #{@template.errors.full_messages.inspect}")
       redirect_to floor_plan_templates_path, alert: "テンプレート作成に失敗しました: #{@template.errors.full_messages.join(", ")}"
@@ -38,8 +34,7 @@ class FloorPlanTemplatesController < ApplicationController
   end
 
   def edit
-    # テンプレート編集ページは canvas_editor で実装（ルームと同じ構成）
-    render :canvas_editor, layout: "application"
+    render inertia: "FloorPlanTemplates/CanvasEditor", props: canvas_editor_props(@template)
   end
 
   def show
@@ -68,15 +63,10 @@ class FloorPlanTemplatesController < ApplicationController
   end
 
   def save_floor_plan
-    if @template.update(floor_plan_data: params.dig(:floor_plan_template, :floor_plan_data) || [])
-      # 上面図保存後、詳細入力ページへリダイレクト
-      redirect_to floor_plan_template_details_path(@template)
+    if @template.update(floor_plan_data_params)
+      render json: { floor_plan_data: @template.floor_plan_data }, status: :ok
     else
-      render inertia: "FloorPlanTemplates/CanvasEditor", props: {
-        template: template_json(@template),
-        errors: @template.errors.messages,
-        **default_inertia_props
-      }, status: :unprocessable_entity
+      render json: { errors: @template.errors.messages }, status: :unprocessable_entity
     end
   end
 
@@ -104,6 +94,19 @@ class FloorPlanTemplatesController < ApplicationController
 
   def template_params
     params.require(:floor_plan_template).permit(:name, :description, :floor_plan_data, :is_public)
+  end
+
+  def floor_plan_data_params
+    params.require(:floor_plan_template).permit(floor_plan_data: [ :id, :type, :x, :y, :x1, :y1, :x2, :y2, :cx, :cy, :r, :width, :height, :color, :lineWidth, :text, :points, :pointsArray, :fill ])
+  end
+
+  def canvas_editor_props(template)
+    {
+      template: template_json(template),
+      shapes_data: template.floor_plan_data || [],
+      current_user: current_user.as_json(only: [ :id, :email ]),
+      **default_inertia_props
+    }
   end
 
   def template_json(template)
