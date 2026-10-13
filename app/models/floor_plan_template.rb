@@ -1,6 +1,7 @@
 class FloorPlanTemplate < ApplicationRecord
   belongs_to :user
   has_many :rooms, dependent: :nullify
+  has_many :template_seats, class_name: "FloorPlanTemplateSeat", dependent: :destroy
 
   validates :name, presence: true, length: { minimum: 1, maximum: 255 }
   validate :floor_plan_data_is_valid_jsonb

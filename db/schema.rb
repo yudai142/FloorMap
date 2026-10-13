@@ -10,9 +10,20 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_17_145212) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_13_010000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "floor_plan_template_seats", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "floor_plan_template_id", null: false
+    t.float "position_x", null: false
+    t.float "position_y", null: false
+    t.string "seat_type", default: "regular", null: false
+    t.datetime "updated_at", null: false
+    t.index ["floor_plan_template_id", "position_x", "position_y"], name: "index_template_seats_on_template_and_position", unique: true
+    t.index ["floor_plan_template_id"], name: "index_floor_plan_template_seats_on_floor_plan_template_id"
+  end
 
   create_table "floor_plan_templates", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -257,6 +268,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_145212) do
     t.index ["session_id"], name: "index_visitors_on_session_id", unique: true
   end
 
+  add_foreign_key "floor_plan_template_seats", "floor_plan_templates"
   add_foreign_key "floor_plan_templates", "users"
   add_foreign_key "notifications", "rooms"
   add_foreign_key "notifications", "users"
