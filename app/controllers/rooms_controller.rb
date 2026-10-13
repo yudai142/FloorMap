@@ -72,14 +72,15 @@ class RoomsController < ApplicationController
     @room = current_user.rooms.build(room_params)
     authorize @room
 
-    # テンプレートから floor_plan_data をコピー
+    # テンプレートから floor_plan_data と座席をコピー
+    template = nil
     if params[:room][:floor_plan_template_id].present?
       template = FloorPlanTemplate.find(params[:room][:floor_plan_template_id])
       @room.floor_plan_data = template.floor_plan_data
       template.increment_usage!
     end
 
-    if @room.save
+    if save_room(template)
       respond_to do |format|
         format.html { redirect_to @room, notice: "ルームを作成しました" }
         format.json { render json: @room.as_json(only: [ :id, :share_token, :name, :description ]), status: :created }
@@ -286,6 +287,18 @@ class RoomsController < ApplicationController
   end
 
   private
+
+  def save_room(template)
+    return @room.save if template.nil?
+
+    Room.transaction do
+      @room.save!
+      template.template_seats.each { |seat| @room.seats.create!(seat.seat_attributes) }
+    end
+    true
+  rescue ActiveRecord::RecordInvalid
+    false
+  end
 
   def auto_checkout_settings_params
     params.require(:auto_checkout_settings).permit(:auto_checkout_enabled, :auto_checkout_time)
