@@ -31,6 +31,11 @@ Rails.application.routes.draw do
       patch :canvas_editor, action: :save_floor_plan
       get :details
     end
+    resources :seats, controller: "floor_plan_template_seats", only: [ :create, :destroy ] do
+      member do
+        patch :position
+      end
+    end
   end
 
   resources :rooms, param: :share_token do

@@ -104,6 +104,7 @@ class FloorPlanTemplatesController < ApplicationController
     {
       template: template_json(template),
       shapes_data: template.floor_plan_data || [],
+      seats: template.template_seats.order(:id).map(&:canvas_json),
       current_user: current_user.as_json(only: [ :id, :email ]),
       **default_inertia_props
     }
