@@ -1,7 +1,7 @@
 import React from 'react'
 import CanvasEditorPage from '../../components/Editor/CanvasEditorPage'
 
-export default function FloorPlanTemplatesCanvasEditor({ template, shapes_data, current_user }) {
+export default function FloorPlanTemplatesCanvasEditor({ template, shapes_data, seats, current_user }) {
   return (
     <CanvasEditorPage
       entity={{
@@ -14,14 +14,14 @@ export default function FloorPlanTemplatesCanvasEditor({ template, shapes_data, 
       }}
       backHref="/floor_plan_templates"
       shapes={shapes_data}
-      seats={[]}
+      seats={seats}
       currentUser={current_user}
       persistence={{
         floorPlanUrl: `/floor_plan_templates/${template.id}/canvas_editor`,
         floorPlanBodyKey: 'floor_plan_template',
         settingsUrl: null,
-        seatsUrl: null,
-        saveMessage: '上面図を保存しました',
+        seatsUrl: `/floor_plan_templates/${template.id}/seats`,
+        saveMessage: '座席配置図を保存しました',
       }}
     />
   )
