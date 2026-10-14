@@ -13,6 +13,7 @@ export default function FloorPlanTemplatesCanvasEditor({ template, shapes_data, 
         auto_checkout_time: '',
       }}
       backHref="/floor_plan_templates"
+      showAutoCheckout={false}
       shapes={shapes_data}
       seats={seats}
       currentUser={current_user}
