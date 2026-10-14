@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import Canvas from './Canvas'
 
-export default function CanvasEditorPage({ entity, backHref, shapes, seats, currentUser, persistence }) {
+export default function CanvasEditorPage({ entity, backHref, shapes, seats, currentUser, persistence, showAutoCheckout = true }) {
   const [canvasSize, setCanvasSize] = useState({ width: entity.width, height: entity.height })
   const [autoCheckoutEnabled, setAutoCheckoutEnabled] = useState(entity.auto_checkout_enabled || false)
   const [autoCheckoutTime, setAutoCheckoutTime] = useState(entity.auto_checkout_time || '')
@@ -77,7 +77,7 @@ export default function CanvasEditorPage({ entity, backHref, shapes, seats, curr
             </div>
           </div>
 
-          {/* 全員離席設定 */}
+          {showAutoCheckout && (
           <div className="flex items-center gap-4 mt-3 p-3 bg-blue-50 rounded border border-blue-200">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
@@ -103,6 +103,7 @@ export default function CanvasEditorPage({ entity, backHref, shapes, seats, curr
               </div>
             )}
           </div>
+          )}
 
           <p className="text-sm text-slate-600 mt-1">
             座席配置図エディタ - ツールを選択して、キャンバスをクリック・ドラッグして描画
