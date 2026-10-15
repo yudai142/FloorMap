@@ -1,0 +1,72 @@
+require "rails_helper"
+
+RSpec.describe "FloorPlanTemplate visibility", type: :request do
+  let(:user) { create(:user) }
+  let(:other_user) { create(:user) }
+
+  describe "viewing a template" do
+    before { sign_in user }
+
+    it "shows a public template of another user" do
+      template = create(:floor_plan_template, user: other_user, is_public: true)
+      get floor_plan_template_path(template)
+      expect(response).to have_http_status(:success)
+    end
+
+    it "hides a private template of another user" do
+      template = create(:floor_plan_template, user: other_user, is_public: false)
+      get floor_plan_template_path(template)
+      expect(response).to redirect_to(floor_plan_templates_path)
+    end
+
+    it "hides the details page of a private template of another user" do
+      template = create(:floor_plan_template, user: other_user, is_public: false)
+      get details_floor_plan_template_path(template)
+      expect(response).to redirect_to(floor_plan_templates_path)
+    end
+
+    it "lets an admin view a private template of another user" do
+      admin = create(:user, role: :admin)
+      sign_in admin
+      template = create(:floor_plan_template, user: other_user, is_public: false)
+      get floor_plan_template_path(template)
+      expect(response).to have_http_status(:success)
+    end
+  end
+
+  describe "listing templates" do
+    before { sign_in user }
+
+    it "lists public templates of other users and not their private ones" do
+      create(:floor_plan_template, user: other_user, is_public: true, name: "公開テンプレートX")
+      create(:floor_plan_template, user: other_user, is_public: false, name: "非公開テンプレートY")
+
+      get floor_plan_templates_path
+      expect(response.body).to include("公開テンプレートX")
+      expect(response.body).not_to include("非公開テンプレートY")
+    end
+  end
+
+  describe "creating a room from a template" do
+    before { sign_in user }
+
+    it "allows a public template of another user" do
+      template = create(:floor_plan_template, user: other_user, is_public: true)
+
+      expect {
+        post rooms_path, params: { room: { name: "公開会議室", floor_plan_template_id: template.id } },
+                         headers: { "Accept" => "application/json" }
+      }.to change(Room, :count).by(1)
+    end
+
+    it "rejects a private template of another user" do
+      template = create(:floor_plan_template, user: other_user, is_public: false)
+
+      expect {
+        post rooms_path, params: { room: { name: "非公開会議室", floor_plan_template_id: template.id } },
+                         headers: { "Accept" => "application/json" }
+      }.not_to change(Room, :count)
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+end
