@@ -75,7 +75,7 @@ class RoomsController < ApplicationController
     # テンプレートから floor_plan_data と座席をコピー
     template = nil
     if params[:room][:floor_plan_template_id].present?
-      template = FloorPlanTemplate.find(params[:room][:floor_plan_template_id])
+      template = FloorPlanTemplate.readable_by(current_user).find(params[:room][:floor_plan_template_id])
       @room.floor_plan_data = template.floor_plan_data
       template.increment_usage!
     end

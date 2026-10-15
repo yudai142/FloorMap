@@ -7,6 +7,7 @@ class FloorPlanTemplate < ApplicationRecord
   validate :floor_plan_data_is_valid_jsonb
 
   scope :public_templates, -> { where(is_public: true) }
+  scope :readable_by, ->(user) { user.admin? ? all : where(user_id: user.id).or(where(is_public: true)) }
   scope :by_user, ->(user) { where(user_id: user.id) }
   scope :popular, -> { order(usage_count: :desc) }
   scope :recent, -> { order(created_at: :desc) }
