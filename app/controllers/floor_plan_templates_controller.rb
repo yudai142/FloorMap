@@ -1,7 +1,8 @@
 class FloorPlanTemplatesController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_template, only: [ :show, :destroy, :edit, :update, :save_floor_plan ]
+  before_action :set_template, only: [ :show, :details, :destroy, :edit, :update, :save_floor_plan ]
   before_action :authorize_user, only: [ :destroy, :edit, :update, :save_floor_plan ]
+  before_action :authorize_read, only: [ :show, :details ]
 
   def index
     @my_templates = current_user.floor_plan_templates.recent
@@ -90,6 +91,12 @@ class FloorPlanTemplatesController < ApplicationController
 
   def authorize_user
     redirect_to root_path unless @template.user == current_user || current_user.admin?
+  end
+
+  def authorize_read
+    return if FloorPlanTemplate.readable_by(current_user).exists?(@template.id)
+
+    redirect_to floor_plan_templates_path, alert: "このテンプレートは閲覧できません"
   end
 
   def template_params
