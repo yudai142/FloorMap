@@ -36,6 +36,12 @@ export default function FloorPlanTemplatesIndex({ my_templates, public_templates
                       詳細
                     </a>
                     <a
+                      href={`/floor_plan_templates/${template.id}/details`}
+                      className="flex-1 text-center px-3 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition text-sm"
+                    >
+                      公開設定
+                    </a>
+                    <a
                       href={`/floor_plan_templates/${template.id}/edit`}
                       className="flex-1 text-center px-3 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition text-sm"
                     >
