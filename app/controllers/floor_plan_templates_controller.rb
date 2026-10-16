@@ -53,7 +53,10 @@ class FloorPlanTemplatesController < ApplicationController
   def update
     # テンプレート詳細フォームから呼び出される
     if @template.update(template_params)
-      redirect_to floor_plan_templates_path, notice: "テンプレートが保存されました"
+      respond_to do |format|
+        format.html { redirect_to floor_plan_templates_path, notice: "テンプレートが保存されました" }
+        format.json { render json: template_json(@template), status: :ok }
+      end
     else
       render inertia: "FloorPlanTemplates/Details", props: {
         template: template_json(@template),
