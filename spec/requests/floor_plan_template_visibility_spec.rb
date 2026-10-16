@@ -34,6 +34,21 @@ RSpec.describe "FloorPlanTemplate visibility", type: :request do
     end
   end
 
+  describe "saving visibility from the details form" do
+    let(:template) { create(:floor_plan_template, user: user, is_public: false) }
+
+    before { sign_in user }
+
+    it "returns success for a JSON request so the form can navigate away" do
+      patch floor_plan_template_path(template),
+            params: { floor_plan_template: { name: template.name, description: "説明", is_public: true } }.to_json,
+            headers: { "Content-Type" => "application/json", "Accept" => "application/json" }
+
+      expect(response).to have_http_status(:ok)
+      expect(template.reload.is_public).to be(true)
+    end
+  end
+
   describe "listing templates" do
     before { sign_in user }
 
