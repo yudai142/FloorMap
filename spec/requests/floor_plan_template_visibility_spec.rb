@@ -47,6 +47,15 @@ RSpec.describe "FloorPlanTemplate visibility", type: :request do
       expect(response).to have_http_status(:ok)
       expect(template.reload.is_public).to be(true)
     end
+
+    it "returns success when the client sends the default fetch Accept header" do
+      patch floor_plan_template_path(template),
+            params: { floor_plan_template: { name: template.name, description: "説明", is_public: true } }.to_json,
+            headers: { "Content-Type" => "application/json", "Accept" => "*/*" }
+
+      expect(response).to have_http_status(:ok)
+      expect(template.reload.is_public).to be(true)
+    end
   end
 
   describe "listing templates" do
