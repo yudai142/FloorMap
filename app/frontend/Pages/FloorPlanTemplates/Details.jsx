@@ -39,6 +39,7 @@ export default function FloorPlanTemplatesDetails({ template }) {
       const response = await fetch(`/floor_plan_templates/${template.id}`, {
         method: 'PATCH',
         headers: {
+          'Accept': 'application/json',
           'Content-Type': 'application/json',
           'X-CSRF-Token': csrfToken,
         },
