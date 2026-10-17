@@ -26,8 +26,9 @@
       window.__VITE_HMR_PORT__ = null
     </script>
 
-    <%# Vite entrypoint with CSS and JS %>
+    <%# Vite entrypoints with CSS and JS %>
     <% unless Rails.env.test? %>
+      <%= vite_javascript_tag "application.js", "data-turbo-track": "reload" %>
       <%= vite_javascript_tag "entrypoints/application.jsx", "data-turbo-track": "reload" %>
       <%= vite_stylesheet_tag "entrypoints/application.jsx", "data-turbo-track": "reload" %>
     <% end %>

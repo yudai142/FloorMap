@@ -1,5 +1,6 @@
 class Room < ApplicationRecord
   belongs_to :user
+  belongs_to :floor_plan_template, optional: true
   has_many :room_permissions, dependent: :destroy
   has_many :seats, dependent: :destroy
   has_many :share_links, dependent: :destroy
