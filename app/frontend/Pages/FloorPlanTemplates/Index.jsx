@@ -1,6 +1,17 @@
 import React from 'react'
 import { usePage } from '@inertiajs/react'
 
+function TemplatePreview({ url, name }) {
+  if (!url) {
+    return (
+      <div className="w-full h-40 bg-slate-100 rounded mb-4 flex items-center justify-center text-sm text-gray-400">
+        プレビューなし
+      </div>
+    )
+  }
+  return <img src={url} alt={`${name}の上面図`} className="w-full h-40 object-contain bg-slate-50 rounded mb-4" />
+}
+
 export default function FloorPlanTemplatesIndex({ my_templates, public_templates }) {
   const { auth } = usePage().props
 
@@ -18,6 +29,7 @@ export default function FloorPlanTemplatesIndex({ my_templates, public_templates
                   key={template.id}
                   className="bg-white rounded-lg shadow hover:shadow-lg transition p-6 border-l-4 border-blue-600"
                 >
+                  <TemplatePreview url={template.preview_image_url} name={template.name} />
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">{template.name}</h3>
                   <p className="text-gray-600 text-sm mb-4 line-clamp-3">{template.description || '説明なし'}</p>
                   <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
@@ -83,6 +95,7 @@ export default function FloorPlanTemplatesIndex({ my_templates, public_templates
                   key={template.id}
                   className="bg-white rounded-lg shadow hover:shadow-lg transition p-6 border-l-4 border-green-600"
                 >
+                  <TemplatePreview url={template.preview_image_url} name={template.name} />
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">{template.name}</h3>
                   <p className="text-gray-600 text-sm mb-2">{template.description || '説明なし'}</p>
                   <p className="text-gray-500 text-xs mb-4">作成者: {template.user.username}</p>
