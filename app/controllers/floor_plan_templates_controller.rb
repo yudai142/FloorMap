@@ -1,7 +1,7 @@
 class FloorPlanTemplatesController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_template, only: [ :show, :details, :destroy, :edit, :update, :save_floor_plan ]
-  before_action :authorize_user, only: [ :destroy, :edit, :update, :save_floor_plan ]
+  before_action :set_template, only: [ :show, :details, :destroy, :edit, :update, :save_floor_plan, :update_preview ]
+  before_action :authorize_user, only: [ :destroy, :edit, :update, :save_floor_plan, :update_preview ]
   before_action :authorize_read, only: [ :show, :details ]
 
   def index
@@ -74,6 +74,16 @@ class FloorPlanTemplatesController < ApplicationController
     end
   end
 
+  def update_preview
+    image = params[:preview_image]
+    unless image.is_a?(ActionDispatch::Http::UploadedFile) && image.content_type == "image/png" && image.size <= 5.megabytes
+      return render json: { errors: [ "5MB以下のPNG画像を指定してください" ] }, status: :unprocessable_entity
+    end
+
+    @template.preview_image.attach(image)
+    head :ok
+  end
+
   def details
     render inertia: "FloorPlanTemplates/Details", props: {
       template: template_json(@template),
@@ -128,7 +138,8 @@ class FloorPlanTemplatesController < ApplicationController
       is_public: template.is_public,
       usage_count: template.usage_count,
       user: { id: template.user.id, username: template.user.username },
-      created_at: template.created_at.iso8601
+      created_at: template.created_at.iso8601,
+      preview_image_url: (rails_blob_path(template.preview_image, only_path: true) if template.preview_image.attached?)
     }
   end
 end

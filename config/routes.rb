@@ -29,6 +29,7 @@ Rails.application.routes.draw do
   resources :floor_plan_templates, only: [ :index, :new, :show, :create, :destroy, :edit, :update ] do
     member do
       patch :canvas_editor, action: :save_floor_plan
+      patch :preview, action: :update_preview
       get :details
     end
     resources :seats, controller: "floor_plan_template_seats", only: [ :create, :destroy ] do
