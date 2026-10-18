@@ -22,6 +22,7 @@ export default function FloorPlanTemplatesCanvasEditor({ template, shapes_data, 
         floorPlanBodyKey: 'floor_plan_template',
         settingsUrl: null,
         seatsUrl: `/floor_plan_templates/${template.id}/seats`,
+        previewUrl: `/floor_plan_templates/${template.id}/preview`,
         saveMessage: '座席配置図を保存しました',
       }}
     />

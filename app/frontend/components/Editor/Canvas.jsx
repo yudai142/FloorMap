@@ -8,6 +8,7 @@ import { useSeatManagement } from './hooks/useSeatManagement'
 import { useShapeDrawing } from './hooks/useShapeDrawing'
 import { useShapePreview } from './hooks/useShapePreview'
 import { snapToGrid, distanceToLine, isPointInPolygon } from './utils/snapToGrid'
+import { svgToPngBlob } from './utils/previewImage'
 import './Canvas.css'
 
 export default function Canvas({ room = {}, initialShapes = [], initialSeats = [], onSave, canvasSize, onCanvasSizeChange, persistence }) {
@@ -329,6 +330,20 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
         }
       }
 
+      if (persistence.previewUrl && svgRef.current) {
+        const previewBlob = await svgToPngBlob(svgRef.current, canvasWidth, canvasHeight)
+        const previewForm = new FormData()
+        previewForm.append('preview_image', previewBlob, 'preview.png')
+        const previewResponse = await fetch(persistence.previewUrl, {
+          method: 'PATCH',
+          headers: { 'X-CSRF-Token': getCsrfToken() },
+          body: previewForm,
+        })
+        if (!previewResponse.ok) {
+          throw new Error('プレビュー画像の保存に失敗しました')
+        }
+      }
+
       // Update the original seats reference for next save
       originalSeatsRef.current = seats.filter(s => s.id > 0)
 
@@ -343,7 +358,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
     } finally {
       setIsSaving(false)
     }
-  }, [room, shapes, seats, canvasSize, persistence, getCsrfToken, onSave, mergeSeat])
+  }, [room, shapes, seats, canvasSize, canvasWidth, canvasHeight, persistence, getCsrfToken, onSave, mergeSeat])
 
   const handleMouseDown = useCallback((e) => {
     // Right-click: complete polygon
