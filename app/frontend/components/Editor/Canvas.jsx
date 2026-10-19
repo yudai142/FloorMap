@@ -128,6 +128,29 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
     return document.querySelector('meta[name="csrf-token"]')?.content || ''
   }, [])
 
+  const uploadPreview = useCallback(async () => {
+    const previewBlob = await svgToPngBlob(svgRef.current, canvasWidth, canvasHeight)
+    const previewForm = new FormData()
+    previewForm.append('preview_image', previewBlob, 'preview.png')
+    const previewResponse = await fetch(persistence.previewUrl, {
+      method: 'PATCH',
+      headers: { 'X-CSRF-Token': getCsrfToken() },
+      body: previewForm,
+    })
+    if (!previewResponse.ok) {
+      throw new Error('プレビュー画像の保存に失敗しました')
+    }
+  }, [persistence.previewUrl, canvasWidth, canvasHeight, getCsrfToken])
+
+  const previewPendingRef = useRef(Boolean(persistence.generatePreviewOnLoad))
+  useEffect(() => {
+    if (!previewPendingRef.current || !persistence.previewUrl) return
+    if (shapes.length !== initialShapes.length) return
+
+    previewPendingRef.current = false
+    uploadPreview().catch((err) => console.error('Preview generation failed:', err))
+  }, [shapes, initialShapes, persistence.previewUrl, uploadPreview])
+
   const getMousePosition = useCallback((e) => {
     if (!svgRef.current) return { x: 0, y: 0 }
     const rect = svgRef.current.getBoundingClientRect()
@@ -330,18 +353,8 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
         }
       }
 
-      if (persistence.previewUrl && svgRef.current) {
-        const previewBlob = await svgToPngBlob(svgRef.current, canvasWidth, canvasHeight)
-        const previewForm = new FormData()
-        previewForm.append('preview_image', previewBlob, 'preview.png')
-        const previewResponse = await fetch(persistence.previewUrl, {
-          method: 'PATCH',
-          headers: { 'X-CSRF-Token': getCsrfToken() },
-          body: previewForm,
-        })
-        if (!previewResponse.ok) {
-          throw new Error('プレビュー画像の保存に失敗しました')
-        }
+      if (persistence.previewUrl) {
+        await uploadPreview()
       }
 
       // Update the original seats reference for next save
@@ -358,7 +371,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
     } finally {
       setIsSaving(false)
     }
-  }, [room, shapes, seats, canvasSize, canvasWidth, canvasHeight, persistence, getCsrfToken, onSave, mergeSeat])
+  }, [room, shapes, seats, canvasSize, persistence, getCsrfToken, onSave, mergeSeat, uploadPreview])
 
   const handleMouseDown = useCallback((e) => {
     // Right-click: complete polygon
