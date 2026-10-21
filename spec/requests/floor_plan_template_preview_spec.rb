@@ -45,15 +45,42 @@ RSpec.describe "FloorPlanTemplate preview image", type: :request do
     end
   end
 
-  describe "listing templates" do
-    it "includes the preview image URL for templates that have one" do
+  describe "GET /floor_plan_templates/:id/preview_svg" do
+    let(:template) do
+      create(:floor_plan_template, user: user, floor_plan_data: [
+        { "type" => "rectangle", "x" => 10, "y" => 20, "width" => 100, "height" => 50, "color" => "#3b82f6" }
+      ])
+    end
+
+    it "renders the current floor plan as SVG without a stored image" do
       sign_in user
-      template.preview_image.attach(io: StringIO.new("\x89PNG\r\n\x1a\n".b), filename: "preview.png", content_type: "image/png")
+
+      get preview_svg_floor_plan_template_path(template)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq("image/svg+xml")
+      expect(response.body).to include('<rect x="10.0" y="20.0" width="100.0" height="50.0"')
+      expect(response.headers["Content-Security-Policy"]).to include("default-src 'none'")
+    end
+
+    it "hides a private template of another user" do
+      other = create(:floor_plan_template, user: other_user, is_public: false)
+      sign_in user
+
+      get preview_svg_floor_plan_template_path(other)
+
+      expect(response).to redirect_to(floor_plan_templates_path)
+    end
+  end
+
+  describe "listing templates" do
+    it "gives every template a live preview URL" do
+      sign_in user
+      template
 
       get floor_plan_templates_path
 
-      expect(response.body).to include("preview_image_url")
-      expect(response.body).to include("/rails/active_storage/")
+      expect(response.body).to include("preview_svg")
     end
   end
 end
