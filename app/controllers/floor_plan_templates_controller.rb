@@ -1,8 +1,8 @@
 class FloorPlanTemplatesController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_template, only: [ :show, :details, :destroy, :edit, :update, :save_floor_plan, :update_preview ]
+  before_action :set_template, only: [ :show, :details, :preview_svg, :destroy, :edit, :update, :save_floor_plan, :update_preview ]
   before_action :authorize_user, only: [ :destroy, :edit, :update, :save_floor_plan, :update_preview ]
-  before_action :authorize_read, only: [ :show, :details ]
+  before_action :authorize_read, only: [ :show, :details, :preview_svg ]
 
   def index
     @my_templates = current_user.floor_plan_templates.recent
@@ -84,6 +84,12 @@ class FloorPlanTemplatesController < ApplicationController
     head :ok
   end
 
+  def preview_svg
+    response.headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    render body: FloorPlanPreviewSvg.new(@template).render, content_type: "image/svg+xml"
+  end
+
   def details
     render inertia: "FloorPlanTemplates/Details", props: {
       template: template_json(@template),
@@ -139,7 +145,7 @@ class FloorPlanTemplatesController < ApplicationController
       usage_count: template.usage_count,
       user: { id: template.user.id, username: template.user.username },
       created_at: template.created_at.iso8601,
-      preview_image_url: (rails_blob_path(template.preview_image, only_path: true) if template.preview_image.attached?)
+      preview_image_url: preview_svg_floor_plan_template_path(template)
     }
   end
 end
