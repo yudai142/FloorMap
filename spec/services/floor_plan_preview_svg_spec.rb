@@ -26,6 +26,36 @@ RSpec.describe FloorPlanPreviewSvg do
     expect(svg).to include('transform="translate(120.0, 80.0)"')
   end
 
+  it "fits the view box to the shapes and seats with padding" do
+    template = create(:floor_plan_template, user: user, floor_plan_data: [
+      { "type" => "rectangle", "x" => 10, "y" => 20, "width" => 100, "height" => 50, "color" => "#3b82f6" }
+    ])
+    create(:floor_plan_template_seat, floor_plan_template: template, position_x: 120, position_y: 80)
+
+    svg = described_class.new(template.reload).render
+
+    expect(svg).to include('viewBox="-10.0 0.0 210.0 112.0"')
+    expect(svg).to include('width="210.0" height="112.0"')
+  end
+
+  it "uses the full canvas size when the template has no content" do
+    template = create(:floor_plan_template, user: user, floor_plan_data: [])
+
+    svg = described_class.new(template).render
+
+    expect(svg).to include('viewBox="0.0 0.0 1000.0 700.0"')
+  end
+
+  it "keeps a minimum size for a single point" do
+    template = create(:floor_plan_template, user: user, floor_plan_data: [
+      { "type" => "circle", "cx" => 100, "cy" => 100, "r" => 0, "color" => "#000" }
+    ])
+
+    svg = described_class.new(template).render
+
+    expect(svg).to include('width="80.0" height="80.0"')
+  end
+
   it "escapes user-provided text" do
     template = create(:floor_plan_template, user: user, floor_plan_data: [
       { "type" => "text", "x" => 5, "y" => 5, "text" => "<script>alert(1)</script>", "color" => "#000" }
