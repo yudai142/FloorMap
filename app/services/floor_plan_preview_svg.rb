@@ -1,6 +1,8 @@
 class FloorPlanPreviewSvg
   WIDTH = 1000
   HEIGHT = 700
+  PADDING = 20
+  MIN_SIZE = 40
   SEAT_COLOR = "#4ade80".freeze
   SEAT_STROKE = "#065f46".freeze
 
@@ -10,9 +12,10 @@ class FloorPlanPreviewSvg
 
   def render
     elements = shapes.filter_map { |shape| shape_svg(shape) } + seats.map { |seat| seat_svg(seat) }
+    box = content_box
 
-    %(<svg xmlns="http://www.w3.org/2000/svg" width="#{WIDTH}" height="#{HEIGHT}" viewBox="0 0 #{WIDTH} #{HEIGHT}">) +
-      %(<rect width="#{WIDTH}" height="#{HEIGHT}" fill="#ffffff"/>) +
+    %(<svg xmlns="http://www.w3.org/2000/svg" width="#{num(box[:width])}" height="#{num(box[:height])}" viewBox="#{num(box[:x])} #{num(box[:y])} #{num(box[:width])} #{num(box[:height])}">) +
+      %(<rect x="#{num(box[:x])}" y="#{num(box[:y])}" width="#{num(box[:width])}" height="#{num(box[:height])}" fill="#ffffff"/>) +
       elements.join +
       "</svg>"
   end
@@ -25,6 +28,43 @@ class FloorPlanPreviewSvg
 
   def seats
     @template.template_seats.order(:id)
+  end
+
+  def content_box
+    points = shapes.flat_map { |shape| shape_points(shape) } + seats.flat_map { |seat| seat_points(seat) }
+    return { x: 0, y: 0, width: WIDTH, height: HEIGHT } if points.empty?
+
+    xs = points.map(&:first)
+    ys = points.map(&:last)
+    width = [ xs.max - xs.min, MIN_SIZE ].max + 2 * PADDING
+    height = [ ys.max - ys.min, MIN_SIZE ].max + 2 * PADDING
+
+    { x: xs.min - PADDING, y: ys.min - PADDING, width: width, height: height }
+  end
+
+  def shape_points(shape)
+    case shape[:type]
+    when "rectangle"
+      x, y = shape[:x].to_f, shape[:y].to_f
+      [ [ x, y ], [ x + shape[:width].to_f, y + shape[:height].to_f ] ]
+    when "line", "arrow"
+      [ [ shape[:x1].to_f, shape[:y1].to_f ], [ shape[:x2].to_f, shape[:y2].to_f ] ]
+    when "circle"
+      cx, cy, r = shape[:cx].to_f, shape[:cy].to_f, shape[:r].to_f
+      [ [ cx - r, cy - r ], [ cx + r, cy + r ] ]
+    when "text"
+      x, y = shape[:x].to_f, shape[:y].to_f
+      [ [ x, y - 14 ], [ x + shape[:text].to_s.length * 8, y + 4 ] ]
+    when "polygon"
+      Array(shape[:pointsArray]).map { |point| [ point[:x].to_f, point[:y].to_f ] }
+    else
+      []
+    end
+  end
+
+  def seat_points(seat)
+    x, y = seat.position_x.to_f, seat.position_y.to_f
+    [ [ x - 12, y - 12 ], [ x + 60, y + 12 ] ]
   end
 
   def shape_svg(shape)
