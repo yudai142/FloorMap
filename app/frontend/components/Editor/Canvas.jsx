@@ -8,9 +8,10 @@ import { useSeatManagement } from './hooks/useSeatManagement'
 import { useShapeDrawing } from './hooks/useShapeDrawing'
 import { useShapePreview } from './hooks/useShapePreview'
 import { snapToGrid, distanceToLine, isPointInPolygon } from './utils/snapToGrid'
+import { svgToPngBlob } from './utils/previewImage'
 import './Canvas.css'
 
-export default function Canvas({ room = {}, initialShapes = [], initialSeats = [], onSave, canvasSize, onCanvasSizeChange }) {
+export default function Canvas({ room = {}, initialShapes = [], initialSeats = [], onSave, canvasSize, onCanvasSizeChange, persistence }) {
   const svgRef = useRef(null)
   const svgContainerRef = useRef(null)
   const scrollContainerRef = useRef(null)
@@ -127,6 +128,29 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
     return document.querySelector('meta[name="csrf-token"]')?.content || ''
   }, [])
 
+  const uploadPreview = useCallback(async () => {
+    const previewBlob = await svgToPngBlob(svgRef.current, canvasWidth, canvasHeight)
+    const previewForm = new FormData()
+    previewForm.append('preview_image', previewBlob, 'preview.png')
+    const previewResponse = await fetch(persistence.previewUrl, {
+      method: 'PATCH',
+      headers: { 'X-CSRF-Token': getCsrfToken() },
+      body: previewForm,
+    })
+    if (!previewResponse.ok) {
+      throw new Error('プレビュー画像の保存に失敗しました')
+    }
+  }, [persistence.previewUrl, canvasWidth, canvasHeight, getCsrfToken])
+
+  const previewPendingRef = useRef(Boolean(persistence.generatePreviewOnLoad))
+  useEffect(() => {
+    if (!previewPendingRef.current || !persistence.previewUrl) return
+    if (shapes.length !== initialShapes.length) return
+
+    previewPendingRef.current = false
+    uploadPreview().catch((err) => console.error('Preview generation failed:', err))
+  }, [shapes, initialShapes, persistence.previewUrl, uploadPreview])
+
   const getMousePosition = useCallback((e) => {
     if (!svgRef.current) return { x: 0, y: 0 }
     const rect = svgRef.current.getBoundingClientRect()
@@ -212,9 +236,9 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
 
       // Save canvas size if changed
       console.log('handleSave - canvasSize:', canvasSize, 'room:', { width: room.width, height: room.height })
-      if (canvasSize && (canvasSize.width !== room.width || canvasSize.height !== room.height)) {
+      if (persistence.settingsUrl && canvasSize && (canvasSize.width !== room.width || canvasSize.height !== room.height)) {
         console.log('Saving canvas size:', canvasSize)
-        const sizeResponse = await fetch(`/rooms/${room.share_token}`, {
+        const sizeResponse = await fetch(persistence.settingsUrl, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -233,13 +257,13 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       }
 
       // Save shapes (floor plan)
-      const floorPlanResponse = await fetch(`/rooms/${room.share_token}/floor_plan.json`, {
+      const floorPlanResponse = await fetch(persistence.floorPlanUrl, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'X-CSRF-Token': getCsrfToken(),
         },
-        body: JSON.stringify({ room: { floor_plan_data: validShapes } }),
+        body: JSON.stringify({ [persistence.floorPlanBodyKey]: { floor_plan_data: validShapes } }),
       })
       if (!floorPlanResponse.ok) {
         const errorText = await floorPlanResponse.text()
@@ -250,13 +274,13 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       // Save seats (create, update, delete)
       // Detect deleted seats (original seats that are no longer in current seats)
       const currentSeatIds = new Set(seats.map(s => s.id).filter(id => id > 0))
-      const deletedSeats = originalSeatsRef.current.filter(
-        originalSeat => originalSeat.id > 0 && !currentSeatIds.has(originalSeat.id)
-      )
+      const deletedSeats = persistence.seatsUrl
+        ? originalSeatsRef.current.filter(originalSeat => originalSeat.id > 0 && !currentSeatIds.has(originalSeat.id))
+        : []
 
       // Delete removed seats
       for (const deletedSeat of deletedSeats) {
-        const deleteResponse = await fetch(`/rooms/${room.share_token}/seats/${deletedSeat.id}.json`, {
+        const deleteResponse = await fetch(`${persistence.seatsUrl}/${deletedSeat.id}.json`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
@@ -270,10 +294,10 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       }
 
       // Send current seats state to server
-      for (const seat of seats) {
+      for (const seat of persistence.seatsUrl ? seats : []) {
         if (seat.id < 0) {
           // New seat - create it
-          const createResponse = await fetch(`/rooms/${room.share_token}/seats.json`, {
+          const createResponse = await fetch(`${persistence.seatsUrl}.json`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -309,7 +333,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
           }
         } else {
           // Existing seat - update position
-          const updateResponse = await fetch(`/rooms/${room.share_token}/seats/${seat.id}/position.json`, {
+          const updateResponse = await fetch(`${persistence.seatsUrl}/${seat.id}/position.json`, {
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
@@ -329,10 +353,14 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
         }
       }
 
+      if (persistence.previewUrl) {
+        await uploadPreview()
+      }
+
       // Update the original seats reference for next save
       originalSeatsRef.current = seats.filter(s => s.id > 0)
 
-      setAlert({ type: 'success', message: '座席配置図を保存しました' })
+      setAlert({ type: 'success', message: persistence.saveMessage })
       setTimeout(() => setAlert(null), 2000)
 
       if (onSave) {
@@ -343,7 +371,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
     } finally {
       setIsSaving(false)
     }
-  }, [room, shapes, seats, getCsrfToken, onSave, mergeSeat])
+  }, [room, shapes, seats, canvasSize, persistence, getCsrfToken, onSave, mergeSeat, uploadPreview])
 
   const handleMouseDown = useCallback((e) => {
     // Right-click: complete polygon

@@ -4,6 +4,7 @@
   "publicDir": "public",
   "assetsDir": "app/assets",
   "entrypoints": [
+    "app/javascript/application.js",
     "app/frontend/entrypoints/application.jsx"
   ],
   "codegenDir": "app/components",
