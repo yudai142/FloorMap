@@ -1,27 +1,17 @@
 import React from 'react'
-import { usePage } from '@inertiajs/react'
+import TemplatePreview from '../../components/FloorPlanTemplates/TemplatePreview'
 
-function TemplatePreview({ url, name }) {
-  if (!url) {
-    return (
-      <div className="w-full h-40 bg-slate-100 rounded mb-4 flex items-center justify-center text-sm text-gray-400">
-        プレビューなし
-      </div>
-    )
-  }
-  return <img src={url} alt={`${name}の上面図`} className="w-full h-40 object-contain bg-slate-50 rounded mb-4" />
-}
-
-export default function FloorPlanTemplatesIndex({ my_templates, public_templates }) {
-  const { auth } = usePage().props
-
+export default function FloorPlanTemplatesIndex({ my_templates }) {
   return (
       <div className="space-y-8">
-        <h1 className="text-3xl font-bold text-gray-900">上面図テンプレート</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-gray-900">マイテンプレート</h1>
+          <a href="/floor_plan_templates/public" className="text-blue-600 hover:text-blue-800 font-medium">
+            公開テンプレートを見る →
+          </a>
+        </div>
 
-        {/* 自分のテンプレート */}
         <section>
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">マイテンプレート</h2>
           {my_templates.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {my_templates.map((template) => (
@@ -85,38 +75,6 @@ export default function FloorPlanTemplatesIndex({ my_templates, public_templates
           )}
         </section>
 
-        {/* 公開テンプレート */}
-        <section>
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">公開テンプレート</h2>
-          {public_templates.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {public_templates.map((template) => (
-                <div
-                  key={template.id}
-                  className="bg-white rounded-lg shadow hover:shadow-lg transition p-6 border-l-4 border-green-600"
-                >
-                  <TemplatePreview url={template.preview_image_url} name={template.name} />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{template.name}</h3>
-                  <p className="text-gray-600 text-sm mb-2">{template.description || '説明なし'}</p>
-                  <p className="text-gray-500 text-xs mb-4">作成者: {template.user.username}</p>
-                  <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                    <span>使用回数: {template.usage_count}</span>
-                  </div>
-                  <a
-                    href={`/floor_plan_templates/${template.id}`}
-                    className="w-full text-center px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm block"
-                  >
-                    このテンプレートを使用
-                  </a>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500">公開テンプレートはありません</p>
-          )}
-        </section>
-
-        {/* テンプレート新規作成ボタン */}
         <div className="flex justify-center">
           <a
             href="/floor_plan_templates/new"
