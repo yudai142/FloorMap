@@ -61,13 +61,23 @@ RSpec.describe "FloorPlanTemplate visibility", type: :request do
   describe "listing templates" do
     before { sign_in user }
 
-    it "lists public templates of other users and not their private ones" do
+    it "lists public templates of other users on the public page, not their private ones" do
       create(:floor_plan_template, user: other_user, is_public: true, name: "公開テンプレートX")
       create(:floor_plan_template, user: other_user, is_public: false, name: "非公開テンプレートY")
 
-      get floor_plan_templates_path
+      get public_floor_plan_templates_path
+      expect(response).to have_http_status(:ok)
       expect(response.body).to include("公開テンプレートX")
       expect(response.body).not_to include("非公開テンプレートY")
+    end
+
+    it "shows only my templates on the my templates page" do
+      create(:floor_plan_template, user: user, name: "マイテンプレートZ")
+      create(:floor_plan_template, user: other_user, is_public: true, name: "他人の公開テンプレートW")
+
+      get floor_plan_templates_path
+      expect(response.body).to include("マイテンプレートZ")
+      expect(response.body).not_to include("他人の公開テンプレートW")
     end
   end
 

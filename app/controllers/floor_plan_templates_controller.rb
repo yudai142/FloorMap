@@ -5,12 +5,15 @@ class FloorPlanTemplatesController < ApplicationController
   before_action :authorize_read, only: [ :show, :details, :preview_svg ]
 
   def index
-    @my_templates = current_user.floor_plan_templates.recent
-    @public_templates = FloorPlanTemplate.public_templates.recent
-
     render inertia: "FloorPlanTemplates/Index", props: {
-      my_templates: @my_templates.map { |t| template_json(t) },
-      public_templates: @public_templates.map { |t| template_json(t) },
+      my_templates: current_user.floor_plan_templates.recent.map { |t| template_json(t) },
+      **default_inertia_props
+    }
+  end
+
+  def public_index
+    render inertia: "FloorPlanTemplates/PublicIndex", props: {
+      public_templates: FloorPlanTemplate.public_templates.recent.map { |t| template_json(t) },
       **default_inertia_props
     }
   end
