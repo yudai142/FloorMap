@@ -11,6 +11,26 @@ import { snapToGrid, distanceToLine, isPointInPolygon } from './utils/snapToGrid
 import { svgToPngBlob } from './utils/previewImage'
 import './Canvas.css'
 
+function offsetShape(shape, dx, dy) {
+  switch (shape.type) {
+    case 'rectangle':
+      return { x: shape.x + dx, y: shape.y + dy }
+    case 'line':
+    case 'arrow':
+      return { x1: shape.x1 + dx, y1: shape.y1 + dy, x2: shape.x2 + dx, y2: shape.y2 + dy }
+    case 'circle':
+      return { cx: shape.cx + dx, cy: shape.cy + dy }
+    case 'text':
+      return { x: shape.x + dx, y: shape.y + dy }
+    case 'polygon': {
+      const pointsArray = (shape.pointsArray || []).map((p) => ({ x: p.x + dx, y: p.y + dy }))
+      return { pointsArray, points: pointsArray.map((p) => `${p.x},${p.y}`).join(' ') }
+    }
+    default:
+      return {}
+  }
+}
+
 export default function Canvas({ room = {}, initialShapes = [], initialSeats = [], onSave, canvasSize, onCanvasSizeChange, persistence }) {
   const svgRef = useRef(null)
   const svgContainerRef = useRef(null)
@@ -22,6 +42,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
   const [polygonClosed, setPolygonClosed] = useState(true)
   const [isResizing, setIsResizing] = useState(null)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const groupDragRef = useRef(null)
 
   // Default canvas dimensions if not provided
   const canvasWidth = canvasSize?.width || room?.width || 1000
@@ -400,6 +421,19 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       }
     } else if (currentTool === 'select') {
       const clickedSeat = getSeatAtPoint(x, y)
+      const clickedShape = clickedSeat ? null : getShapeAtPoint(x, y)
+      const isSelectedSeat = (seat) => selectedElements.some((el) => el.type === 'seat' && el.id === seat.id)
+      const isSelectedShape = (shape) => selectedElements.some((el) => el.type === 'shape' && el.id === shape.id)
+      const clickedSelection = (clickedSeat && isSelectedSeat(clickedSeat)) || (clickedShape && isSelectedShape(clickedShape))
+      if (clickedSelection) {
+        groupDragRef.current = {
+          start: { x, y },
+          seats: seats.filter(isSelectedSeat).map((seat) => ({ ...seat })),
+          shapes: shapes.filter(isSelectedShape).map((shape) => ({ ...shape })),
+          moved: false,
+        }
+        return
+      }
       if (clickedSeat) {
         // Check if already selected
         const alreadySelected = selectedElements && selectedElements.some((el) => el.type === 'seat' && el.id === clickedSeat.id)
@@ -477,10 +511,20 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       }
     }
   }, [currentTool, drawMode, getMousePosition, getSeatAtPoint, getShapeAtPoint, createSeat, deleteSeat, deleteShape, updateShape, moveSeat,
-      addLine, addRectangle, addCircle, addArrow, addText, addPolygon, polygonPoints, drawingStart, polygonClosed])
+      addLine, addRectangle, addCircle, addArrow, addText, addPolygon, polygonPoints, drawingStart, polygonClosed, selectedElements, seats, shapes])
 
   const handleMouseMove = useCallback((e) => {
     const { x, y } = getMousePosition(e)
+
+    if (groupDragRef.current) {
+      const drag = groupDragRef.current
+      const dx = x - drag.start.x
+      const dy = y - drag.start.y
+      if (dx !== 0 || dy !== 0) drag.moved = true
+      drag.shapes.forEach((snapshot) => updateShape(snapshot.id, offsetShape(snapshot, dx, dy)))
+      drag.seats.forEach((snapshot) => mergeSeat({ ...snapshot, x: snapshot.x + dx, y: snapshot.y + dy }))
+      return
+    }
 
     if (dragging && currentTool === 'select') {
       const newX = Math.max(0, Math.min(x - dragging.offsetX, canvasWidth))
@@ -517,10 +561,20 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
     }
   }, [getMousePosition, dragging, currentTool, drawingStart, drawMode, canvasWidth, canvasHeight, seats, shapes,
       mergeSeat, updateLinePreview, updateRectanglePreview, updateCirclePreview, updateArrowPreview, setDrawingStart, polygonPoints,
-      updateShape, snapToGrid])
+      updateShape, snapToGrid, selectionStart, setSelectionBox])
 
   const handleMouseUp = useCallback((e) => {
     const { x, y } = getMousePosition(e)
+
+    if (groupDragRef.current) {
+      const drag = groupDragRef.current
+      groupDragRef.current = null
+      if (drag.moved) {
+        const state = useEditorStore.getState()
+        saveToHistory(state.seats, state.shapes)
+      }
+      return
+    }
 
     if (dragging && currentTool === 'select') {
       const newX = Math.max(0, Math.min(x - dragging.offsetX, canvasWidth))
@@ -609,7 +663,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
     }
   }, [getMousePosition, dragging, currentTool, drawingStart, drawMode, canvasWidth, canvasHeight, seats, shapes,
       moveSeat, setDragging, setDrawingStart, clearPreview, addLine, addRectangle, addCircle, addArrow, setSelectedElements, setSelectionStart, setSelectionBox,
-      updateShape, snapToGrid, mergeSeat, setAlert])
+      updateShape, snapToGrid, mergeSeat, setAlert, selectionStart, selectionBox, setSelectedElements, saveToHistory])
 
   // 親コンテナのサイズに基づいてリサイズ方向を判定
   const getResizeDirection = (e) => {
