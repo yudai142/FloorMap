@@ -11,6 +11,43 @@ import { snapToGrid, distanceToLine, isPointInPolygon } from './utils/snapToGrid
 import { svgToPngBlob } from './utils/previewImage'
 import './Canvas.css'
 
+function getShapeBounds(shape) {
+  let points
+  switch (shape.type) {
+    case 'rectangle':
+      points = [[shape.x, shape.y], [shape.x + shape.width, shape.y + shape.height]]
+      break
+    case 'line':
+    case 'arrow':
+      points = [[shape.x1, shape.y1], [shape.x2, shape.y2]]
+      break
+    case 'circle':
+      points = [[shape.cx - shape.r, shape.cy - shape.r], [shape.cx + shape.r, shape.cy + shape.r]]
+      break
+    case 'text':
+      points = [[shape.x, shape.y - 14], [shape.x + shape.text.length * 8, shape.y + 4]]
+      break
+    case 'polygon':
+      points = (shape.pointsArray || []).map((p) => [p.x, p.y])
+      break
+    default:
+      return null
+  }
+  if (points.length === 0) return null
+  const xs = points.map((p) => p[0])
+  const ys = points.map((p) => p[1])
+  return { minX: Math.min(...xs), minY: Math.min(...ys), maxX: Math.max(...xs), maxY: Math.max(...ys) }
+}
+
+function isBoundsInside(bounds, box) {
+  return (
+    bounds.minX >= box.x &&
+    bounds.maxX <= box.x + box.width &&
+    bounds.minY >= box.y &&
+    bounds.maxY <= box.y + box.height
+  )
+}
+
 function offsetShape(shape, dx, dy) {
   switch (shape.type) {
     case 'rectangle':
@@ -602,40 +639,8 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       })
 
       shapes.forEach((shape) => {
-        let isSelected = false
-        if (shape.type === 'line' || shape.type === 'arrow') {
-          if (
-            shape.x1 >= selectionBox.x &&
-            shape.x1 <= selectionBox.x + selectionBox.width &&
-            shape.y1 >= selectionBox.y &&
-            shape.y1 <= selectionBox.y + selectionBox.height &&
-            shape.x2 >= selectionBox.x &&
-            shape.x2 <= selectionBox.x + selectionBox.width &&
-            shape.y2 >= selectionBox.y &&
-            shape.y2 <= selectionBox.y + selectionBox.height
-          ) {
-            isSelected = true
-          }
-        } else if (shape.type === 'rectangle') {
-          if (
-            shape.x >= selectionBox.x &&
-            shape.x + shape.width <= selectionBox.x + selectionBox.width &&
-            shape.y >= selectionBox.y &&
-            shape.y + shape.height <= selectionBox.y + selectionBox.height
-          ) {
-            isSelected = true
-          }
-        } else if (shape.type === 'circle') {
-          if (
-            shape.cx - shape.r >= selectionBox.x &&
-            shape.cx + shape.r <= selectionBox.x + selectionBox.width &&
-            shape.cy - shape.r >= selectionBox.y &&
-            shape.cy + shape.r <= selectionBox.y + selectionBox.height
-          ) {
-            isSelected = true
-          }
-        }
-        if (isSelected) {
+        const bounds = getShapeBounds(shape)
+        if (bounds && isBoundsInside(bounds, selectionBox)) {
           newSelected.push({ type: 'shape', id: shape.id })
         }
       })
