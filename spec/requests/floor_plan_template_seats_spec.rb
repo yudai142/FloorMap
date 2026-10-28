@@ -74,6 +74,22 @@ RSpec.describe "FloorPlanTemplateSeats", type: :request do
   describe "creating a room from a template" do
     before { sign_in user }
 
+    it "carries the selected template into the new room form" do
+      template = create(:floor_plan_template, user: user)
+
+      get new_room_path(template_id: template.id)
+
+      expect(CGI.unescapeHTML(response.body)).to include(%("floor_plan_template_id":#{template.id}))
+    end
+
+    it "does not carry a template the user cannot read" do
+      other_private = create(:floor_plan_template, user: other_user, is_public: false)
+
+      get new_room_path(template_id: other_private.id)
+
+      expect(CGI.unescapeHTML(response.body)).to include(%("floor_plan_template_id":null))
+    end
+
     it "copies the template seats into the room" do
       create(:floor_plan_template_seat, floor_plan_template: template, position_x: 40, position_y: 40, seat_type: "vip")
       create(:floor_plan_template_seat, floor_plan_template: template, position_x: 120, position_y: 40)

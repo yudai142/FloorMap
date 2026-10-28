@@ -54,11 +54,14 @@ class RoomsController < ApplicationController
     @my_templates = current_user.floor_plan_templates
     @public_templates = FloorPlanTemplate.public_templates
 
+    template = FloorPlanTemplate.readable_by(current_user).find_by(id: params[:template_id])
+
     render inertia: "Rooms/New", props: {
       room: {
         id: nil,
         name: "",
-        description: ""
+        description: "",
+        floor_plan_template_id: template&.id
       },
       floor_plan_templates: {
         mine: @my_templates.map { |t| { id: t.id, name: t.name, description: t.description } },
