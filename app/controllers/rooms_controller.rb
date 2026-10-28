@@ -51,12 +51,21 @@ class RoomsController < ApplicationController
   def new
     authorize Room, :create?
     @room = Room.new
+    @my_templates = current_user.floor_plan_templates
+    @public_templates = FloorPlanTemplate.public_templates
+
+    template = FloorPlanTemplate.readable_by(current_user).find_by(id: params[:template_id])
 
     render inertia: "Rooms/New", props: {
       room: {
         id: nil,
         name: "",
-        description: ""
+        description: "",
+        floor_plan_template_id: template&.id
+      },
+      floor_plan_templates: {
+        mine: @my_templates.map { |t| { id: t.id, name: t.name, description: t.description } },
+        public: @public_templates.map { |t| { id: t.id, name: t.name, user_name: t.user.email } }
       },
       auth: auth_props
     }
@@ -66,7 +75,15 @@ class RoomsController < ApplicationController
     @room = current_user.rooms.build(room_params)
     authorize @room
 
-    if @room.save
+    # テンプレートから floor_plan_data と座席をコピー
+    template = nil
+    if params[:room][:floor_plan_template_id].present?
+      template = FloorPlanTemplate.readable_by(current_user).find(params[:room][:floor_plan_template_id])
+      @room.floor_plan_data = template.floor_plan_data
+      template.increment_usage!
+    end
+
+    if save_room(template)
       respond_to do |format|
         format.html { redirect_to @room, notice: "ルームを作成しました" }
         format.json { render json: @room.as_json(only: [ :id, :share_token, :name, :description ]), status: :created }
@@ -274,6 +291,18 @@ class RoomsController < ApplicationController
 
   private
 
+  def save_room(template)
+    return @room.save if template.nil?
+
+    Room.transaction do
+      @room.save!
+      template.template_seats.each { |seat| @room.seats.create!(seat.seat_attributes) }
+    end
+    true
+  rescue ActiveRecord::RecordInvalid
+    false
+  end
+
   def auto_checkout_settings_params
     params.require(:auto_checkout_settings).permit(:auto_checkout_enabled, :auto_checkout_time)
   end
@@ -321,7 +350,7 @@ class RoomsController < ApplicationController
   end
 
   def room_params
-    params.require(:room).permit(:name, :description, :width, :height, :auto_checkout_enabled, :auto_checkout_time)
+    params.require(:room).permit(:name, :description, :width, :height, :auto_checkout_enabled, :auto_checkout_time, :floor_plan_template_id)
   end
 
   def seat_canvas_json(seat)

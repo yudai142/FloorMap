@@ -8,9 +8,67 @@ import { useSeatManagement } from './hooks/useSeatManagement'
 import { useShapeDrawing } from './hooks/useShapeDrawing'
 import { useShapePreview } from './hooks/useShapePreview'
 import { snapToGrid, distanceToLine, isPointInPolygon } from './utils/snapToGrid'
+import { svgToPngBlob } from './utils/previewImage'
 import './Canvas.css'
 
-export default function Canvas({ room = {}, initialShapes = [], initialSeats = [], onSave, canvasSize, onCanvasSizeChange }) {
+function getShapeBounds(shape) {
+  let points
+  switch (shape.type) {
+    case 'rectangle':
+      points = [[shape.x, shape.y], [shape.x + shape.width, shape.y + shape.height]]
+      break
+    case 'line':
+    case 'arrow':
+      points = [[shape.x1, shape.y1], [shape.x2, shape.y2]]
+      break
+    case 'circle':
+      points = [[shape.cx - shape.r, shape.cy - shape.r], [shape.cx + shape.r, shape.cy + shape.r]]
+      break
+    case 'text':
+      points = [[shape.x, shape.y - 14], [shape.x + shape.text.length * 8, shape.y + 4]]
+      break
+    case 'polygon':
+      points = (shape.pointsArray || []).map((p) => [p.x, p.y])
+      break
+    default:
+      return null
+  }
+  if (points.length === 0) return null
+  const xs = points.map((p) => p[0])
+  const ys = points.map((p) => p[1])
+  return { minX: Math.min(...xs), minY: Math.min(...ys), maxX: Math.max(...xs), maxY: Math.max(...ys) }
+}
+
+function isBoundsInside(bounds, box) {
+  return (
+    bounds.minX >= box.x &&
+    bounds.maxX <= box.x + box.width &&
+    bounds.minY >= box.y &&
+    bounds.maxY <= box.y + box.height
+  )
+}
+
+function offsetShape(shape, dx, dy) {
+  switch (shape.type) {
+    case 'rectangle':
+      return { x: shape.x + dx, y: shape.y + dy }
+    case 'line':
+    case 'arrow':
+      return { x1: shape.x1 + dx, y1: shape.y1 + dy, x2: shape.x2 + dx, y2: shape.y2 + dy }
+    case 'circle':
+      return { cx: shape.cx + dx, cy: shape.cy + dy }
+    case 'text':
+      return { x: shape.x + dx, y: shape.y + dy }
+    case 'polygon': {
+      const pointsArray = (shape.pointsArray || []).map((p) => ({ x: p.x + dx, y: p.y + dy }))
+      return { pointsArray, points: pointsArray.map((p) => `${p.x},${p.y}`).join(' ') }
+    }
+    default:
+      return {}
+  }
+}
+
+export default function Canvas({ room = {}, initialShapes = [], initialSeats = [], onSave, canvasSize, onCanvasSizeChange, persistence }) {
   const svgRef = useRef(null)
   const svgContainerRef = useRef(null)
   const scrollContainerRef = useRef(null)
@@ -21,6 +79,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
   const [polygonClosed, setPolygonClosed] = useState(true)
   const [isResizing, setIsResizing] = useState(null)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const groupDragRef = useRef(null)
 
   // Default canvas dimensions if not provided
   const canvasWidth = canvasSize?.width || room?.width || 1000
@@ -127,6 +186,29 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
     return document.querySelector('meta[name="csrf-token"]')?.content || ''
   }, [])
 
+  const uploadPreview = useCallback(async () => {
+    const previewBlob = await svgToPngBlob(svgRef.current, canvasWidth, canvasHeight)
+    const previewForm = new FormData()
+    previewForm.append('preview_image', previewBlob, 'preview.png')
+    const previewResponse = await fetch(persistence.previewUrl, {
+      method: 'PATCH',
+      headers: { 'X-CSRF-Token': getCsrfToken() },
+      body: previewForm,
+    })
+    if (!previewResponse.ok) {
+      throw new Error('プレビュー画像の保存に失敗しました')
+    }
+  }, [persistence.previewUrl, canvasWidth, canvasHeight, getCsrfToken])
+
+  const previewPendingRef = useRef(Boolean(persistence.generatePreviewOnLoad))
+  useEffect(() => {
+    if (!previewPendingRef.current || !persistence.previewUrl) return
+    if (shapes.length !== initialShapes.length) return
+
+    previewPendingRef.current = false
+    uploadPreview().catch((err) => console.error('Preview generation failed:', err))
+  }, [shapes, initialShapes, persistence.previewUrl, uploadPreview])
+
   const getMousePosition = useCallback((e) => {
     if (!svgRef.current) return { x: 0, y: 0 }
     const rect = svgRef.current.getBoundingClientRect()
@@ -212,9 +294,9 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
 
       // Save canvas size if changed
       console.log('handleSave - canvasSize:', canvasSize, 'room:', { width: room.width, height: room.height })
-      if (canvasSize && (canvasSize.width !== room.width || canvasSize.height !== room.height)) {
+      if (persistence.settingsUrl && canvasSize && (canvasSize.width !== room.width || canvasSize.height !== room.height)) {
         console.log('Saving canvas size:', canvasSize)
-        const sizeResponse = await fetch(`/rooms/${room.share_token}`, {
+        const sizeResponse = await fetch(persistence.settingsUrl, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -233,13 +315,13 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       }
 
       // Save shapes (floor plan)
-      const floorPlanResponse = await fetch(`/rooms/${room.share_token}/floor_plan.json`, {
+      const floorPlanResponse = await fetch(persistence.floorPlanUrl, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'X-CSRF-Token': getCsrfToken(),
         },
-        body: JSON.stringify({ room: { floor_plan_data: validShapes } }),
+        body: JSON.stringify({ [persistence.floorPlanBodyKey]: { floor_plan_data: validShapes } }),
       })
       if (!floorPlanResponse.ok) {
         const errorText = await floorPlanResponse.text()
@@ -250,13 +332,13 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       // Save seats (create, update, delete)
       // Detect deleted seats (original seats that are no longer in current seats)
       const currentSeatIds = new Set(seats.map(s => s.id).filter(id => id > 0))
-      const deletedSeats = originalSeatsRef.current.filter(
-        originalSeat => originalSeat.id > 0 && !currentSeatIds.has(originalSeat.id)
-      )
+      const deletedSeats = persistence.seatsUrl
+        ? originalSeatsRef.current.filter(originalSeat => originalSeat.id > 0 && !currentSeatIds.has(originalSeat.id))
+        : []
 
       // Delete removed seats
       for (const deletedSeat of deletedSeats) {
-        const deleteResponse = await fetch(`/rooms/${room.share_token}/seats/${deletedSeat.id}.json`, {
+        const deleteResponse = await fetch(`${persistence.seatsUrl}/${deletedSeat.id}.json`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
@@ -270,10 +352,10 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       }
 
       // Send current seats state to server
-      for (const seat of seats) {
+      for (const seat of persistence.seatsUrl ? seats : []) {
         if (seat.id < 0) {
           // New seat - create it
-          const createResponse = await fetch(`/rooms/${room.share_token}/seats.json`, {
+          const createResponse = await fetch(`${persistence.seatsUrl}.json`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -309,7 +391,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
           }
         } else {
           // Existing seat - update position
-          const updateResponse = await fetch(`/rooms/${room.share_token}/seats/${seat.id}/position.json`, {
+          const updateResponse = await fetch(`${persistence.seatsUrl}/${seat.id}/position.json`, {
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
@@ -329,10 +411,14 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
         }
       }
 
+      if (persistence.previewUrl) {
+        await uploadPreview()
+      }
+
       // Update the original seats reference for next save
       originalSeatsRef.current = seats.filter(s => s.id > 0)
 
-      setAlert({ type: 'success', message: '座席配置図を保存しました' })
+      setAlert({ type: 'success', message: persistence.saveMessage })
       setTimeout(() => setAlert(null), 2000)
 
       if (onSave) {
@@ -343,7 +429,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
     } finally {
       setIsSaving(false)
     }
-  }, [room, shapes, seats, getCsrfToken, onSave, mergeSeat])
+  }, [room, shapes, seats, canvasSize, persistence, getCsrfToken, onSave, mergeSeat, uploadPreview])
 
   const handleMouseDown = useCallback((e) => {
     // Right-click: complete polygon
@@ -372,6 +458,19 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       }
     } else if (currentTool === 'select') {
       const clickedSeat = getSeatAtPoint(x, y)
+      const clickedShape = clickedSeat ? null : getShapeAtPoint(x, y)
+      const isSelectedSeat = (seat) => selectedElements.some((el) => el.type === 'seat' && el.id === seat.id)
+      const isSelectedShape = (shape) => selectedElements.some((el) => el.type === 'shape' && el.id === shape.id)
+      const clickedSelection = (clickedSeat && isSelectedSeat(clickedSeat)) || (clickedShape && isSelectedShape(clickedShape))
+      if (clickedSelection) {
+        groupDragRef.current = {
+          start: { x, y },
+          seats: seats.filter(isSelectedSeat).map((seat) => ({ ...seat })),
+          shapes: shapes.filter(isSelectedShape).map((shape) => ({ ...shape })),
+          moved: false,
+        }
+        return
+      }
       if (clickedSeat) {
         // Check if already selected
         const alreadySelected = selectedElements && selectedElements.some((el) => el.type === 'seat' && el.id === clickedSeat.id)
@@ -449,10 +548,20 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       }
     }
   }, [currentTool, drawMode, getMousePosition, getSeatAtPoint, getShapeAtPoint, createSeat, deleteSeat, deleteShape, updateShape, moveSeat,
-      addLine, addRectangle, addCircle, addArrow, addText, addPolygon, polygonPoints, drawingStart, polygonClosed])
+      addLine, addRectangle, addCircle, addArrow, addText, addPolygon, polygonPoints, drawingStart, polygonClosed, selectedElements, seats, shapes])
 
   const handleMouseMove = useCallback((e) => {
     const { x, y } = getMousePosition(e)
+
+    if (groupDragRef.current) {
+      const drag = groupDragRef.current
+      const dx = x - drag.start.x
+      const dy = y - drag.start.y
+      if (dx !== 0 || dy !== 0) drag.moved = true
+      drag.shapes.forEach((snapshot) => updateShape(snapshot.id, offsetShape(snapshot, dx, dy)))
+      drag.seats.forEach((snapshot) => mergeSeat({ ...snapshot, x: snapshot.x + dx, y: snapshot.y + dy }))
+      return
+    }
 
     if (dragging && currentTool === 'select') {
       const newX = Math.max(0, Math.min(x - dragging.offsetX, canvasWidth))
@@ -489,10 +598,20 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
     }
   }, [getMousePosition, dragging, currentTool, drawingStart, drawMode, canvasWidth, canvasHeight, seats, shapes,
       mergeSeat, updateLinePreview, updateRectanglePreview, updateCirclePreview, updateArrowPreview, setDrawingStart, polygonPoints,
-      updateShape, snapToGrid])
+      updateShape, snapToGrid, selectionStart, setSelectionBox])
 
   const handleMouseUp = useCallback((e) => {
     const { x, y } = getMousePosition(e)
+
+    if (groupDragRef.current) {
+      const drag = groupDragRef.current
+      groupDragRef.current = null
+      if (drag.moved) {
+        const state = useEditorStore.getState()
+        saveToHistory(state.seats, state.shapes)
+      }
+      return
+    }
 
     if (dragging && currentTool === 'select') {
       const newX = Math.max(0, Math.min(x - dragging.offsetX, canvasWidth))
@@ -520,40 +639,8 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       })
 
       shapes.forEach((shape) => {
-        let isSelected = false
-        if (shape.type === 'line' || shape.type === 'arrow') {
-          if (
-            shape.x1 >= selectionBox.x &&
-            shape.x1 <= selectionBox.x + selectionBox.width &&
-            shape.y1 >= selectionBox.y &&
-            shape.y1 <= selectionBox.y + selectionBox.height &&
-            shape.x2 >= selectionBox.x &&
-            shape.x2 <= selectionBox.x + selectionBox.width &&
-            shape.y2 >= selectionBox.y &&
-            shape.y2 <= selectionBox.y + selectionBox.height
-          ) {
-            isSelected = true
-          }
-        } else if (shape.type === 'rectangle') {
-          if (
-            shape.x >= selectionBox.x &&
-            shape.x + shape.width <= selectionBox.x + selectionBox.width &&
-            shape.y >= selectionBox.y &&
-            shape.y + shape.height <= selectionBox.y + selectionBox.height
-          ) {
-            isSelected = true
-          }
-        } else if (shape.type === 'circle') {
-          if (
-            shape.cx - shape.r >= selectionBox.x &&
-            shape.cx + shape.r <= selectionBox.x + selectionBox.width &&
-            shape.cy - shape.r >= selectionBox.y &&
-            shape.cy + shape.r <= selectionBox.y + selectionBox.height
-          ) {
-            isSelected = true
-          }
-        }
-        if (isSelected) {
+        const bounds = getShapeBounds(shape)
+        if (bounds && isBoundsInside(bounds, selectionBox)) {
           newSelected.push({ type: 'shape', id: shape.id })
         }
       })
@@ -581,7 +668,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
     }
   }, [getMousePosition, dragging, currentTool, drawingStart, drawMode, canvasWidth, canvasHeight, seats, shapes,
       moveSeat, setDragging, setDrawingStart, clearPreview, addLine, addRectangle, addCircle, addArrow, setSelectedElements, setSelectionStart, setSelectionBox,
-      updateShape, snapToGrid, mergeSeat, setAlert])
+      updateShape, snapToGrid, mergeSeat, setAlert, selectionStart, selectionBox, setSelectedElements, saveToHistory])
 
   // 親コンテナのサイズに基づいてリサイズ方向を判定
   const getResizeDirection = (e) => {
