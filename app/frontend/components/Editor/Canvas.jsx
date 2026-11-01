@@ -958,7 +958,12 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
 
               {/* Seats */}
               {seats.map((seat) => (
-                <SeatRenderer key={seat.id} seat={seat} onDelete={deleteSeat} />
+                <SeatRenderer
+                  key={seat.id}
+                  seat={seat}
+                  onDelete={deleteSeat}
+                  isSelected={selectedElements.some((el) => el.type === 'seat' && el.id === seat.id)}
+                />
               ))}
 
               {/* キャンバスの右端と下の青い枠線（最後に描画して前面に表示） */}
