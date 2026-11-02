@@ -87,6 +87,14 @@ class FloorPlanTemplatesController < ApplicationController
     head :ok
   end
 
+  def content
+    template = FloorPlanTemplate.readable_by(current_user).find(params[:id])
+    render json: {
+      floor_plan_data: template.floor_plan_data,
+      seats: template.template_seats.order(:id).map { |seat| { position_x: seat.position_x, position_y: seat.position_y, seat_type: seat.seat_type } }
+    }
+  end
+
   def preview_svg
     response.headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'"
     response.headers["X-Content-Type-Options"] = "nosniff"
