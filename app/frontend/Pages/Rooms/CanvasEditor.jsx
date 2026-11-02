@@ -1,7 +1,7 @@
 import React from 'react'
 import CanvasEditorPage from '../../components/Editor/CanvasEditorPage'
 
-export default function CanvasEditor({ room, shapes_data, seats, current_user }) {
+export default function CanvasEditor({ room, shapes_data, seats, templates, current_user }) {
   return (
     <CanvasEditorPage
       entity={room}
@@ -9,6 +9,7 @@ export default function CanvasEditor({ room, shapes_data, seats, current_user })
       shapes={shapes_data}
       seats={seats}
       currentUser={current_user}
+      templates={templates}
       persistence={{
         floorPlanUrl: `/rooms/${room.share_token}/floor_plan.json`,
         floorPlanBodyKey: 'room',

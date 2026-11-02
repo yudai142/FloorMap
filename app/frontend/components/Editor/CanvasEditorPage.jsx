@@ -1,7 +1,58 @@
 import React, { useState } from 'react'
 import Canvas from './Canvas'
+import { useEditorStore } from '../../store/editorStore'
 
-export default function CanvasEditorPage({ entity, backHref, shapes, seats, currentUser, persistence, showAutoCheckout = true }) {
+export default function CanvasEditorPage({ entity, backHref, shapes, seats, currentUser, persistence, showAutoCheckout = true, templates }) {
+  const [selectedTemplateId, setSelectedTemplateId] = useState('')
+  const [importError, setImportError] = useState('')
+
+  const importTemplate = async () => {
+    setImportError('')
+    try {
+      const response = await fetch(`/floor_plan_templates/${selectedTemplateId}/content`, {
+        headers: { Accept: 'application/json' },
+      })
+      if (!response.ok) {
+        setImportError('テンプレートを読み込めませんでした')
+        return
+      }
+      const content = await response.json()
+      const state = useEditorStore.getState()
+      const stamp = Date.now()
+
+      const addedShapes = (content.floor_plan_data || []).map((shape, index) => ({ ...shape, id: `tpl-${stamp}-${index}` }))
+
+      const addedSeats = []
+      let nextSeatId = Math.min(0, ...state.seats.map((seat) => seat.id)) - 1
+      for (const seat of content.seats || []) {
+        const occupied = [...state.seats, ...addedSeats].some((s) => s.x === seat.position_x && s.y === seat.position_y)
+        if (occupied) continue
+        addedSeats.push({
+          id: nextSeatId--,
+          label: `S${state.seats.length + addedSeats.length + 1}`,
+          x: seat.position_x,
+          y: seat.position_y,
+          occupied: false,
+          occupant_name: '不明',
+          seat_type: seat.seat_type,
+        })
+      }
+
+      const allShapes = [...state.shapes, ...addedShapes]
+      const allSeats = [...state.seats, ...addedSeats]
+      state.setShapes(allShapes)
+      state.setSeats(allSeats)
+      state.setSelectedElements([
+        ...addedShapes.map((shape) => ({ type: 'shape', id: shape.id })),
+        ...addedSeats.map((seat) => ({ type: 'seat', id: seat.id })),
+      ])
+      state.setCurrentTool('select')
+      state.saveToHistory(allSeats, allShapes)
+      useEditorStore.setState({ hasUnsavedChanges: true })
+    } catch (err) {
+      setImportError('テンプレートを読み込めませんでした')
+    }
+  }
   const [canvasSize, setCanvasSize] = useState({ width: entity.width, height: entity.height })
   const [autoCheckoutEnabled, setAutoCheckoutEnabled] = useState(entity.auto_checkout_enabled || false)
   const [autoCheckoutTime, setAutoCheckoutTime] = useState(entity.auto_checkout_time || '')
@@ -103,6 +154,33 @@ export default function CanvasEditorPage({ entity, backHref, shapes, seats, curr
               </div>
             )}
           </div>
+          )}
+
+          {templates && (
+            <div className="flex items-center gap-2 mt-3">
+              <label className="text-sm text-slate-600">テンプレート:</label>
+              <select
+                value={selectedTemplateId}
+                onChange={(e) => setSelectedTemplateId(e.target.value)}
+                className="px-2 py-1 border border-slate-300 rounded text-sm"
+              >
+                <option value="">選択してください</option>
+                {templates.map((template) => (
+                  <option key={template.id} value={template.id}>
+                    {template.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={importTemplate}
+                disabled={!selectedTemplateId}
+                className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:bg-gray-400"
+              >
+                読み込む
+              </button>
+              {importError && <span className="text-sm text-red-600">{importError}</span>}
+            </div>
           )}
 
           <p className="text-sm text-slate-600 mt-1">
