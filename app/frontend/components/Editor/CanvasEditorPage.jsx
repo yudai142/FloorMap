@@ -22,6 +22,16 @@ export default function CanvasEditorPage({ entity, backHref, shapes, seats, curr
 
       const addedShapes = (content.floor_plan_data || []).map((shape, index) => ({ ...shape, id: `tpl-${stamp}-${index}` }))
 
+      const usedLabels = new Set(state.seats.map((seat) => seat.label))
+      let nextNumber = Math.max(0, ...state.seats.map((seat) => parseInt(String(seat.label).replace(/\D/g, ''), 10) || 0)) + 1
+      const nextLabel = () => {
+        while (usedLabels.has(`S${nextNumber}`)) nextNumber++
+        const label = `S${nextNumber}`
+        usedLabels.add(label)
+        nextNumber++
+        return label
+      }
+
       const addedSeats = []
       let nextSeatId = Math.min(0, ...state.seats.map((seat) => seat.id)) - 1
       for (const seat of content.seats || []) {
@@ -29,7 +39,7 @@ export default function CanvasEditorPage({ entity, backHref, shapes, seats, curr
         if (occupied) continue
         addedSeats.push({
           id: nextSeatId--,
-          label: `S${state.seats.length + addedSeats.length + 1}`,
+          label: nextLabel(),
           x: seat.position_x,
           y: seat.position_y,
           occupied: false,
