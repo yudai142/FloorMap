@@ -9,64 +9,8 @@ import { useShapeDrawing } from './hooks/useShapeDrawing'
 import { useShapePreview } from './hooks/useShapePreview'
 import { snapToGrid, distanceToLine, isPointInPolygon } from './utils/snapToGrid'
 import { svgToPngBlob } from './utils/previewImage'
+import { getShapeBounds, isBoundsInside, offsetShape } from './utils/shapeBounds'
 import './Canvas.css'
-
-function getShapeBounds(shape) {
-  let points
-  switch (shape.type) {
-    case 'rectangle':
-      points = [[shape.x, shape.y], [shape.x + shape.width, shape.y + shape.height]]
-      break
-    case 'line':
-    case 'arrow':
-      points = [[shape.x1, shape.y1], [shape.x2, shape.y2]]
-      break
-    case 'circle':
-      points = [[shape.cx - shape.r, shape.cy - shape.r], [shape.cx + shape.r, shape.cy + shape.r]]
-      break
-    case 'text':
-      points = [[shape.x, shape.y - 14], [shape.x + shape.text.length * 8, shape.y + 4]]
-      break
-    case 'polygon':
-      points = (shape.pointsArray || []).map((p) => [p.x, p.y])
-      break
-    default:
-      return null
-  }
-  if (points.length === 0) return null
-  const xs = points.map((p) => p[0])
-  const ys = points.map((p) => p[1])
-  return { minX: Math.min(...xs), minY: Math.min(...ys), maxX: Math.max(...xs), maxY: Math.max(...ys) }
-}
-
-function isBoundsInside(bounds, box) {
-  return (
-    bounds.minX >= box.x &&
-    bounds.maxX <= box.x + box.width &&
-    bounds.minY >= box.y &&
-    bounds.maxY <= box.y + box.height
-  )
-}
-
-function offsetShape(shape, dx, dy) {
-  switch (shape.type) {
-    case 'rectangle':
-      return { x: shape.x + dx, y: shape.y + dy }
-    case 'line':
-    case 'arrow':
-      return { x1: shape.x1 + dx, y1: shape.y1 + dy, x2: shape.x2 + dx, y2: shape.y2 + dy }
-    case 'circle':
-      return { cx: shape.cx + dx, cy: shape.cy + dy }
-    case 'text':
-      return { x: shape.x + dx, y: shape.y + dy }
-    case 'polygon': {
-      const pointsArray = (shape.pointsArray || []).map((p) => ({ x: p.x + dx, y: p.y + dy }))
-      return { pointsArray, points: pointsArray.map((p) => `${p.x},${p.y}`).join(' ') }
-    }
-    default:
-      return {}
-  }
-}
 
 export default function Canvas({ room = {}, initialShapes = [], initialSeats = [], onSave, canvasSize, onCanvasSizeChange, persistence }) {
   const svgRef = useRef(null)
