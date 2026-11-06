@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import Canvas from './Canvas'
 import { useEditorStore } from '../../store/editorStore'
+import { findFreePlacement, getShapeBounds, offsetShape, seatBounds, unionBounds } from './utils/shapeBounds'
 
 export default function CanvasEditorPage({ entity, backHref, shapes, seats, currentUser, persistence, showAutoCheckout = true, templates }) {
   const [selectedTemplateId, setSelectedTemplateId] = useState('')
@@ -20,7 +21,27 @@ export default function CanvasEditorPage({ entity, backHref, shapes, seats, curr
       const state = useEditorStore.getState()
       const stamp = Date.now()
 
-      const addedShapes = (content.floor_plan_data || []).map((shape, index) => ({ ...shape, id: `tpl-${stamp}-${index}` }))
+      const templateBounds = unionBounds([
+        ...(content.floor_plan_data || []).map((shape) => getShapeBounds(shape)),
+        ...(content.seats || []).map((seat) => seatBounds(seat.position_x, seat.position_y)),
+      ])
+      const occupiedBounds = [
+        ...state.shapes.map((shape) => getShapeBounds(shape)),
+        ...state.seats.map((seat) => seatBounds(seat.x, seat.y)),
+      ].filter(Boolean)
+      const placement = templateBounds
+        ? findFreePlacement(occupiedBounds, templateBounds, canvasSize)
+        : { offsetX: 0, offsetY: 0, width: canvasSize.width, height: canvasSize.height }
+      if (placement.width !== canvasSize.width || placement.height !== canvasSize.height) {
+        setCanvasSize({ ...canvasSize, width: placement.width, height: placement.height })
+      }
+      const { offsetX, offsetY } = placement
+
+      const addedShapes = (content.floor_plan_data || []).map((shape, index) => ({
+        ...shape,
+        ...offsetShape(shape, offsetX, offsetY),
+        id: `tpl-${stamp}-${index}`,
+      }))
 
       const usedLabels = new Set(state.seats.map((seat) => seat.label))
       let nextNumber = Math.max(0, ...state.seats.map((seat) => parseInt(String(seat.label).replace(/\D/g, ''), 10) || 0)) + 1
@@ -35,13 +56,11 @@ export default function CanvasEditorPage({ entity, backHref, shapes, seats, curr
       const addedSeats = []
       let nextSeatId = Math.min(0, ...state.seats.map((seat) => seat.id)) - 1
       for (const seat of content.seats || []) {
-        const occupied = [...state.seats, ...addedSeats].some((s) => s.x === seat.position_x && s.y === seat.position_y)
-        if (occupied) continue
         addedSeats.push({
           id: nextSeatId--,
           label: nextLabel(),
-          x: seat.position_x,
-          y: seat.position_y,
+          x: seat.position_x + offsetX,
+          y: seat.position_y + offsetY,
           occupied: false,
           occupant_name: '不明',
           seat_type: seat.seat_type,
