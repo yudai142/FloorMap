@@ -18,7 +18,8 @@ export default function EditorToolbar({
   historyIndex,
   historyLength,
 }) {
-  const { setCurrentTool, drawMode, setDrawMode, selectedColor, setSelectedColor } = useEditorStore()
+  const { setCurrentTool, drawMode, setDrawMode, selectedColor, setSelectedColor, selectedElements, clearSelection } = useEditorStore()
+  const hasSelection = selectedElements.length > 0
 
   const tools = [
     { id: 'select', label: '選択', emoji: '↖' },
@@ -50,12 +51,16 @@ export default function EditorToolbar({
         {/* Tool Selection Group */}
         <div className="border-2 border-blue-300 rounded-lg p-3 bg-blue-50 shadow-sm">
           <div className="flex gap-1 flex-wrap">
-            {tools.map((tool) => (
+            {tools.map((tool) => {
+              const isDeselect = tool.id === 'select' && hasSelection
+              return (
               <button
                 key={tool.id}
-                onClick={() => setCurrentTool(tool.id)}
+                onClick={() => (isDeselect ? clearSelection() : setCurrentTool(tool.id))}
                 className={`btn btn-sm gap-1 font-medium transition-all text-slate-900 border-2 ${
-                  currentTool === tool.id
+                  isDeselect
+                    ? 'btn-warning border-slate-900 shadow-lg'
+                    : currentTool === tool.id
                     ? tool.id === 'delete'
                       ? 'btn-error border-slate-900 shadow-lg'
                       : 'btn-info border-slate-900 shadow-lg'
@@ -63,12 +68,15 @@ export default function EditorToolbar({
                     ? 'btn-error btn-outline hover:btn-error'
                     : 'btn-outline hover:border-blue-400 hover:bg-blue-100 border-slate-300'
                 }`}
-                title={tool.label}
+                title={isDeselect ? '選択解除' : tool.label}
               >
-                <span className="text-lg">{tool.emoji}</span>
-                <span className="hidden sm:inline text-sm">{tool.label}</span>
+                <span className="text-lg">{isDeselect ? '✕' : tool.emoji}</span>
+                <span className="hidden sm:inline text-sm">
+                  {isDeselect ? `選択解除 (${selectedElements.length})` : tool.label}
+                </span>
               </button>
-            ))}
+              )
+            })}
           </div>
         </div>
 
