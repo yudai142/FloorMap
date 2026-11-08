@@ -44,6 +44,7 @@ class FloorPlanTemplatesController < ApplicationController
   def show
     render inertia: "FloorPlanTemplates/Show", props: {
       template: template_json(@template),
+      rooms: current_user.rooms.order(created_at: :desc).map { |room| { share_token: room.share_token, name: room.name } },
       **default_inertia_props
     }
   end
