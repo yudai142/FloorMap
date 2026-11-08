@@ -44,4 +44,27 @@ RSpec.describe "Importing a template into a room", type: :request do
       expect(body).not_to include("非公開テンプレートC")
     end
   end
+
+  describe "template detail page and room editor preselection" do
+    it "lists the user's rooms on the template page" do
+      room = create(:room, user: user, name: "自分のルームX")
+      template = create(:floor_plan_template, user: user)
+      sign_in user
+
+      get floor_plan_template_path(template)
+
+      expect(CGI.unescapeHTML(response.body)).to include("自分のルームX")
+      expect(CGI.unescapeHTML(response.body)).to include(room.share_token)
+    end
+
+    it "preselects a readable template given in the room editor URL" do
+      room = create(:room, user: user)
+      template = create(:floor_plan_template, user: user)
+      sign_in user
+
+      get "/rooms/#{room.share_token}/canvas_editor?template_id=#{template.id}"
+
+      expect(CGI.unescapeHTML(response.body)).to include(%("initial_template_id":#{template.id}))
+    end
+  end
 end
