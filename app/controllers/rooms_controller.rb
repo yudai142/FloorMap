@@ -140,6 +140,7 @@ class RoomsController < ApplicationController
       shapes_data: @room.floor_plan_data || [],
       seats: @room.seats.map { |s| seat_canvas_json(s) },
       templates: FloorPlanTemplate.readable_by(current_user).recent.map { |t| { id: t.id, name: t.name } },
+      initial_template_id: FloorPlanTemplate.readable_by(current_user).find_by(id: params[:template_id])&.id,
       current_user: current_user.as_json(only: [ :id, :email ]),
       auth: auth_props
     }

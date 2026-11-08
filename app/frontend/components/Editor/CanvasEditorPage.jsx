@@ -3,8 +3,8 @@ import Canvas from './Canvas'
 import { useEditorStore } from '../../store/editorStore'
 import { findFreePlacement, getShapeBounds, offsetShape, seatBounds, unionBounds } from './utils/shapeBounds'
 
-export default function CanvasEditorPage({ entity, backHref, shapes, seats, currentUser, persistence, showAutoCheckout = true, templates }) {
-  const [selectedTemplateId, setSelectedTemplateId] = useState('')
+export default function CanvasEditorPage({ entity, backHref, shapes, seats, currentUser, persistence, showAutoCheckout = true, templates, initialTemplateId }) {
+  const [selectedTemplateId, setSelectedTemplateId] = useState(initialTemplateId ? String(initialTemplateId) : '')
   const [importError, setImportError] = useState('')
 
   const importTemplate = async () => {
