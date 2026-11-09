@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Canvas from './Canvas'
 import { useEditorStore } from '../../store/editorStore'
 import { findFreePlacement, getShapeBounds, offsetShape, seatBounds, unionBounds } from './utils/shapeBounds'
@@ -6,6 +6,15 @@ import { findFreePlacement, getShapeBounds, offsetShape, seatBounds, unionBounds
 export default function CanvasEditorPage({ entity, backHref, shapes, seats, currentUser, persistence, showAutoCheckout = true, templates, initialTemplateId }) {
   const [selectedTemplateId, setSelectedTemplateId] = useState(initialTemplateId ? String(initialTemplateId) : '')
   const [importError, setImportError] = useState('')
+  const autoImportedRef = useRef(false)
+
+  useEffect(() => {
+    if (!initialTemplateId || autoImportedRef.current) return
+    autoImportedRef.current = true
+    importTemplate()
+    // Runs once on mount when the editor is opened from a template page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const importTemplate = async () => {
     setImportError('')
