@@ -1,9 +1,8 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { usePage } from '@inertiajs/react'
 
 export default function FloorPlanTemplatesShow({ template, rooms = [] }) {
   const { auth } = usePage().props
-  const [selectedRoomToken, setSelectedRoomToken] = useState('')
   const isOwner = auth?.user?.id === template.user.id
 
   const handleImport = () => {
@@ -73,36 +72,12 @@ export default function FloorPlanTemplatesShow({ template, rooms = [] }) {
               このテンプレートを使用して新規ルーム作成
             </button>
             {rooms.length > 0 && (
-              <div className="space-y-3">
-                <label htmlFor="room-select" className="block text-sm font-medium text-gray-700">
-                  既存のルームに読み込む
-                </label>
-                <div className="flex gap-2">
-                  <select
-                    id="room-select"
-                    value={selectedRoomToken}
-                    onChange={(e) => setSelectedRoomToken(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
-                  >
-                    <option value="">ルームを選択</option>
-                    {rooms.map((room) => (
-                      <option key={room.share_token} value={room.share_token}>
-                        {room.name}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    disabled={!selectedRoomToken}
-                    onClick={() => {
-                      window.location.href = `/rooms/${selectedRoomToken}/canvas_editor?template_id=${template.id}`
-                    }}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-semibold disabled:bg-gray-400"
-                  >
-                    読み込む
-                  </button>
-                </div>
-              </div>
+              <a
+                href={`/floor_plan_templates/${template.id}/rooms`}
+                className="w-full block text-center px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-semibold"
+              >
+                既存のルームに読み込む
+              </a>
             )}
             <a
               href="/floor_plan_templates"
