@@ -67,4 +67,28 @@ RSpec.describe "Importing a template into a room", type: :request do
       expect(CGI.unescapeHTML(response.body)).to include(%("initial_template_id":#{template.id}))
     end
   end
+
+  describe "GET /floor_plan_templates/:id/rooms" do
+    it "lists only the user's own rooms" do
+      create(:room, user: user, name: "自分のルームP")
+      create(:room, user: other_user, name: "他人のルームQ")
+      template = create(:floor_plan_template, user: user)
+      sign_in user
+
+      get rooms_floor_plan_template_path(template)
+
+      body = CGI.unescapeHTML(response.body)
+      expect(body).to include("自分のルームP")
+      expect(body).not_to include("他人のルームQ")
+    end
+
+    it "redirects when the template is not readable" do
+      template = create(:floor_plan_template, user: other_user, is_public: false)
+      sign_in user
+
+      get rooms_floor_plan_template_path(template)
+
+      expect(response).to redirect_to(floor_plan_templates_path)
+    end
+  end
 end

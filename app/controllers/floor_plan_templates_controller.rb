@@ -96,6 +96,19 @@ class FloorPlanTemplatesController < ApplicationController
     }
   end
 
+  def choose_room
+    template = FloorPlanTemplate.readable_by(current_user).find_by(id: params[:id])
+    return redirect_to(floor_plan_templates_path, alert: "このテンプレートは利用できません") if template.nil?
+
+    render inertia: "FloorPlanTemplates/ChooseRoom", props: {
+      template: template_json(template),
+      rooms: current_user.rooms.includes(:seats).order(updated_at: :desc).map do |room|
+        { share_token: room.share_token, name: room.name, seat_count: room.seats.size, updated_at: room.updated_at.strftime("%Y/%m/%d %H:%M") }
+      end,
+      **default_inertia_props
+    }
+  end
+
   def preview_svg
     response.headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'"
     response.headers["X-Content-Type-Options"] = "nosniff"
