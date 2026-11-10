@@ -42,6 +42,7 @@ import RoomsShow from '../Pages/Rooms/Show'
 import RoomsCanvasEditor from '../Pages/Rooms/CanvasEditor'
 import FloorPlanTemplatesIndex from '../Pages/FloorPlanTemplates/Index'
 import FloorPlanTemplatesPublicIndex from '../Pages/FloorPlanTemplates/PublicIndex'
+import FloorPlanTemplatesChooseRoom from '../Pages/FloorPlanTemplates/ChooseRoom'
 import FloorPlanTemplatesNew from '../Pages/FloorPlanTemplates/New'
 import FloorPlanTemplatesShow from '../Pages/FloorPlanTemplates/Show'
 import FloorPlanTemplatesCanvasEditor from '../Pages/FloorPlanTemplates/CanvasEditor'
@@ -55,6 +56,7 @@ const pageMap = {
   'Rooms/CanvasEditor': RoomsCanvasEditor,
   'FloorPlanTemplates/Index': FloorPlanTemplatesIndex,
   'FloorPlanTemplates/PublicIndex': FloorPlanTemplatesPublicIndex,
+  'FloorPlanTemplates/ChooseRoom': FloorPlanTemplatesChooseRoom,
   'FloorPlanTemplates/New': FloorPlanTemplatesNew,
   'FloorPlanTemplates/Show': FloorPlanTemplatesShow,
   'FloorPlanTemplates/CanvasEditor': FloorPlanTemplatesCanvasEditor,
