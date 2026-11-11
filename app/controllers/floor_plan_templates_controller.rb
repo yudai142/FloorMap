@@ -100,10 +100,13 @@ class FloorPlanTemplatesController < ApplicationController
     template = FloorPlanTemplate.readable_by(current_user).find_by(id: params[:id])
     return redirect_to(floor_plan_templates_path, alert: "このテンプレートは利用できません") if template.nil?
 
+    rooms = current_user.rooms.order(updated_at: :desc)
+    seat_counts = Seat.where(room_id: rooms.select(:id)).group(:room_id).count
+
     render inertia: "FloorPlanTemplates/ChooseRoom", props: {
       template: template_json(template),
-      rooms: current_user.rooms.includes(:seats).order(updated_at: :desc).map do |room|
-        { share_token: room.share_token, name: room.name, seat_count: room.seats.size, updated_at: room.updated_at.strftime("%Y/%m/%d %H:%M") }
+      rooms: rooms.map do |room|
+        { share_token: room.share_token, name: room.name, seat_count: seat_counts.fetch(room.id, 0), updated_at: room.updated_at.strftime("%Y/%m/%d %H:%M") }
       end,
       **default_inertia_props
     }
