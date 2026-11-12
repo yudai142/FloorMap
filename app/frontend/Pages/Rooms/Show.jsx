@@ -108,9 +108,8 @@ export default function RoomShow() {
   }, [room.id, deviceId, current_user])
 
   // ActionCable subscription for real-time updates
-  const subscriptionRef = useRef(null)
   useEffect(() => {
-    subscriptionRef.current = subscribeToRoom(room.share_token, {
+    const subscriptionPromise = subscribeToRoom(room.share_token, {
       onUserAutoCheckoutUpdated: (data) => {
         if (currentSession && data.session_id === currentSession.id) {
           setCurrentSession(prev => ({
@@ -135,7 +134,9 @@ export default function RoomShow() {
     })
 
     return () => {
-      unsubscribeFromRoom(subscriptionRef.current)
+      subscriptionPromise
+        .then((subscription) => unsubscribeFromRoom(subscription))
+        .catch((err) => console.error('ActionCable unsubscribe failed:', err))
     }
   }, [room.share_token, currentSession])
 
