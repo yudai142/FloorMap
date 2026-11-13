@@ -4,22 +4,23 @@ import { useEditorStore } from '../../store/editorStore'
 import { findFreePlacement, getShapeBounds, offsetShape, seatBounds, unionBounds } from './utils/shapeBounds'
 
 export default function CanvasEditorPage({ entity, backHref, shapes, seats, currentUser, persistence, showAutoCheckout = true, templates, initialTemplateId }) {
-  const [selectedTemplateId, setSelectedTemplateId] = useState(initialTemplateId ? String(initialTemplateId) : '')
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false)
   const [importError, setImportError] = useState('')
   const autoImportedRef = useRef(false)
 
   useEffect(() => {
     if (!initialTemplateId || autoImportedRef.current) return
     autoImportedRef.current = true
-    importTemplate()
+    importTemplate(initialTemplateId)
     // Runs once on mount when the editor is opened from a template page.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const importTemplate = async () => {
+  const importTemplate = async (templateId) => {
     setImportError('')
+    setIsTemplateModalOpen(false)
     try {
-      const response = await fetch(`/floor_plan_templates/${selectedTemplateId}/content`, {
+      const response = await fetch(`/floor_plan_templates/${templateId}/content`, {
         headers: { Accept: 'application/json' },
       })
       if (!response.ok) {
@@ -196,28 +197,70 @@ export default function CanvasEditorPage({ entity, backHref, shapes, seats, curr
 
           {templates && (
             <div className="flex items-center gap-2 mt-3">
-              <label className="text-sm text-slate-600">テンプレート:</label>
-              <select
-                value={selectedTemplateId}
-                onChange={(e) => setSelectedTemplateId(e.target.value)}
-                className="px-2 py-1 border border-slate-300 rounded text-sm"
-              >
-                <option value="">選択してください</option>
-                {templates.map((template) => (
-                  <option key={template.id} value={template.id}>
-                    {template.name}
-                  </option>
-                ))}
-              </select>
               <button
                 type="button"
-                onClick={importTemplate}
-                disabled={!selectedTemplateId}
-                className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:bg-gray-400"
+                onClick={() => setIsTemplateModalOpen(true)}
+                className="px-3 py-1 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700"
               >
-                読み込む
+                テンプレートから読み込む
               </button>
               {importError && <span className="text-sm text-red-600">{importError}</span>}
+            </div>
+          )}
+
+          {templates && isTemplateModalOpen && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+              onClick={() => setIsTemplateModalOpen(false)}
+            >
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="template-modal-title"
+                className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[80vh] overflow-y-auto p-6"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h2 id="template-modal-title" className="text-xl font-semibold text-slate-900">
+                    テンプレートを選択
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => setIsTemplateModalOpen(false)}
+                    className="text-slate-500 hover:text-slate-800"
+                    aria-label="閉じる"
+                  >
+                    ✕
+                  </button>
+                </div>
+                {templates.length > 0 ? (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {templates.map((template) => (
+                      <button
+                        key={template.id}
+                        type="button"
+                        onClick={() => importTemplate(template.id)}
+                        className="text-left bg-white border border-slate-200 rounded-lg p-3 hover:border-blue-500 hover:shadow"
+                      >
+                        {template.preview_image_url ? (
+                          <img
+                            src={template.preview_image_url}
+                            alt={`${template.name}の上面図`}
+                            className="w-full h-32 object-contain bg-slate-50 rounded mb-2"
+                          />
+                        ) : (
+                          <div className="w-full h-32 bg-slate-100 rounded mb-2 flex items-center justify-center text-xs text-slate-400">
+                            プレビューなし
+                          </div>
+                        )}
+                        <div className="text-sm font-medium text-slate-900 truncate">{template.name}</div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-slate-500">読み込めるテンプレートがありません</p>
+                )}
+              </div>
             </div>
           )}
 
