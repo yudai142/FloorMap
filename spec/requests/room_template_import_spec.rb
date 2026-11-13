@@ -42,6 +42,7 @@ RSpec.describe "Importing a template into a room", type: :request do
       expect(body).to include("自分のテンプレートA")
       expect(body).to include("公開テンプレートB")
       expect(body).not_to include("非公開テンプレートC")
+      expect(body).to include(%(preview_image_url))
     end
   end
 
