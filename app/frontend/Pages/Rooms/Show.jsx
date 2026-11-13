@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { usePage } from '@inertiajs/react'
 import { ErrorAlert, SuccessAlert } from '../../components/Alert'
-import { subscribeToRoom, unsubscribeFromRoom } from '../../channels/rooms_channel'
+import { subscribeToRoom, unsubscribeFromRoom } from '../../../javascript/channels/rooms_channel'
 
 // Suppress 422 console errors from check-in/check-out
 const originalError = console.error
@@ -108,9 +108,8 @@ export default function RoomShow() {
   }, [room.id, deviceId, current_user])
 
   // ActionCable subscription for real-time updates
-  const subscriptionRef = useRef(null)
   useEffect(() => {
-    subscriptionRef.current = subscribeToRoom(room.share_token, {
+    const subscriptionPromise = subscribeToRoom(room.share_token, {
       onUserAutoCheckoutUpdated: (data) => {
         if (currentSession && data.session_id === currentSession.id) {
           setCurrentSession(prev => ({
@@ -135,7 +134,9 @@ export default function RoomShow() {
     })
 
     return () => {
-      unsubscribeFromRoom(subscriptionRef.current)
+      subscriptionPromise
+        .then((subscription) => unsubscribeFromRoom(subscription))
+        .catch((err) => console.error('ActionCable unsubscribe failed:', err))
     }
   }, [room.share_token, currentSession])
 

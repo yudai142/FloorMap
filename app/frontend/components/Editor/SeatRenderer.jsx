@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react'
 
-export default function SeatRenderer({ seat, onDelete }) {
+export default function SeatRenderer({ seat, onDelete, isSelected = false }) {
   const handleContextMenu = useCallback(
     (e) => {
       e.preventDefault()
@@ -14,6 +14,16 @@ export default function SeatRenderer({ seat, onDelete }) {
 
   return (
     <g transform={`translate(${x}, ${y})`} onContextMenu={handleContextMenu} style={{ cursor: 'grab' }}>
+      {isSelected && (
+        <circle
+          r="18"
+          fill="rgba(6, 182, 212, 0.1)"
+          stroke="#06b6d4"
+          strokeWidth="2"
+          strokeDasharray="4,4"
+          pointerEvents="none"
+        />
+      )}
       <circle
         r="12"
         fill={seat.occupied ? '#f87171' : '#4ade80'}

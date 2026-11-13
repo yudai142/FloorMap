@@ -26,11 +26,8 @@ class Seat < ApplicationRecord
 
   GRID_SIZE = 40
 
-  after_create_commit :clear_caches
-  after_create_commit :broadcast_seat_updated
-  after_update_commit :clear_caches
-  after_update_commit :broadcast_seat_updated
-  after_destroy_commit :clear_caches
+  after_commit :clear_caches
+  after_save_commit :broadcast_seat_updated
   after_destroy_commit :broadcast_seat_removed
 
   def clear_caches

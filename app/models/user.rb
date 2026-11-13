@@ -10,6 +10,7 @@ class User < ApplicationRecord
   has_many :room_permissions, dependent: :destroy
   has_many :sessions, dependent: :destroy
   has_many :notifications, dependent: :destroy
+  has_many :floor_plan_templates, dependent: :destroy
 
   validates :email, presence: true, uniqueness: true
   validates :username, presence: true, uniqueness: true

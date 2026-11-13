@@ -1,12 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 
 export default function Layout({ children, auth = {} }) {
-  const [csrfToken, setCsrfToken] = useState('')
-
-  useEffect(() => {
-    const token = document.querySelector('meta[name="csrf-token"]')?.content || ''
-    setCsrfToken(token)
-  }, [])
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || ''
 
   const handleLogout = (e) => {
     e.preventDefault()
@@ -40,33 +35,51 @@ export default function Layout({ children, auth = {} }) {
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <a href="/" className="text-2xl font-bold text-blue-600 hover:text-blue-800 transition">🗺️ FloorMap</a>
-          <div className="flex items-center space-x-4">
-            {auth?.is_authenticated ? (
-              <>
-                <span className="text-gray-700 font-medium">{auth.user?.username}</span>
+          <div className="flex items-center space-x-6">
+            {auth?.is_authenticated && (
+              <nav className="flex items-center space-x-4">
                 <a
-                  href="/users/edit"
-                  className="px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition"
+                  href="/rooms"
+                  className="text-gray-700 hover:text-blue-600 font-medium transition"
                 >
-                  名前変更
+                  ルーム
                 </a>
-                <button
-                  onClick={handleLogout}
-                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                <a
+                  href="/floor_plan_templates"
+                  className="text-gray-700 hover:text-blue-600 font-medium transition"
                 >
-                  ログアウト
-                </button>
-              </>
-            ) : (
-              <>
-                <a href="/users/sign_in" className="text-gray-700 hover:text-gray-900">
-                  ログイン
+                  テンプレート
                 </a>
-                <a href="/users/sign_up" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                  サインアップ
-                </a>
-              </>
+              </nav>
             )}
+            <div className="flex items-center space-x-4">
+              {auth?.is_authenticated ? (
+                <>
+                  <span className="text-gray-700 font-medium">{auth.user?.username}</span>
+                  <a
+                    href="/users/edit"
+                    className="px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition"
+                  >
+                    名前変更
+                  </a>
+                  <button
+                    onClick={handleLogout}
+                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                  >
+                    ログアウト
+                  </button>
+                </>
+              ) : (
+                <>
+                  <a href="/users/sign_in" className="text-gray-700 hover:text-gray-900">
+                    ログイン
+                  </a>
+                  <a href="/users/sign_up" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    サインアップ
+                  </a>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </header>

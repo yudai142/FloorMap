@@ -14,8 +14,7 @@ class ApplicationController < ActionController::Base
         user: current_user ? {
           id: current_user.id,
           email: current_user.email,
-          username: current_user.username,
-          name: current_user.name
+          username: current_user.username
         } : nil,
         is_authenticated: user_signed_in?
       }
