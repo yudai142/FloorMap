@@ -4,6 +4,7 @@ import { useEditorStore } from '../../store/editorStore'
 import { findFreePlacement, getShapeBounds, offsetShape, seatBounds, unionBounds } from './utils/shapeBounds'
 
 export default function CanvasEditorPage({ entity, backHref, shapes, seats, currentUser, persistence, showAutoCheckout = true, templates, initialTemplateId }) {
+  const hasUnsavedChanges = useEditorStore((state) => state.hasUnsavedChanges)
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false)
   const [importError, setImportError] = useState('')
   const autoImportedRef = useRef(false)
@@ -132,6 +133,11 @@ export default function CanvasEditorPage({ entity, backHref, shapes, seats, curr
               ← 戻る
             </a>
             <h1 className="text-2xl font-bold text-slate-900">{entity.name}</h1>
+            {hasUnsavedChanges && (
+              <span className="px-3 py-1 rounded-full bg-orange-500 text-white text-sm font-semibold shadow">
+                ● 未保存の変更
+              </span>
+            )}
             <span className="badge badge-lg">
               {canvasSize.width} × {canvasSize.height}px
             </span>
