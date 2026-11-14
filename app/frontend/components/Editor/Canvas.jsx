@@ -57,6 +57,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
     undo,
     redo,
     saveToHistory,
+    saveChanges,
     addShape,
     deleteShape,
     updateShape,
@@ -362,6 +363,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
       // Update the original seats reference for next save
       originalSeatsRef.current = seats.filter(s => s.id > 0)
 
+      saveChanges()
       setAlert({ type: 'success', message: persistence.saveMessage })
       setTimeout(() => setAlert(null), 2000)
 
@@ -373,7 +375,7 @@ export default function Canvas({ room = {}, initialShapes = [], initialSeats = [
     } finally {
       setIsSaving(false)
     }
-  }, [room, shapes, seats, canvasSize, persistence, getCsrfToken, onSave, mergeSeat, uploadPreview])
+  }, [room, shapes, seats, canvasSize, persistence, getCsrfToken, onSave, mergeSeat, uploadPreview, saveChanges])
 
   const handleMouseDown = useCallback((e) => {
     // Right-click: complete polygon
