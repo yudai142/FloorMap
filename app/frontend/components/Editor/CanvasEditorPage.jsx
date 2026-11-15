@@ -6,6 +6,10 @@ import { findFreePlacement, getShapeBounds, offsetShape, seatBounds, unionBounds
 export default function CanvasEditorPage({ entity, backHref, shapes, seats, currentUser, persistence, showAutoCheckout = true, templates, initialTemplateId }) {
   const hasUnsavedChanges = useEditorStore((state) => state.hasUnsavedChanges)
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false)
+  const [templatePage, setTemplatePage] = useState(1)
+  const TEMPLATES_PER_PAGE = 9
+  const pageCount = Math.max(1, Math.ceil((templates?.length || 0) / TEMPLATES_PER_PAGE))
+  const pagedTemplates = (templates || []).slice((templatePage - 1) * TEMPLATES_PER_PAGE, templatePage * TEMPLATES_PER_PAGE)
   const [importError, setImportError] = useState('')
   const autoImportedRef = useRef(false)
 
@@ -205,7 +209,10 @@ export default function CanvasEditorPage({ entity, backHref, shapes, seats, curr
             <div className="flex items-center gap-2 mt-3">
               <button
                 type="button"
-                onClick={() => setIsTemplateModalOpen(true)}
+                onClick={() => {
+                  setTemplatePage(1)
+                  setIsTemplateModalOpen(true)
+                }}
                 className="px-3 py-1 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700"
               >
                 テンプレートから読み込む
@@ -240,8 +247,9 @@ export default function CanvasEditorPage({ entity, backHref, shapes, seats, curr
                   </button>
                 </div>
                 {templates.length > 0 ? (
+                  <>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {templates.map((template) => (
+                    {pagedTemplates.map((template) => (
                       <button
                         key={template.id}
                         type="button"
@@ -263,6 +271,40 @@ export default function CanvasEditorPage({ entity, backHref, shapes, seats, curr
                       </button>
                     ))}
                   </div>
+                  {pageCount > 1 && (
+                    <div className="flex items-center justify-center gap-2 mt-6">
+                      <button
+                        type="button"
+                        onClick={() => setTemplatePage((page) => Math.max(1, page - 1))}
+                        disabled={templatePage === 1}
+                        className="px-3 py-1 border border-slate-300 rounded text-sm disabled:text-slate-300"
+                      >
+                        前へ
+                      </button>
+                      {Array.from({ length: pageCount }, (_, index) => index + 1).map((page) => (
+                        <button
+                          key={page}
+                          type="button"
+                          onClick={() => setTemplatePage(page)}
+                          aria-current={page === templatePage ? 'page' : undefined}
+                          className={`px-3 py-1 rounded text-sm ${
+                            page === templatePage ? 'bg-indigo-600 text-white' : 'border border-slate-300 hover:bg-slate-100'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => setTemplatePage((page) => Math.min(pageCount, page + 1))}
+                        disabled={templatePage === pageCount}
+                        className="px-3 py-1 border border-slate-300 rounded text-sm disabled:text-slate-300"
+                      >
+                        次へ
+                      </button>
+                    </div>
+                  )}
+                  </>
                 ) : (
                   <p className="text-slate-500">読み込めるテンプレートがありません</p>
                 )}
