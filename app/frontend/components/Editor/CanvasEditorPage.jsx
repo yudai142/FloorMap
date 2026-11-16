@@ -7,9 +7,9 @@ export default function CanvasEditorPage({ entity, backHref, shapes, seats, curr
   const hasUnsavedChanges = useEditorStore((state) => state.hasUnsavedChanges)
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false)
   const [templatePage, setTemplatePage] = useState(1)
-  const TEMPLATES_PER_PAGE = 9
-  const pageCount = Math.max(1, Math.ceil((templates?.length || 0) / TEMPLATES_PER_PAGE))
-  const pagedTemplates = (templates || []).slice((templatePage - 1) * TEMPLATES_PER_PAGE, templatePage * TEMPLATES_PER_PAGE)
+  const [templatesPerPage, setTemplatesPerPage] = useState(9)
+  const pageCount = Math.max(1, Math.ceil((templates?.length || 0) / templatesPerPage))
+  const pagedTemplates = (templates || []).slice((templatePage - 1) * templatesPerPage, templatePage * templatesPerPage)
   const [importError, setImportError] = useState('')
   const autoImportedRef = useRef(false)
 
@@ -245,6 +245,24 @@ export default function CanvasEditorPage({ entity, backHref, shapes, seats, curr
                   >
                     ✕
                   </button>
+                </div>
+                <div className="flex justify-end items-center gap-2 mb-4 text-sm text-slate-600">
+                  <label htmlFor="templates-per-page">1ページの表示数</label>
+                  <select
+                    id="templates-per-page"
+                    value={templatesPerPage}
+                    onChange={(e) => {
+                      setTemplatesPerPage(Number(e.target.value))
+                      setTemplatePage(1)
+                    }}
+                    className="px-2 py-1 border border-slate-300 rounded"
+                  >
+                    {[6, 9, 12].map((count) => (
+                      <option key={count} value={count}>
+                        {count}件
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 {templates.length > 0 ? (
                   <>
