@@ -36,6 +36,8 @@ Rails.application.routes.draw do
       get :preview_svg
       get :content
       get :rooms, action: :choose_room
+      post :favorite, action: :add_favorite
+      delete :favorite, action: :remove_favorite
       get :details
     end
     resources :seats, controller: "floor_plan_template_seats", only: [ :create, :destroy ] do

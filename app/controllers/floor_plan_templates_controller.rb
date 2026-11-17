@@ -12,8 +12,10 @@ class FloorPlanTemplatesController < ApplicationController
   end
 
   def public_index
+    favorite_ids = FloorPlanTemplateFavorite.where(user: current_user).pluck(:floor_plan_template_id)
+
     render inertia: "FloorPlanTemplates/PublicIndex", props: {
-      public_templates: FloorPlanTemplate.public_templates.recent.map { |t| template_json(t) },
+      public_templates: FloorPlanTemplate.public_templates.recent.map { |t| template_json(t).merge(favorited: favorite_ids.include?(t.id)) },
       **default_inertia_props
     }
   end
@@ -43,7 +45,7 @@ class FloorPlanTemplatesController < ApplicationController
 
   def show
     render inertia: "FloorPlanTemplates/Show", props: {
-      template: template_json(@template),
+      template: template_json(@template).merge(favorited: @template.favorited_by?(current_user)),
       rooms: current_user.rooms.order(created_at: :desc).map { |room| { share_token: room.share_token, name: room.name } },
       **default_inertia_props
     }
@@ -110,6 +112,18 @@ class FloorPlanTemplatesController < ApplicationController
       end,
       **default_inertia_props
     }
+  end
+
+  def add_favorite
+    template = FloorPlanTemplate.readable_by(current_user).find(params[:id])
+    template.favorites.find_or_create_by!(user: current_user)
+    head :ok
+  end
+
+  def remove_favorite
+    template = FloorPlanTemplate.readable_by(current_user).find(params[:id])
+    template.favorites.where(user: current_user).destroy_all
+    head :no_content
   end
 
   def preview_svg
