@@ -3,6 +3,7 @@ class FloorPlanTemplate < ApplicationRecord
   has_many :rooms, dependent: :nullify
   has_many :template_seats, class_name: "FloorPlanTemplateSeat", dependent: :destroy
   has_one_attached :preview_image
+  has_many :favorites, class_name: "FloorPlanTemplateFavorite", dependent: :destroy
 
   validates :name, presence: true, length: { minimum: 1, maximum: 255 }
   validate :floor_plan_data_is_valid_jsonb
@@ -12,6 +13,10 @@ class FloorPlanTemplate < ApplicationRecord
   scope :by_user, ->(user) { where(user_id: user.id) }
   scope :popular, -> { order(usage_count: :desc) }
   scope :recent, -> { order(created_at: :desc) }
+
+  def favorited_by?(user)
+    user.present? && favorites.exists?(user_id: user.id)
+  end
 
   def public?
     is_public

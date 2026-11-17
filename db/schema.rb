@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_18_131720) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_17_010000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -40,6 +40,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_131720) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "floor_plan_template_favorites", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "floor_plan_template_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["floor_plan_template_id"], name: "index_floor_plan_template_favorites_on_floor_plan_template_id"
+    t.index ["user_id", "floor_plan_template_id"], name: "index_template_favorites_on_user_and_template", unique: true
+    t.index ["user_id"], name: "index_floor_plan_template_favorites_on_user_id"
   end
 
   create_table "floor_plan_template_seats", force: :cascade do |t|
@@ -298,6 +308,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_131720) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "floor_plan_template_favorites", "floor_plan_templates"
+  add_foreign_key "floor_plan_template_favorites", "users"
   add_foreign_key "floor_plan_template_seats", "floor_plan_templates"
   add_foreign_key "floor_plan_templates", "users"
   add_foreign_key "notifications", "rooms"
