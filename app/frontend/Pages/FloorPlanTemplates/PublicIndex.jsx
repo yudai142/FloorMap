@@ -1,5 +1,6 @@
 import React from 'react'
 import TemplatePreview from '../../components/FloorPlanTemplates/TemplatePreview'
+import FavoriteButton from '../../components/FloorPlanTemplates/FavoriteButton'
 
 export default function FloorPlanTemplatesPublicIndex({ public_templates }) {
   return (
@@ -23,6 +24,9 @@ export default function FloorPlanTemplatesPublicIndex({ public_templates }) {
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">{template.name}</h3>
                   <p className="text-gray-600 text-sm mb-2">{template.description || '説明なし'}</p>
                   <p className="text-gray-500 text-xs mb-4">作成者: {template.user.username}</p>
+                  <div className="mb-3">
+                    <FavoriteButton templateId={template.id} initialFavorited={template.favorited} />
+                  </div>
                   <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
                     <span>使用回数: {template.usage_count}</span>
                   </div>
