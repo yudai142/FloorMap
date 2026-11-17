@@ -1,5 +1,6 @@
 import React from 'react'
 import { usePage } from '@inertiajs/react'
+import FavoriteButton from '../../components/FloorPlanTemplates/FavoriteButton'
 
 export default function FloorPlanTemplatesShow({ template, rooms = [] }) {
   const { auth } = usePage().props
@@ -64,6 +65,11 @@ export default function FloorPlanTemplatesShow({ template, rooms = [] }) {
                   </button>
                 </form>
               </>
+            )}
+            {!isOwner && (
+              <div className="flex justify-center">
+                <FavoriteButton templateId={template.id} initialFavorited={template.favorited} />
+              </div>
             )}
             <button
               onClick={handleImport}
