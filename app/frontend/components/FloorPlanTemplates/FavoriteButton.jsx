@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 
-export default function FavoriteButton({ templateId, initialFavorited }) {
+export default function FavoriteButton({ templateId, initialFavorited, onChange }) {
   const [favorited, setFavorited] = useState(Boolean(initialFavorited))
   const [busy, setBusy] = useState(false)
 
@@ -14,7 +14,10 @@ export default function FavoriteButton({ templateId, initialFavorited }) {
           Accept: 'application/json',
         },
       })
-      if (response.ok) setFavorited(!favorited)
+      if (response.ok) {
+        setFavorited(!favorited)
+        onChange?.(templateId, !favorited)
+      }
     } finally {
       setBusy(false)
     }
