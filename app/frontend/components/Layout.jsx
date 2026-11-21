@@ -45,7 +45,7 @@ export default function Layout({ children, auth = {} }) {
                   ルーム
                 </a>
                 <a
-                  href="/floor_plan_templates"
+                  href="/floor_plan_templates/public"
                   className="text-gray-700 hover:text-blue-600 font-medium transition"
                 >
                   テンプレート
