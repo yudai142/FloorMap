@@ -7,7 +7,8 @@ export default function New() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     name: room?.name || '',
-    description: room?.description || ''
+    description: room?.description || '',
+    floor_plan_template_id: room?.floor_plan_template_id || null
   })
 
   const handleChange = (e) => {
