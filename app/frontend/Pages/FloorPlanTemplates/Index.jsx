@@ -1,15 +1,12 @@
 import React from 'react'
 import TemplatePreview from '../../components/FloorPlanTemplates/TemplatePreview'
+import TemplateTabs from '../../components/FloorPlanTemplates/TemplateTabs'
 
 export default function FloorPlanTemplatesIndex({ my_templates }) {
   return (
       <div className="space-y-8">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-gray-900">マイテンプレート</h1>
-          <a href="/floor_plan_templates/public" className="text-blue-600 hover:text-blue-800 font-medium">
-            公開テンプレートを見る →
-          </a>
-        </div>
+        <h1 className="text-3xl font-bold text-gray-900">テンプレート</h1>
+        <TemplateTabs active="mine" />
 
         <section>
           {my_templates.length > 0 ? (
