@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import TemplatePreview from '../../components/FloorPlanTemplates/TemplatePreview'
 import FavoriteButton from '../../components/FloorPlanTemplates/FavoriteButton'
+import TemplateTabs from '../../components/FloorPlanTemplates/TemplateTabs'
 
 export default function FloorPlanTemplatesPublicIndex({ public_templates }) {
   const [favoriteIds, setFavoriteIds] = useState(
@@ -26,12 +27,8 @@ export default function FloorPlanTemplatesPublicIndex({ public_templates }) {
 
   return (
       <div className="space-y-8">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-gray-900">公開テンプレート</h1>
-          <a href="/floor_plan_templates" className="text-blue-600 hover:text-blue-800 font-medium">
-            ← マイテンプレートへ
-          </a>
-        </div>
+        <h1 className="text-3xl font-bold text-gray-900">テンプレート</h1>
+        <TemplateTabs active="public" />
 
         <div className="flex items-center justify-between">
           <label className="inline-flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700">
