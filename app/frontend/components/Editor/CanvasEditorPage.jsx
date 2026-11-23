@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import Canvas from './Canvas'
 import { useEditorStore } from '../../store/editorStore'
 import { findFreePlacement, getShapeBounds, offsetShape, seatBounds, unionBounds } from './utils/shapeBounds'
+import Pagination, { PageSizeSelect } from '../FloorPlanTemplates/Pagination'
 
 export default function CanvasEditorPage({ entity, backHref, shapes, seats, currentUser, persistence, showAutoCheckout = true, templates, initialTemplateId }) {
   const hasUnsavedChanges = useEditorStore((state) => state.hasUnsavedChanges)
@@ -246,23 +247,15 @@ export default function CanvasEditorPage({ entity, backHref, shapes, seats, curr
                     ✕
                   </button>
                 </div>
-                <div className="flex justify-end items-center gap-2 mb-4 text-sm text-slate-600">
-                  <label htmlFor="templates-per-page">1ページの表示数</label>
-                  <select
+                <div className="flex justify-end mb-4">
+                  <PageSizeSelect
                     id="templates-per-page"
                     value={templatesPerPage}
-                    onChange={(e) => {
-                      setTemplatesPerPage(Number(e.target.value))
+                    onChange={(count) => {
+                      setTemplatesPerPage(count)
                       setTemplatePage(1)
                     }}
-                    className="px-2 py-1 border border-slate-300 rounded"
-                  >
-                    {[6, 9, 12].map((count) => (
-                      <option key={count} value={count}>
-                        {count}件
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </div>
                 {templates.length > 0 ? (
                   <>
@@ -289,39 +282,7 @@ export default function CanvasEditorPage({ entity, backHref, shapes, seats, curr
                       </button>
                     ))}
                   </div>
-                  {pageCount > 1 && (
-                    <div className="flex items-center justify-center gap-2 mt-6">
-                      <button
-                        type="button"
-                        onClick={() => setTemplatePage((page) => Math.max(1, page - 1))}
-                        disabled={templatePage === 1}
-                        className="px-3 py-1 border border-slate-300 rounded text-sm disabled:text-slate-300"
-                      >
-                        前へ
-                      </button>
-                      {Array.from({ length: pageCount }, (_, index) => index + 1).map((page) => (
-                        <button
-                          key={page}
-                          type="button"
-                          onClick={() => setTemplatePage(page)}
-                          aria-current={page === templatePage ? 'page' : undefined}
-                          className={`px-3 py-1 rounded text-sm ${
-                            page === templatePage ? 'bg-indigo-600 text-white' : 'border border-slate-300 hover:bg-slate-100'
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      ))}
-                      <button
-                        type="button"
-                        onClick={() => setTemplatePage((page) => Math.min(pageCount, page + 1))}
-                        disabled={templatePage === pageCount}
-                        className="px-3 py-1 border border-slate-300 rounded text-sm disabled:text-slate-300"
-                      >
-                        次へ
-                      </button>
-                    </div>
-                  )}
+                  <Pagination page={templatePage} pageCount={pageCount} onChange={setTemplatePage} />
                   </>
                 ) : (
                   <p className="text-slate-500">読み込めるテンプレートがありません</p>
