@@ -52,4 +52,20 @@ RSpec.describe "FloorPlanTemplate favorites", type: :request do
       expect(body).to match(/"favorited":false/)
     end
   end
+
+  describe "GET /floor_plan_templates/favorites" do
+    it "lists only the templates the user has favorited" do
+      fav = create(:floor_plan_template, user: other_user, is_public: true, name: "お気に入りP")
+      create(:floor_plan_template, user: other_user, is_public: true, name: "未登録Q")
+      fav.favorites.create!(user: user)
+      sign_in user
+
+      get favorites_floor_plan_templates_path
+
+      body = CGI.unescapeHTML(response.body)
+      expect(response).to have_http_status(:ok)
+      expect(body).to include("お気に入りP")
+      expect(body).not_to include("未登録Q")
+    end
+  end
 end

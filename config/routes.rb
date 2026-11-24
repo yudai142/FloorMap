@@ -29,6 +29,7 @@ Rails.application.routes.draw do
   resources :floor_plan_templates, only: [ :index, :new, :show, :create, :destroy, :edit, :update ] do
     collection do
       get :public, action: :public_index
+      get :favorites, action: :favorite_index
     end
     member do
       patch :canvas_editor, action: :save_floor_plan

@@ -11,6 +11,19 @@ class FloorPlanTemplatesController < ApplicationController
     }
   end
 
+  def favorite_index
+    templates = FloorPlanTemplate.readable_by(current_user)
+                                 .joins(:favorites)
+                                 .where(floor_plan_template_favorites: { user_id: current_user.id })
+                                 .recent
+
+    render inertia: "FloorPlanTemplates/PublicIndex", props: {
+      public_templates: templates.map { |t| template_json(t).merge(favorited: true) },
+      favorites_only: true,
+      **default_inertia_props
+    }
+  end
+
   def public_index
     favorite_ids = FloorPlanTemplateFavorite.where(user: current_user).pluck(:floor_plan_template_id)
 
