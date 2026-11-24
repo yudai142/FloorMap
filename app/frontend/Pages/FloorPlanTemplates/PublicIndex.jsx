@@ -4,11 +4,10 @@ import FavoriteButton from '../../components/FloorPlanTemplates/FavoriteButton'
 import TemplateTabs from '../../components/FloorPlanTemplates/TemplateTabs'
 import Pagination, { PageSizeSelect } from '../../components/FloorPlanTemplates/Pagination'
 
-export default function FloorPlanTemplatesPublicIndex({ public_templates }) {
+export default function FloorPlanTemplatesPublicIndex({ public_templates, favorites_only = false }) {
   const [favoriteIds, setFavoriteIds] = useState(
     () => new Set(public_templates.filter((template) => template.favorited).map((template) => template.id))
   )
-  const [favoritesOnly, setFavoritesOnly] = useState(false)
   const [perPage, setPerPage] = useState(12)
   const [page, setPage] = useState(1)
 
@@ -24,7 +23,7 @@ export default function FloorPlanTemplatesPublicIndex({ public_templates }) {
     })
   }
 
-  const filteredTemplates = favoritesOnly
+  const filteredTemplates = favorites_only
     ? public_templates.filter((template) => favoriteIds.has(template.id))
     : public_templates
 
@@ -35,32 +34,18 @@ export default function FloorPlanTemplatesPublicIndex({ public_templates }) {
   return (
       <div className="space-y-6">
         <h1 className="text-3xl font-bold text-gray-900">テンプレート</h1>
-        <TemplateTabs active="public" />
+        <TemplateTabs active={favorites_only ? 'favorites' : 'public'} />
 
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <PageSizeSelect
-              id="public-templates-per-page"
-              value={perPage}
-              options={[8, 12, 16]}
-              onChange={(count) => {
-                setPerPage(count)
-                setPage(1)
-              }}
-            />
-            <label className="inline-flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700">
-              <input
-                type="checkbox"
-                checked={favoritesOnly}
-                onChange={(e) => {
-                  setFavoritesOnly(e.target.checked)
-                  setPage(1)
-                }}
-                className="h-4 w-4 text-amber-600 border-gray-300 rounded"
-              />
-              お気に入りだけ表示
-            </label>
-          </div>
+          <PageSizeSelect
+            id="public-templates-per-page"
+            value={perPage}
+            options={[8, 12, 16]}
+            onChange={(count) => {
+              setPerPage(count)
+              setPage(1)
+            }}
+          />
           <span className="text-sm text-gray-500">{filteredTemplates.length} 件</span>
         </div>
 
@@ -97,7 +82,7 @@ export default function FloorPlanTemplatesPublicIndex({ public_templates }) {
             </div>
           ) : (
             <p className="text-gray-500">
-              {favoritesOnly ? 'お気に入りのテンプレートはありません' : '公開テンプレートはありません'}
+              {favorites_only ? 'お気に入りのテンプレートはありません' : '公開テンプレートはありません'}
             </p>
           )}
         </section>
