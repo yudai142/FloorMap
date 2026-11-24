@@ -3,6 +3,7 @@ import React from 'react'
 const TABS = [
   { key: 'mine', label: 'マイテンプレート', href: '/floor_plan_templates' },
   { key: 'public', label: '公開テンプレート', href: '/floor_plan_templates/public' },
+  { key: 'favorites', label: 'お気に入り', href: '/floor_plan_templates/favorites' },
 ]
 
 export default function TemplateTabs({ active }) {
