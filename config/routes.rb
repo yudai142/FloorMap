@@ -60,6 +60,7 @@ Rails.application.routes.draw do
       end
     end
     member do
+      get :preview_svg
       get :canvas_editor
       get :canvas_data
       patch :floor_plan

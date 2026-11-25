@@ -1,5 +1,5 @@
 class RoomsController < ApplicationController
-  before_action :set_room, only: [ :show, :edit, :update, :destroy, :canvas_data, :canvas_editor, :floor_plan, :update_auto_checkout_settings ]
+  before_action :set_room, only: [ :show, :edit, :update, :destroy, :canvas_data, :canvas_editor, :floor_plan, :update_auto_checkout_settings, :preview_svg ]
   skip_before_action :authenticate_user!, only: [ :show, :canvas_data, :update_auto_checkout_settings ]
 
   def index
@@ -13,6 +13,13 @@ class RoomsController < ApplicationController
       current_user: current_user.as_json(only: [ :id, :email, :role ]),
       auth: auth_props
     }
+  end
+
+  def preview_svg
+    authorize @room, :show?
+    response.headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    render body: FloorPlanPreviewSvg.new(@room.floor_plan_data || [], @room.seats.order(:id)).render, content_type: "image/svg+xml"
   end
 
   def show
@@ -334,7 +341,8 @@ class RoomsController < ApplicationController
       seats_count: room.seats.count,
       occupied_seat_count: room.occupied_seat_count,
       occupancy_rate: room.occupancy_rate,
-      created_at: room.created_at
+      created_at: room.created_at,
+      preview_image_url: preview_svg_room_path(room.share_token)
     }
   end
 
