@@ -6,8 +6,9 @@ class FloorPlanPreviewSvg
   SEAT_COLOR = "#4ade80".freeze
   SEAT_STROKE = "#065f46".freeze
 
-  def initialize(template)
-    @template = template
+  def initialize(floor_plan_data, seats)
+    @floor_plan_data = floor_plan_data
+    @seats = seats
   end
 
   def render
@@ -22,12 +23,10 @@ class FloorPlanPreviewSvg
 
   private
 
-  def shapes
-    Array(@template.floor_plan_data).map { |shape| shape.to_h.with_indifferent_access }
-  end
+  attr_reader :seats
 
-  def seats
-    @template.template_seats.order(:id)
+  def shapes
+    Array(@floor_plan_data).map { |shape| shape.to_h.with_indifferent_access }
   end
 
   def content_box

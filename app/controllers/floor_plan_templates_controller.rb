@@ -142,7 +142,7 @@ class FloorPlanTemplatesController < ApplicationController
   def preview_svg
     response.headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'"
     response.headers["X-Content-Type-Options"] = "nosniff"
-    render body: FloorPlanPreviewSvg.new(@template).render, content_type: "image/svg+xml"
+    render body: FloorPlanPreviewSvg.new(@template.floor_plan_data, @template.template_seats.order(:id)).render, content_type: "image/svg+xml"
   end
 
   def details

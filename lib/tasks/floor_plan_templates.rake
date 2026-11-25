@@ -6,7 +6,7 @@ namespace :floor_plan_templates do
     FloorPlanTemplate.includes(:template_seats).find_each do |template|
       next if template.preview_image.attached?
 
-      svg = FloorPlanPreviewSvg.new(template).render
+      svg = FloorPlanPreviewSvg.new(template.floor_plan_data, template.template_seats.order(:id)).render
       template.preview_image.attach(io: StringIO.new(svg), filename: "preview.svg", content_type: "image/svg+xml")
       generated += 1
       puts "generated preview for template ##{template.id}"
