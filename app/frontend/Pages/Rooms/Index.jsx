@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { usePage } from '@inertiajs/react'
 import { Link } from '@inertiajs/react'
+import TemplatePreview from '../../components/FloorPlanTemplates/TemplatePreview'
 
 export default function RoomsIndex() {
   const { rooms, current_user, auth } = usePage().props
@@ -132,6 +133,7 @@ export default function RoomsIndex() {
                 href={`/rooms/${room.share_token}`}
                 className="room-card"
               >
+                <TemplatePreview url={room.preview_image_url} name={room.name} heightClass="h-32" />
                 <div className="room-card-header">
                   <h3 className="room-name">{room.name}</h3>
                   <span className="room-badge">
