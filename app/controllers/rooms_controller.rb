@@ -1,5 +1,5 @@
 class RoomsController < ApplicationController
-  before_action :set_room, only: [ :show, :edit, :update, :destroy, :canvas_data, :canvas_editor, :floor_plan, :update_auto_checkout_settings ]
+  before_action :set_room, only: [ :show, :edit, :update, :destroy, :canvas_data, :canvas_editor, :floor_plan, :update_auto_checkout_settings, :preview_svg ]
   skip_before_action :authenticate_user!, only: [ :show, :canvas_data, :update_auto_checkout_settings ]
 
   def index
@@ -13,6 +13,13 @@ class RoomsController < ApplicationController
       current_user: current_user.as_json(only: [ :id, :email, :role ]),
       auth: auth_props
     }
+  end
+
+  def preview_svg
+    authorize @room, :show?
+    response.headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    render body: FloorPlanPreviewSvg.new(@room.floor_plan_data || [], @room.seats.order(:id)).render, content_type: "image/svg+xml"
   end
 
   def show
@@ -51,12 +58,21 @@ class RoomsController < ApplicationController
   def new
     authorize Room, :create?
     @room = Room.new
+    @my_templates = current_user.floor_plan_templates
+    @public_templates = FloorPlanTemplate.public_templates
+
+    template = FloorPlanTemplate.readable_by(current_user).find_by(id: params[:template_id])
 
     render inertia: "Rooms/New", props: {
       room: {
         id: nil,
         name: "",
-        description: ""
+        description: "",
+        floor_plan_template_id: template&.id
+      },
+      floor_plan_templates: {
+        mine: @my_templates.map { |t| { id: t.id, name: t.name, description: t.description } },
+        public: @public_templates.map { |t| { id: t.id, name: t.name, user_name: t.user.email } }
       },
       auth: auth_props
     }
@@ -66,7 +82,15 @@ class RoomsController < ApplicationController
     @room = current_user.rooms.build(room_params)
     authorize @room
 
-    if @room.save
+    # テンプレートから floor_plan_data と座席をコピー
+    template = nil
+    if params[:room][:floor_plan_template_id].present?
+      template = FloorPlanTemplate.readable_by(current_user).find(params[:room][:floor_plan_template_id])
+      @room.floor_plan_data = template.floor_plan_data
+      template.increment_usage!
+    end
+
+    if save_room(template)
       respond_to do |format|
         format.html { redirect_to @room, notice: "ルームを作成しました" }
         format.json { render json: @room.as_json(only: [ :id, :share_token, :name, :description ]), status: :created }
@@ -122,6 +146,8 @@ class RoomsController < ApplicationController
       },
       shapes_data: @room.floor_plan_data || [],
       seats: @room.seats.map { |s| seat_canvas_json(s) },
+      templates: FloorPlanTemplate.readable_by(current_user).recent.map { |t| { id: t.id, name: t.name, preview_image_url: preview_svg_floor_plan_template_path(t) } },
+      initial_template_id: FloorPlanTemplate.readable_by(current_user).find_by(id: params[:template_id])&.id,
       current_user: current_user.as_json(only: [ :id, :email ]),
       auth: auth_props
     }
@@ -194,7 +220,8 @@ class RoomsController < ApplicationController
         visitor_id: s.visitor_id,
         visitor: visitor_data,
         device_identifier: s.device_identifier,
-        user_name: s.user_name
+        user_name: s.user_name,
+        check_in_time: s.check_in_time
       }
       sessions_data << session_item
     end
@@ -274,6 +301,18 @@ class RoomsController < ApplicationController
 
   private
 
+  def save_room(template)
+    return @room.save if template.nil?
+
+    Room.transaction do
+      @room.save!
+      template.template_seats.each { |seat| @room.seats.create!(seat.seat_attributes) }
+    end
+    true
+  rescue ActiveRecord::RecordInvalid
+    false
+  end
+
   def auto_checkout_settings_params
     params.require(:auto_checkout_settings).permit(:auto_checkout_enabled, :auto_checkout_time)
   end
@@ -303,7 +342,8 @@ class RoomsController < ApplicationController
       seats_count: room.seats.count,
       occupied_seat_count: room.occupied_seat_count,
       occupancy_rate: room.occupancy_rate,
-      created_at: room.created_at
+      created_at: room.created_at,
+      preview_image_url: preview_svg_room_path(room.share_token)
     }
   end
 
@@ -321,7 +361,7 @@ class RoomsController < ApplicationController
   end
 
   def room_params
-    params.require(:room).permit(:name, :description, :width, :height, :auto_checkout_enabled, :auto_checkout_time)
+    params.require(:room).permit(:name, :description, :width, :height, :auto_checkout_enabled, :auto_checkout_time, :floor_plan_template_id)
   end
 
   def seat_canvas_json(seat)

@@ -18,12 +18,10 @@ class Session < ApplicationRecord
   scope :by_date, ->(date) { where(created_at: date.beginning_of_day..date.end_of_day) }
   scope :recent, -> { order(created_at: :desc) }
 
-  after_create_commit :clear_seat_caches
-  after_create_commit :broadcast_seat_updated
+  after_commit :clear_seat_caches
+  after_save_commit :broadcast_seat_updated
   after_create_commit :schedule_auto_checkout
   after_create_commit :schedule_user_auto_checkout
-  after_update_commit :clear_seat_caches, if: :saved_change_to_status?
-  after_update_commit :broadcast_seat_updated, if: :saved_change_to_status?
   after_update_commit :schedule_user_auto_checkout, if: :saved_change_to_user_auto_checkout_time?
   after_update_commit :broadcast_user_auto_checkout_updated, if: :saved_change_to_user_auto_checkout_time?
 

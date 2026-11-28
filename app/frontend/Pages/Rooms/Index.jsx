@@ -1,12 +1,16 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { usePage } from '@inertiajs/react'
 import { Link } from '@inertiajs/react'
+import TemplatePreview from '../../components/FloorPlanTemplates/TemplatePreview'
+import Pagination, { PageSizeSelect } from '../../components/FloorPlanTemplates/Pagination'
 
 export default function RoomsIndex() {
   const { rooms, current_user, auth } = usePage().props
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState('created_at')
   const [sortDirection, setSortDirection] = useState('desc')
+  const [perPage, setPerPage] = useState(12)
+  const [page, setPage] = useState(1)
   const [csrfToken, setCsrfToken] = useState('')
 
   useEffect(() => {
@@ -44,6 +48,14 @@ export default function RoomsIndex() {
 
     return result
   }, [rooms, searchQuery, sortBy, sortDirection])
+
+  const pageCount = Math.max(1, Math.ceil(filteredRooms.length / perPage))
+  const currentPage = Math.min(page, pageCount)
+  const visibleRooms = filteredRooms.slice((currentPage - 1) * perPage, currentPage * perPage)
+
+  useEffect(() => {
+    setPage(1)
+  }, [searchQuery, sortBy, sortDirection, perPage])
 
   const handleSortChange = (column) => {
     if (sortBy === column) {
@@ -123,15 +135,26 @@ export default function RoomsIndex() {
           </div>
         </div>
 
+        <div className="flex items-center justify-between mb-4">
+          <PageSizeSelect
+            id="rooms-per-page"
+            value={perPage}
+            options={[8, 12, 16]}
+            onChange={(count) => setPerPage(count)}
+          />
+          <span className="text-sm text-gray-500">{filteredRooms.length} 件</span>
+        </div>
+
         {/* ルーム一覧 */}
         <div className="rooms-grid">
           {filteredRooms.length > 0 ? (
-            filteredRooms.map((room) => (
+            visibleRooms.map((room) => (
               <a
                 key={room.id}
                 href={`/rooms/${room.share_token}`}
                 className="room-card"
               >
+                <TemplatePreview url={room.preview_image_url} name={room.name} heightClass="h-32" />
                 <div className="room-card-header">
                   <h3 className="room-name">{room.name}</h3>
                   <span className="room-badge">
@@ -162,6 +185,7 @@ export default function RoomsIndex() {
             </div>
           )}
         </div>
+        <Pagination page={currentPage} pageCount={pageCount} onChange={setPage} />
       </div>
 
       <style>{`

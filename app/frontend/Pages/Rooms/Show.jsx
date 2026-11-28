@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { usePage } from '@inertiajs/react'
 import { ErrorAlert, SuccessAlert } from '../../components/Alert'
-import { subscribeToRoom, unsubscribeFromRoom } from '../../channels/rooms_channel'
+import { subscribeToRoom, unsubscribeFromRoom } from '../../../javascript/channels/rooms_channel'
 
 // Suppress 422 console errors from check-in/check-out
 const originalError = console.error
@@ -26,6 +26,23 @@ export default function RoomShow() {
   const [alert, setAlert] = useState(null)
   const [seats, setSeats] = useState(initialSeats || [])
   const [sessions, setSessions] = useState([])
+  const [seatSort, setSeatSort] = useState('number')
+
+  const seatNumber = (seat) => parseInt(String(seat.seat_identifier || '').replace(/\D/g, ''), 10) || 0
+
+  const sortedSeats = useMemo(() => {
+    const activeSessionOf = (seat) => sessions.find((s) => s.seat_id === seat.id && s.status === 'active')
+    return [...(seats || [])].sort((a, b) => {
+      const sessionA = activeSessionOf(a)
+      const sessionB = activeSessionOf(b)
+      if (!!sessionA !== !!sessionB) return sessionA ? -1 : 1
+      if (sessionA && sessionB && seatSort === 'checkin') {
+        const diff = (new Date(sessionA.check_in_time).getTime() || 0) - (new Date(sessionB.check_in_time).getTime() || 0)
+        if (diff !== 0) return diff
+      }
+      return seatNumber(a) - seatNumber(b)
+    })
+  }, [seats, sessions, seatSort])
   const [currentSession, setCurrentSession] = useState(initialSession)
   const [autoCheckoutEnabled, setAutoCheckoutEnabled] = useState(false)
   const [autoCheckoutTime, setAutoCheckoutTime] = useState('')
@@ -108,9 +125,8 @@ export default function RoomShow() {
   }, [room.id, deviceId, current_user])
 
   // ActionCable subscription for real-time updates
-  const subscriptionRef = useRef(null)
   useEffect(() => {
-    subscriptionRef.current = subscribeToRoom(room.share_token, {
+    const subscriptionPromise = subscribeToRoom(room.share_token, {
       onUserAutoCheckoutUpdated: (data) => {
         if (currentSession && data.session_id === currentSession.id) {
           setCurrentSession(prev => ({
@@ -135,7 +151,9 @@ export default function RoomShow() {
     })
 
     return () => {
-      unsubscribeFromRoom(subscriptionRef.current)
+      subscriptionPromise
+        .then((subscription) => unsubscribeFromRoom(subscription))
+        .catch((err) => console.error('ActionCable unsubscribe failed:', err))
     }
   }, [room.share_token, currentSession])
 
@@ -809,14 +827,34 @@ export default function RoomShow() {
           </div>
           )}
 
-          <div className="panel-header">
+          <div className="panel-header flex items-center justify-between gap-2">
             <h2>座席ステータス一覧</h2>
+            <div className="flex gap-1">
+              {[
+                { key: 'number', label: '番号順' },
+                { key: 'checkin', label: '着席順' },
+              ].map((option) => (
+                <button
+                  key={option.key}
+                  type="button"
+                  onClick={() => setSeatSort(option.key)}
+                  aria-pressed={seatSort === option.key}
+                  className={`px-3 py-1 rounded border text-xs font-medium ${
+                    seatSort === option.key
+                      ? 'bg-blue-600 border-blue-600 text-white'
+                      : 'bg-white border-slate-300 text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="seats-table-container">
             {seats && seats.length > 0 ? (
               <div className="seats-grid">
-                {seats.map((seat) => {
+                {sortedSeats.map((seat) => {
                   const session = sessions.find(s => s.seat_id === seat.id && s.status === 'active')
                   return (
                     <div key={seat.id} className="seat-item">
