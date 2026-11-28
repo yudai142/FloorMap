@@ -220,7 +220,8 @@ class RoomsController < ApplicationController
         visitor_id: s.visitor_id,
         visitor: visitor_data,
         device_identifier: s.device_identifier,
-        user_name: s.user_name
+        user_name: s.user_name,
+        check_in_time: s.check_in_time
       }
       sessions_data << session_item
     end
